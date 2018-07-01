@@ -14,6 +14,7 @@ RUN export GOPATH=/appli/chaingun/player && \
 	go get -d && \
 	cd /appli/chaingun/player && \
 	go install github.com/majeinfo/chaingun/player
+ADD start.sh /
 
 ENV VERBOSE ""
 VOLUME /scripts
