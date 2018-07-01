@@ -8,6 +8,8 @@ WORKDIR /appli/chaingun
 RUN pip3 install -r requirements.txt
 RUN mkdir /scripts && mkdir /output
 RUN export GOPATH=/appli/chaingun/player && \
+	cd /appli/chaingun/player/src/github.com && \
+	rm -rf gorilla sirupsen tobyhede && \
 	cd /appli/chaingun/player/src/github.com/majeinfo/chaingun/player && \
 	go get -d && \
 	cd /appli/chaingun/player && \
