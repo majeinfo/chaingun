@@ -26,7 +26,7 @@ standalone)
 
 manager)
 	cd manager/server
-	python manage.py runserver "$2" 
+	python3 manage.py runserver "$2" 
 ;;
 
 *)
