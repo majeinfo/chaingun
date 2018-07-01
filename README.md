@@ -39,17 +39,25 @@ a) run a Player in standalone mode :
 $ docker container run -it -v /path/to/scripts:/scripts -v /path/to/output/dir:/output \
 			majeinfo/chaingun standalone script.yml
 
-b) run a Player in dameon mode :
+b) run a Player in daemon mode :
 
-$ docker container run -it majeinfo/chaingun daemon listen_port
+$ docker container run -it majeinfo/chaingun daemon [<IP>:<Listen_Port>]
+
+	- default IP is 0.0.0.0 
+	- default port is 12345
 
 c) run the Manager (when Players are started as Daemons) :
 
 $ docker container run -it -v /path/to/scripts:/scripts -v /path/to/output/dir:/output \
-			majeinfo/chaingun manager listen_port
+			majeinfo/chaingun manager [<IP>:<Listen_Port>]
+
+	- default IP is 0.0.0.0 
+	- default port is 8000
 
 Then connect with a Web Browser to the specified port on localhost by default.
 
+The verbose mode can be specified using the VERBOSE environment variable :
+	-e VERBOSE=1
 
 ## License
 Licensed under the MIT license.

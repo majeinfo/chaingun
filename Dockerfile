@@ -1,13 +1,21 @@
-FROM debian:8.11
+FROM debian:buster
 LABEL maintainer "jd@maje.biz"
 
-ARG target_dir=/appli
-#RUN yum update -y
-#RUN yum install -y git golang
-#RUN yum clean all
 RUN apt-get update -y
-RUN apt-get install -y git golang
-RUN mkdir ${target_dir} && cd ${target_dir} && git clone https://github.com/majeinfo/chaingun.git
+RUN apt-get install -y git golang python3 python3-pip
+RUN mkdir /appli && cd /appli && git clone https://github.com/majeinfo/chaingun.git
+WORKDIR /appli/chaingun
+RUN pip3 install -r requirements.txt
+RUN mkdir /scripts && mkdir /output
+RUN export GOPATH=/appli/chaingun/player && \
+	cd /appli/chaingun/player/src/github.com/majeinfo/chaingun/player && \
+	go get -d && \
+	cd /appli/chaingun/player && \
+	go install github.com/majeinfo/chaingun/player
+
+ENV VERBOSE ""
+VOLUME /scripts
+VOLUME /output
 EXPOSE 8000
-WORKDIR ${target_dir}/chaingun
-CMD [ "/usr/local/bin/python", "manage.py", "runserver", "0.0.0.0:8000" ]
+
+ENTRYPOINT [ "/start.sh" ]

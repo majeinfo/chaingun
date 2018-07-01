@@ -14,3 +14,8 @@ out
 pkg
 py36
 data
+golang.org
+gopkg.in
+gorilla
+sirupsen
+tobyhede
