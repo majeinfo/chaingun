@@ -1,0 +1,23 @@
+---
+iterations: 8
+users: 2000
+rampup: 20
+actions:
+  - http:
+      title: Get all courses
+      method: GET
+      url: http://localhost:9183/courses
+      accept: json
+      response:
+        jsonpath: $[*].id+
+        variable: courseId
+        index: random # first, random, last
+  - sleep:
+      duration: 3
+  - http:
+      title: Get course
+      method: GET
+      url: http://localhost:9183/courses/${courseId}
+      accept: json
+  - sleep:
+        duration: 3

@@ -1,0 +1,32 @@
+---
+iterations: 1
+users: 1
+rampup: 0
+feeder:
+  type: csv #csv, json
+  filename: samples/testdata.csv
+actions:
+  - sleep:
+      duration: 1
+  - http:
+      title: Get all courses
+      method: GET
+      url: http://localhost:9183/courses
+      accept: json
+      response:
+        jsonpath: $[*].id+
+        variable: courseId
+        index: random # first, random, last
+  - sleep:
+      duration: 3
+  - http:
+      title: Get course
+      method: GET
+      url: http://localhost:9183/courses/${courseId}
+      accept: json
+      response:
+        jsonpath: $.author+
+        variable: author
+        index: first # first, random, last
+  - sleep:
+        duration: 3

@@ -1,0 +1,18 @@
+---
+iterations: -1
+duration: 10
+users: 100
+rampup: 10
+actions:
+  - http:
+      title: Page 1
+      method: GET
+      url: http://www.delamarche.com/page1.php
+  - http:
+      title: Page 2
+      method: GET
+      url: http://www.delamarche.com/page2.php
+  - http:
+      title: Page SSL
+      method: GET
+      url: https://www.delamarche.com:443/

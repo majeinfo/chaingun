@@ -1,0 +1,18 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+actions:
+  - http:
+      title: Page 1
+      method: GET
+      url: http://www.delamarche.com/page1.php
+      storeCookie: __all__
+  - http:
+      title: Page 2
+      method: GET
+      url: http://www.delamarche.com/page2.php
+  - http:
+      title: Page SSL
+      method: GET
+      url: https://www.delamarche.com:443/

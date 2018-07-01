@@ -1,0 +1,272 @@
+package main
+
+import (
+	"flag"
+	"io/ioutil"
+	_ "math/rand"
+	_ "net"
+	"os"
+	"os/exec"
+	"path"
+	"path/filepath"
+	"strconv"
+	"sync"
+	"time"
+
+	"github.com/majeinfo/chaingun/action"
+	"github.com/majeinfo/chaingun/config"
+	"github.com/majeinfo/chaingun/feeder"
+	"github.com/majeinfo/chaingun/reporter"
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
+)
+
+var (
+	VU_start          time.Time
+	VU_count          int
+	gp_is_daemon      *bool
+	gp_valid_playbook bool = false
+	gp_listen_addr    *string
+	gp_connect_to     *string
+	gp_scriptfile     *string
+	gp_outputdir      *string
+	gp_outputtype     *string
+	gp_python_cmd     *string
+
+	gp_playbook config.TestDef
+	gp_actions  []action.Action
+)
+
+// Analyze the command line
+func command_line() {
+	gp_is_daemon = flag.Bool("daemon", false, "Set to start the Player as a Daemon")
+	gp_listen_addr = flag.String("listen-addr", "127.0.0.1:12345", "Address and port to listen to - in daemon and standalone mode")
+	//gp_connect_to = flag.String("connect-to", "", "Address an port to connect to - in daemon mode")
+	verbose := flag.Bool("verbose", false, "Set verbose mode")
+	gp_scriptfile = flag.String("script", "", "Set the Script")
+	gp_outputdir = flag.String("output-dir", "", "Set the output directory")
+	gp_outputtype = flag.String("output-type", "csv", "Set the output type in file (csv/default, json)")
+	gp_python_cmd = flag.String("python-cmd", "", "Select the Python Interpreter to create the graphs")
+
+	flag.Parse()
+
+	log_level := log.InfoLevel
+	if *verbose {
+		log_level = log.DebugLevel
+	}
+	log.SetLevel(log_level)
+
+	if !*gp_is_daemon {
+		if *gp_scriptfile == "" {
+			log.Fatal("When not started as a daemon, needs a 'script' file")
+		}
+		if *gp_python_cmd == "" {
+			*gp_python_cmd = os.Getenv("Python")
+			if *gp_python_cmd == "" {
+				log.Fatalf("You must specify a Python interpreter path with --python-cmd option or via the PYTHON environment variable")
+			}
+		}
+		if _, err := os.Stat(*gp_python_cmd); os.IsNotExist(err) {
+			log.Fatalf("Python interpreter %s does not exist.", *gp_python_cmd)
+		}
+	} else {
+		// Either listen-addr or connect-to must be specified
+		// WebSocket server must not be started
+		if *gp_listen_addr != "" && *gp_connect_to != "" {
+			log.Fatal("Either --connect-to or --listen-addr options can be specified")
+		}
+		if *gp_listen_addr == "" && *gp_connect_to == "" {
+			log.Fatal("One of --connect-to or --listen-addr options must be specified")
+		}
+
+		if *gp_scriptfile != "" {
+			log.Warning("When started as a daemon, the --script option is ignored !")
+		}
+	}
+}
+
+// Program starts here
+func main() {
+
+	command_line()
+
+	if *gp_listen_addr != "" {
+		hub = newHub()
+	}
+
+	if !*gp_is_daemon {
+
+		log.Debugf("Create server listening on: %s", *gp_listen_addr)
+		go startWsServer(*gp_listen_addr)
+
+		// Read the scenario from file
+		data, err := ioutil.ReadFile(*gp_scriptfile)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if !createPlaybook([]byte(data), &gp_playbook, &gp_actions) {
+			log.Fatalf("Error while processing the Script File")
+		}
+
+		if gp_playbook.DataFeeder.Type == "csv" {
+			feeder.Csv(gp_playbook.DataFeeder, path.Dir(*gp_scriptfile))
+		} else if gp_playbook.DataFeeder.Type != "" {
+			log.Fatalf("Unsupported feeder type: %s", gp_playbook.DataFeeder.Type)
+		}
+
+		reporter.SimulationStart = time.Now()
+
+		var outputfile string
+		var dir string
+		if *gp_outputdir == "" {
+			d, _ := os.Getwd()
+			dir = d + "/results"
+		} else {
+			dir = *gp_outputdir
+		}
+		outputfile = dir + "/data.csv"
+		reporter.InitReport(*gp_outputtype)
+		reporter.OpenResultsFile(outputfile)
+
+		spawnUsers(&gp_playbook, &gp_actions)
+
+		log.Infof("Done in %v", time.Since(reporter.SimulationStart))
+		log.Infof("Building reports, please wait...")
+		reporter.CloseResultsFile()
+
+		// Build graphs
+		log.Info("Launching Viewer")
+		absdir, err := filepath.Abs(os.Args[0])
+		if err != nil {
+			log.Fatalf("Cannot compute absolute path for %s: %s", os.Args[0], err)
+		}
+		locdir := path.Dir(absdir) + "/../.."
+		log.Info("Launching graph builder:")
+		log.Infof("%s %s/python/viewer.py --data '%s' --output-dir '%s'",
+			*gp_python_cmd, locdir, outputfile, *gp_outputdir)
+		cmd := exec.Command(*gp_python_cmd, locdir+"/python/viewer.py",
+			"--data", outputfile,
+			"--output-dir", *gp_outputdir)
+		err = cmd.Run()
+		if err != nil {
+			log.Errorf("Viewer run failed: %s", err.Error())
+		}
+
+	} else {
+
+		if *gp_listen_addr != "" {
+			log.Debugf("Create server listening on: %s", *gp_listen_addr)
+			startWsServer(*gp_listen_addr)
+		} else {
+			/*
+				conn, err := net.Dial("tcp", *gp_connect_to)
+				if err != nil {
+					log.Fatalf("Could not connect to %s: %s", *gp_connect_to, err)
+				}
+			*/
+			log.Fatalf("connect-to mode is not yet implemented")
+		}
+	}
+}
+
+// Create a Playbook fro the YAML data
+func createPlaybook(data []byte, playbook *config.TestDef, actions *[]action.Action) bool {
+	yaml.Unmarshal([]byte(data), playbook)
+	log.Debug("Playbook:")
+	log.Debug(playbook)
+
+	if !config.ValidateTestDefinition(playbook) {
+		return false
+	}
+
+	var isValid bool
+	*actions, isValid = action.BuildActionList(playbook)
+	if !isValid {
+		return false
+	}
+	log.Debug("Tests Definition:")
+	log.Debug(playbook)
+
+	return true
+}
+
+// Launch VUs
+func spawnUsers(playbook *config.TestDef, actions *[]action.Action) {
+	resultsChannel := make(chan reporter.HttpReqResult, 10000)
+	go reporter.AcceptResults(resultsChannel, &VU_count, &hub.broadcast)
+	VU_start = time.Now()
+	wg := sync.WaitGroup{}
+	for i := 0; i < playbook.Users; i++ {
+		wg.Add(1)
+		VU_count++
+		//UID := strconv.Itoa(rand.Intn(playbook.Users+1) + 10000)
+		UID := strconv.Itoa(os.Getpid()*100000 + i)
+		go launchActions(playbook, resultsChannel, &wg, actions, UID)
+		waitDuration := float32(playbook.Rampup) / float32(playbook.Users)
+		time.Sleep(time.Duration(int(1000*waitDuration)) * time.Millisecond)
+
+		// In daemon mode, we may receive an order to stop the load test
+		if gp_daemon_status == STOPPING_NOW {
+			log.Info("Stop now")
+			break
+		}
+	}
+	log.Info("All users started, waiting at WaitGroup")
+	wg.Wait()
+	reporter.StopResults()
+}
+
+// Called once per each VU
+func launchActions(playbook *config.TestDef, resultsChannel chan reporter.HttpReqResult, wg *sync.WaitGroup, actions *[]action.Action, UID string) {
+	var sessionMap = make(map[string]string)
+
+	i := 0
+	for (playbook.Iterations == -1) || (i < playbook.Iterations) {
+
+		// Make sure the sessionMap is cleared before each iteration - except for the UID which stays
+		cleanSessionMapAndResetUID(UID, sessionMap)
+
+		// If we have feeder data, pop an item and push its key-value pairs into the sessionMap
+		feedSession(playbook, sessionMap)
+
+		// Iterate over the actions. Note the use of the command-pattern like Execute method on the Action interface
+		for _, action := range *actions {
+			if action != nil {
+				//action.(Action).Execute(resultsChannel, sessionMap)
+				action.Execute(resultsChannel, sessionMap)
+			}
+		}
+		if playbook.Iterations != -1 {
+			i++
+		} else {
+			ti := time.Now()
+			if ti.Sub(VU_start) > time.Duration(playbook.Duration)*time.Second {
+				//log.Info("finished", time.Duration(t.Duration) * time.Second, ti.Sub(VU_start))
+				break
+			}
+		}
+	}
+	wg.Done()
+	VU_count--
+}
+
+func cleanSessionMapAndResetUID(UID string, sessionMap map[string]string) {
+	// Optimization? Delete all entries rather than reallocate map from scratch for each new iteration.
+	for k := range sessionMap {
+		delete(sessionMap, k)
+	}
+	sessionMap["UID"] = UID
+}
+
+func feedSession(playbook *config.TestDef, sessionMap map[string]string) {
+	if playbook.DataFeeder.Type != "" {
+		go feeder.NextFromFeeder()       // Do async
+		feedData := <-feeder.FeedChannel // Will block here until feeder delivers value over the FeedChannel
+		for item := range feedData {
+			sessionMap[item] = feedData[item]
+		}
+	}
+}
+
+// EOF

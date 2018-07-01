@@ -1,0 +1,16 @@
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+setup.sh
+
+# Folders
+_obj
+_test
+__pycache__
+misc
+bin
+out
+pkg
+py36
+data/*

@@ -1,0 +1,48 @@
+---
+iterations: 2
+users: 2
+rampup: 4
+feeder:
+  type: csv
+  filename: data1.csv
+  separator: ","
+actions:
+  - http:
+      title: Page 1
+      method: GET
+      url: http://www.delamarche.com/page1.php
+      storeCookie: __all__
+  - http:
+      title: Page 2
+      method: GET
+      url: http://www.delamarche.com/page2.php
+  - http:
+      title: Page 3
+      method: GET
+      url: http://www.delamarche.com/page3.php?nom=${nom}
+  - http:
+      title: Page 4
+      method: POST
+      url: http://www.delamarche.com/page4.php
+      body: nom=${nom}&age=${age}
+      response:
+        regex: "is: (.*)<br>"
+        index: first
+        variable: address
+  - http:
+      title: Page 5
+      method: GET
+      url: http://www.delamarche.com/page5.php?address=${address}
+  - http:
+      title: Page 4bis
+      method: POST
+      url: http://www.delamarche.com/page4.php
+      body: nom=${nom}&age=${age}
+      response:
+        regex: "is: (.*), (.*)<br>"
+        index: first
+        variable: address
+  - http:
+      title: Page 5bis
+      method: GET
+      url: http://www.delamarche.com/page5.php?address=${address}
