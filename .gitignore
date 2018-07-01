@@ -13,4 +13,4 @@ bin
 out
 pkg
 py36
-data/*
+data
