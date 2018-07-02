@@ -16,7 +16,7 @@ daemon)
 ;;
 
 standalone)
-	if [ "$2" != "" ]; then
+	if [ "$2" = "" ]; then
 		echo "The YML Playbook is missing"
 		exit 1
 	fi
