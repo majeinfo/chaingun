@@ -268,6 +268,7 @@ function ConnectToWS(id) {
             EnableButton("#label_dfbut" + id);
             EnableButton("#dfbut" + id);
             DisplayError("Data feed needed: " + filename);
+            break;
         case "results":
             console.log("Results received");
             console.log(data.msg);

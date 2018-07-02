@@ -36,7 +36,8 @@ the Manager.
 
 a) run a Player in standalone mode :
 
-$ docker container run -it -v /path/to/scripts:/scripts -v /path/to/output/dir:/output \
+$ docker container run -it -v /path/to/scripts:/scripts \
+			-v /path/to/output/dir:/output \
 			majeinfo/chaingun standalone script.yml
 
 b) run a Player in daemon mode :
@@ -48,7 +49,9 @@ $ docker container run -it majeinfo/chaingun daemon [<IP>:<Listen_Port>]
 
 c) run the Manager (when Players are started as Daemons) :
 
-$ docker container run -it -v /path/to/scripts:/scripts -v /path/to/output/dir:/output \
+$ docker container run -it -v /path/to/scripts:/scripts \
+			-v /path/to/output/dir:/output \
+			-v /path/to/data_and_graphs:/data \
 			majeinfo/chaingun manager [<IP>:<Listen_Port>]
 
 	- default IP is 0.0.0.0 
