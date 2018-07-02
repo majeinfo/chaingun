@@ -41,7 +41,7 @@ var (
 func command_line() {
 	gp_is_daemon = flag.Bool("daemon", false, "Set to start the Player as a Daemon")
 	gp_listen_addr = flag.String("listen-addr", "127.0.0.1:12345", "Address and port to listen to - in daemon and standalone mode")
-	//gp_connect_to = flag.String("connect-to", "", "Address an port to connect to - in daemon mode")
+	gp_connect_to = flag.String("connect-to", "", "Address an port to connect to - in daemon mode (not supported yet)")
 	verbose := flag.Bool("verbose", false, "Set verbose mode")
 	gp_scriptfile = flag.String("script", "", "Set the Script")
 	gp_outputdir = flag.String("output-dir", "", "Set the output directory")
