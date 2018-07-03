@@ -22,23 +22,28 @@ To be completed...
 Chaingun is made of 2 parts :
 
 - a Player which role is to inject requests to the tested server(s)
-- a manager that provides a Web interface to manage the Players
+- a Manager that provides a Web interface to manage the Players
 
 Players can be run in standalone mode : this is the easiest way to proceed and may be
-sufficient when the expected test load can be ensured by only one Player.
+sufficient when the expected test load can be ensured by only one Player. In such a case
+the Manager is not needed.
 
 If you need many Players to be coordinated to stress the same server in the same time,
 you launch different Players (on different hosts !) in "daemon mode". Then you start the Web
-interface of the manager and you can drive the Players remotely. The results will be aggregated by
+interface of the Manager and you can drive the Players remotely. The results will be aggregated by
 the Manager.
+
+#### Run fro the command line
+
+To be completed...
 
 #### Run from container image
 
 a) run a Player in standalone mode :
 
-$ docker container run -it -v /path/to/scripts:/scripts \
-			-v /path/to/output/dir:/output \
-			majeinfo/chaingun standalone script.yml
+`$ docker container run -it -v /path/to/scripts:/scripts \\
+			-v /path/to/output/dir:/output \\
+			majeinfo/chaingun standalone script.yml`
 
 b) run a Player in daemon mode :
 
