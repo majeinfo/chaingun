@@ -1,6 +1,6 @@
 # BUILDER Image
 FROM debian:buster as builder
-RUN apt-get update -y
+RUN apt-get clean && apt-get update -y
 RUN apt-get install -y git golang
 
 RUN mkdir /appli && cd /appli && git clone https://github.com/majeinfo/chaingun.git
@@ -19,7 +19,7 @@ RUN export GOPATH=/appli/chaingun/player && \
 FROM debian:buster
 LABEL maintainer "jd@maje.biz"
 
-RUN apt-get update -y
+RUN apt-get clean && apt-get update -y
 #RUN apt-get install -y git golang python3 python3-pip locales
 RUN apt-get install -y git python3 python3-pip locales
 RUN sed -i '/^#.* fr_FR.UTF-8.* /s/^#//' /etc/locale.gen && locale-gen
