@@ -73,6 +73,7 @@ The verbose mode can be specified using the VERBOSE environment variable :
 This is a sample script. 
 Mandatory paremeters are marked with a "# MAND" pseudo-comment at the end of the line
 
+```
 ---
 iterations: 2		# MAND
 duration: 100		# MAND if iterations == -1. Time is in seconds
@@ -124,6 +125,7 @@ actions:
       title: Page 5bis
       method: GET
       url: http://server/page5.php?address=${address}
+```
 
 ## License
 Licensed under the MIT license.
