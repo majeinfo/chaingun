@@ -48,11 +48,13 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.HttpReqRe
 
 			resultsChannel <- httpReqResult
 		} else {
+			log.Debugf("Received data: %s", responseBody)
 			defer resp.Body.Close()
 
 			if httpAction.StoreCookie != "" {
 				for _, cookie := range resp.Cookies() {
 					if cookie.Name == httpAction.StoreCookie || httpAction.StoreCookie == "__all__" {
+						log.Debugf("Store cookie: %s=%s", httpAction.StoreCookie, cookie.Value)
 						sessionMap[cookie_prefix+cookie.Name] = cookie.Value
 					}
 				}
@@ -204,7 +206,7 @@ func RegexpProcessor(httpAction HttpAction, sessionMap map[string]string, respon
 
 	r := string(responseBody[:])
 	res := httpAction.ResponseHandler.Regex.FindAllStringSubmatch(r, -1)
-	log.Debugf("%v", res)
+	log.Debugf("Regex applied: %v", res)
 	if len(res) > 0 {
 		// TODO: value should be computed like "abc$1$xyz" (config)
 		resultsArray := make([]string, 0, 10)
@@ -212,7 +214,14 @@ func RegexpProcessor(httpAction HttpAction, sessionMap map[string]string, respon
 		passResultIntoSessionMap(resultsArray, httpAction, sessionMap)
 	} else {
 		// TODO: should use a default value (config)
-		log.Warning("Regexp failed to apply")
+		if httpAction.ResponseHandler.Defaultvalue != "" {
+			log.Warning("Regexp failed to apply, uses default value")
+			resultsArray := make([]string, 0, 10)
+			resultsArray = append(resultsArray, httpAction.ResponseHandler.Defaultvalue)
+			passResultIntoSessionMap(resultsArray, httpAction, sessionMap)			
+		} else {
+			log.Error("Regexp failed to apply")
+		}
 	}
 }
 

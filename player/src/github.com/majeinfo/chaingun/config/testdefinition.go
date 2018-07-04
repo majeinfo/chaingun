@@ -9,7 +9,7 @@ const LAST = "last"
 const RANDOM = "random"
 
 type TestDef struct {
-	Iterations int `yaml:"iterations"`
+	Iterations int `yaml:"iterations"`					// (mandatory) -1 implies use of "duration"
 	Duration int `yaml:"duration"`
 	Users int `yaml:"users"`
 	Rampup int `yaml:"rampup"`

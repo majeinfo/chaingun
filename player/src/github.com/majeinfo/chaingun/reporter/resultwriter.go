@@ -29,11 +29,11 @@ func OpenResultsFile(fileName string) {
 		locdir := path.Dir(fileName)
 		err := os.MkdirAll(locdir, 0755)
 		if err != nil {
-			log.Fatal("Cannot create directory %s: %s", locdir, err)
+			log.Fatalf("Cannot create directory %s: %s", locdir, err)
 		}
 		f, err = os.Create(fileName)
 		if err != nil {
-			log.Fatal("Cannot create output file %s: %s", fileName, err)
+			log.Fatalf("Cannot create output file %s: %s", fileName, err)
 		}
 	}
 	initResultsFile()

@@ -165,14 +165,17 @@ func main() {
 					log.Fatalf("Could not connect to %s: %s", *gp_connect_to, err)
 				}
 			*/
-			log.Fatalf("connect-to mode is not yet implemented")
+			log.Fatal("connect-to mode is not yet implemented")
 		}
 	}
 }
 
 // Create a Playbook fro the YAML data
 func createPlaybook(data []byte, playbook *config.TestDef, actions *[]action.Action) bool {
-	yaml.Unmarshal([]byte(data), playbook)
+	err := yaml.UnmarshalStrict([]byte(data), playbook)
+	if err != nil {
+		log.Fatalf("YAML error: %v", err)		
+	}
 	log.Debug("Playbook:")
 	log.Debug(playbook)
 

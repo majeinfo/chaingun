@@ -29,6 +29,7 @@ type HttpResponseHandler struct {
     Regex *regexp.Regexp `yaml:"regex"`
     Variable string `yaml:"variable"`
     Index    string `yaml:"index"`
+    Defaultvalue string `yaml:"default_value"`
 }
 
 func stringInSlice(a string, list []string) bool {
@@ -114,6 +115,7 @@ func NewHttpAction(a map[interface{}]interface{}) HttpAction {
 
         responseHandler.Variable = response["variable"].(string)
         responseHandler.Index = response["index"].(string)
+        responseHandler.Defaultvalue = response["default_value"].(string)
     }
 
     accept := "text/html,application/json,application/xhtml+xml,application/xml,text/plain"
