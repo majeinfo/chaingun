@@ -9,7 +9,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/xmlpath.v2"
-	//"github.com/NodePrime/jsonpath"
+	"github.com/JumboInteractiveLimited/jsonpath"
 	"bytes"
 	"crypto/tls"
 
@@ -130,7 +130,7 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) *http
  *  Extract data from response according to the desired processor
  */
 func processResult(httpAction HttpAction, sessionMap map[string]string, responseBody []byte) bool {
-	if httpAction.ResponseHandler.Jsonpath != "" {
+	if httpAction.ResponseHandler.Jsonpaths != nil {
 		return JsonProcessor(httpAction, sessionMap, responseBody)
 	}
 
@@ -145,36 +145,42 @@ func processResult(httpAction HttpAction, sessionMap map[string]string, response
 	return true
 }
 
-// TODO: must be rewritten
 func JsonProcessor(httpAction HttpAction, sessionMap map[string]string, responseBody []byte) bool {
 	log.Debugf("Response processed by Json")
 
-	/*
-	   paths, err := jsonpath.ParsePaths(httpAction.ResponseHandler.Jsonpath)
-	   if err != nil {
-	       log.Fatal(err)
-	   }
-	   eval, err := jsonpath.EvalPathsInBytes(responseBody, paths)
-	   if err != nil {
-	       log.Fatal(err)
-	   }
+	eval, err := jsonpath.EvalPathsInBytes(responseBody, httpAction.ResponseHandler.Jsonpaths)
+	if err != nil {
+		log.Errorf("Jsonpath failed to be applied: %v", err)
+		return false
+	}
 
-	   // TODO optimization: Don't reinitialize each time, reuse this somehow.
-	   resultsArray := make([]string, 0, 10)
-	   for {
-	       if result, ok := eval.Next(); ok {
-	            value := strings.TrimSpace(result.Pretty(false))
-	           resultsArray = append(resultsArray, trimChar(value, '"'))
-	       } else {
-	           break
-	       }
-	   }
-	   if eval.Error != nil {
-	       log.Fatal(eval.Error)
-	   }
+	// TODO optimization: Don't reinitialize each time, reuse this somehow.
+	resultsArray := make([]string, 0, 10)
+	for {
+		if result, ok := eval.Next(); ok {
+			value := strings.TrimSpace(result.Pretty(false))
+			log.Debugf("JSON extracted value: %s", value)
+			resultsArray = append(resultsArray, trimChar(value, '"'))
+		} else {
+			break
+		}
+	}
+	if eval.Error != nil {
+		log.Errorf("Error while evaluating jsonpath: %s", eval.Error)
+		return false
+	}
 
-	   passResultIntoSessionMap(resultsArray, httpAction, sessionMap)
-	*/
+	if len(resultsArray) == 0 {
+		if httpAction.ResponseHandler.Defaultvalue != "" {
+			log.Warning("Jsonpath failed to apply, uses default value")
+			resultsArray = append(resultsArray, httpAction.ResponseHandler.Defaultvalue)		
+		} else {
+			log.Errorf("Jsonpath failed to apply - no default value given")
+			return false
+		}		
+	}
+
+	passResultIntoSessionMap(resultsArray, httpAction, sessionMap)
 
 	return true
 }
@@ -220,7 +226,6 @@ func RegexpProcessor(httpAction HttpAction, sessionMap map[string]string, respon
 		resultsArray = append(resultsArray, res[0][1])
 		passResultIntoSessionMap(resultsArray, httpAction, sessionMap)
 	} else {
-		// TODO: should use a default value (config)
 		if httpAction.ResponseHandler.Defaultvalue != "" {
 			log.Warning("Regexp failed to apply, uses default value")
 			resultsArray := make([]string, 0, 10)

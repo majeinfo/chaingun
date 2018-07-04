@@ -4,6 +4,7 @@ import (
 	"regexp"
     log "github.com/sirupsen/logrus"
     "gopkg.in/xmlpath.v2"
+    "github.com/JumboInteractiveLimited/jsonpath"
     "github.com/majeinfo/chaingun/reporter"
 )
 
@@ -24,7 +25,7 @@ func (h HttpAction) Execute(resultsChannel chan reporter.HttpReqResult, sessionM
 }
 
 type HttpResponseHandler struct {
-    Jsonpath string `yaml:"jsonpath"`
+    Jsonpaths []*jsonpath.Path `yaml:"jsonpath"`
     Xmlpath *xmlpath.Path `yaml:"xmlpath"`
     Regex *regexp.Regexp `yaml:"regex"`
     Variable string `yaml:"variable"`
@@ -78,8 +79,6 @@ func NewHttpAction(a map[interface{}]interface{}) HttpAction {
             valid = false
         }
 
-        // TODO perhaps compile Xmlpath expressions so we can validate early?
-
         if r["variable"] == nil || r["variable"] == "" {
             log.Error("Error: HttpAction ResponseHandler must define a Variable.")
             valid = false
@@ -95,9 +94,15 @@ func NewHttpAction(a map[interface{}]interface{}) HttpAction {
         response := a["response"].(map[interface{}]interface{})
 
         if response["jsonpath"] != nil && response["jsonpath"] != "" {
-            responseHandler.Jsonpath = response["jsonpath"].(string)
+            var err error
+            //responseHandler.Jsonpath = response["jsonpath"].(string)
+            responseHandler.Jsonpaths, err = jsonpath.ParsePaths(response["jsonpath"].(string))
+            if err != nil {
+                log.Error("Jsonpath could not be compiled: %s", response["jsonpath"].(string))
+            }
         }
         if response["xmlpath"] != nil && response["xmlpath"] != "" {
+            // TODO perhaps compile Xmlpath expressions so we can validate early?            
             //responseHandler.Xmlpath = response["xmlpath"].(string)
             var err error
             responseHandler.Xmlpath, err = xmlpath.Compile(response["xmlpath"].(string))
@@ -109,7 +114,7 @@ func NewHttpAction(a map[interface{}]interface{}) HttpAction {
 			var err error
             responseHandler.Regex, err = regexp.Compile(response["regex"].(string))
             if err != nil {
-				log.Error("Regexp could not be compiled: %", response["regex"].(string))
+				log.Error("Regexp could not be compiled: %s", response["regex"].(string))
 			}
         }
         if response["default_value"] == nil {

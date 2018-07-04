@@ -1,0 +1,23 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+actions:
+  - http:
+      title: Page 1
+      method: GET
+      url: http://www.delamarche.com/page1.php
+      storeCookie: __all__
+  - http:
+      title: Page 2
+      method: GET
+      url: http://www.delamarche.com/page2-json.php
+      response:
+        jsonpath: $.NOM+
+        variable: nom
+        index: first
+        default_value: alice
+  - http:
+      title: Page 3
+      method: GET
+      url: http://www.delamarche.com/page3.php?nom=${nom}

@@ -126,7 +126,19 @@ actions:
       title: Page 5bis
       method: GET
       url: http://server/page5.php?address=${address}
+  - http:
+      title: Page 6
+      method: POST
+      url: http://server/page4.php
+      body: name=${name}&age=${age}
+      response:
+        jsonpath: $.name+
+        index: first
+        variable: name
+        default_value: bob
 ```
+
+The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
 
 ## License
 Licensed under the MIT license.
