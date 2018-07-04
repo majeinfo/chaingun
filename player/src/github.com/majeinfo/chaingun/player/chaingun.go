@@ -225,6 +225,7 @@ func launchActions(playbook *config.TestDef, resultsChannel chan reporter.HttpRe
 	var sessionMap = make(map[string]string)
 
 	i := 0
+actionLoop:
 	for (playbook.Iterations == -1) || (i < playbook.Iterations) {
 
 		// Make sure the sessionMap is cleared before each iteration - except for the UID which stays
@@ -237,7 +238,21 @@ func launchActions(playbook *config.TestDef, resultsChannel chan reporter.HttpRe
 		for _, action := range *actions {
 			if action != nil {
 				//action.(Action).Execute(resultsChannel, sessionMap)
-				action.Execute(resultsChannel, sessionMap)
+				if !action.Execute(resultsChannel, sessionMap) {
+					// An error occurred : continue, stop the vu or stop the test ?
+					switch playbook.OnError {
+					case config.ERR_CONTINUE:
+						log.Info("Continue on error")
+						break
+					case config.ERR_STOP_TEST:
+						log.Info("Stop test on error")
+						gp_daemon_status = STOPPING_NOW
+						break actionLoop
+					case config.ERR_STOP_VU:
+						log.Info("Stop VU on error")
+						break actionLoop
+					}
+				}
 			}
 		}
 		if playbook.Iterations != -1 {

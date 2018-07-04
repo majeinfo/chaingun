@@ -5,5 +5,6 @@ import (
 )
 
 type Action interface {
-	Execute(resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string)
+	// Returns false if an error occurred during the execution
+	Execute(resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) bool
 }

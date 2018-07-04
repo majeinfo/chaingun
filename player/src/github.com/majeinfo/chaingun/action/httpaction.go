@@ -19,8 +19,8 @@ type HttpAction struct {
     StoreCookie     string              `yaml:"storeCookie"`
 }
 
-func (h HttpAction) Execute(resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) {
-    DoHttpRequest(h, resultsChannel, sessionMap)
+func (h HttpAction) Execute(resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) bool {
+    return DoHttpRequest(h, resultsChannel, sessionMap)
 }
 
 type HttpResponseHandler struct {
@@ -111,6 +111,9 @@ func NewHttpAction(a map[interface{}]interface{}) HttpAction {
             if err != nil {
 				log.Error("Regexp could not be compiled: %", response["regex"].(string))
 			}
+        }
+        if response["default_value"] == nil {
+            response["default_value"] = ""
         }
 
         responseHandler.Variable = response["variable"].(string)

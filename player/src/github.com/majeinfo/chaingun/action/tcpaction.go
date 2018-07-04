@@ -10,8 +10,9 @@ type TcpAction struct {
 	Title string `yaml:"title"`
 }
 
-func (t TcpAction) Execute(resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) {
+func (t TcpAction) Execute(resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) bool {
 	DoTcpRequest(t, resultsChannel, sessionMap)
+	return true
 }
 
 func NewTcpAction(a map[interface{}]interface{}) TcpAction {

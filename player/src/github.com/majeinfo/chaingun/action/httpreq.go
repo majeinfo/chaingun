@@ -21,7 +21,7 @@ var cookie_prefix = "__cookie__"
 var cookie_prefix_length = len(cookie_prefix)
 
 // Accepts a Httpaction and a one-way channel to write the results to.
-func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) {
+func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) bool {
 	req := buildHttpRequest(httpAction, sessionMap)
 	if req.Method != "POST" {
 		log.Debugf("New Request: Method:%s, URL: %s", req.Method, req.URL)
@@ -38,36 +38,38 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.HttpReqRe
 
 	if err != nil {
 		log.Errorf("HTTP request failed: %s", err)
-	} else {
-		elapsed := time.Since(start)
-		responseBody, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			//log.Fatal(err)
-			log.Printf("Reading HTTP response failed: %s", err)
-			httpReqResult := buildHttpResult(sessionMap["UID"], 0, resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title)
+		return false
+	} 
 
-			resultsChannel <- httpReqResult
-		} else {
-			log.Debugf("Received data: %s", responseBody)
-			defer resp.Body.Close()
+	elapsed := time.Since(start)
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		//log.Fatal(err)
+		log.Printf("Reading HTTP response failed: %s", err)
+		httpReqResult := buildHttpResult(sessionMap["UID"], 0, resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title)
+		resultsChannel <- httpReqResult
+		return false
+	} 
 
-			if httpAction.StoreCookie != "" {
-				for _, cookie := range resp.Cookies() {
-					if cookie.Name == httpAction.StoreCookie || httpAction.StoreCookie == "__all__" {
-						log.Debugf("Store cookie: %s=%s", httpAction.StoreCookie, cookie.Value)
-						sessionMap[cookie_prefix+cookie.Name] = cookie.Value
-					}
-				}
+	log.Debugf("Received data: %s", responseBody)
+	defer resp.Body.Close()
+
+	if httpAction.StoreCookie != "" {
+		for _, cookie := range resp.Cookies() {
+			if cookie.Name == httpAction.StoreCookie || httpAction.StoreCookie == "__all__" {
+				log.Debugf("Store cookie: %s=%s", httpAction.StoreCookie, cookie.Value)
+				sessionMap[cookie_prefix+cookie.Name] = cookie.Value
 			}
-
-			// if action specifies response action, parse using regexp/jsonpath
-			processResult(httpAction, sessionMap, responseBody)
-
-			httpReqResult := buildHttpResult(sessionMap["UID"], len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title)
-
-			resultsChannel <- httpReqResult
 		}
 	}
+
+	// if action specifies response action, parse using regexp/jsonpath
+	if !processResult(httpAction, sessionMap, responseBody) {
+		return false
+	}
+	httpReqResult := buildHttpResult(sessionMap["UID"], len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title)
+	resultsChannel <- httpReqResult
+	return true
 }
 
 func buildHttpResult(vid string, contentLength int, status int, elapsed int64, title string) reporter.HttpReqResult {
@@ -127,24 +129,24 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) *http
 /**
  *  Extract data from response according to the desired processor
  */
-func processResult(httpAction HttpAction, sessionMap map[string]string, responseBody []byte) {
+func processResult(httpAction HttpAction, sessionMap map[string]string, responseBody []byte) bool {
 	if httpAction.ResponseHandler.Jsonpath != "" {
-		JsonProcessor(httpAction, sessionMap, responseBody)
+		return JsonProcessor(httpAction, sessionMap, responseBody)
 	}
 
 	if httpAction.ResponseHandler.Xmlpath != nil {
-		XmlPathProcessor(httpAction, sessionMap, responseBody)
+		return XmlPathProcessor(httpAction, sessionMap, responseBody)
 	}
 
 	if httpAction.ResponseHandler.Regex != nil {
-		RegexpProcessor(httpAction, sessionMap, responseBody)
+		return RegexpProcessor(httpAction, sessionMap, responseBody)
 	}
 
-	// log.Println(string(responseBody))
+	return true
 }
 
 // TODO: must be rewritten
-func JsonProcessor(httpAction HttpAction, sessionMap map[string]string, responseBody []byte) {
+func JsonProcessor(httpAction HttpAction, sessionMap map[string]string, responseBody []byte) bool {
 	log.Debugf("Response processed by Json")
 
 	/*
@@ -173,15 +175,18 @@ func JsonProcessor(httpAction HttpAction, sessionMap map[string]string, response
 
 	   passResultIntoSessionMap(resultsArray, httpAction, sessionMap)
 	*/
+
+	return true
 }
 
-func XmlPathProcessor(httpAction HttpAction, sessionMap map[string]string, responseBody []byte) {
+func XmlPathProcessor(httpAction HttpAction, sessionMap map[string]string, responseBody []byte) bool {
 	log.Debugf("Response processed by XmlPath")
 
 	r := bytes.NewReader(responseBody)
 	root, err := xmlpath.Parse(r)
 	if err != nil {
 		log.Errorf("Could not parse reponse of page %s, as XML data: %s", httpAction.Title, err)
+		return false
 	}
 
 	iterator := httpAction.ResponseHandler.Xmlpath.Iter(root)
@@ -199,9 +204,11 @@ func XmlPathProcessor(httpAction HttpAction, sessionMap map[string]string, respo
 		}
 		passResultIntoSessionMap(resultsArray, httpAction, sessionMap)
 	}
+
+	return true
 }
 
-func RegexpProcessor(httpAction HttpAction, sessionMap map[string]string, responseBody []byte) {
+func RegexpProcessor(httpAction HttpAction, sessionMap map[string]string, responseBody []byte) bool {
 	log.Debugf("Response processed by Regexp")
 
 	r := string(responseBody[:])
@@ -220,9 +227,12 @@ func RegexpProcessor(httpAction HttpAction, sessionMap map[string]string, respon
 			resultsArray = append(resultsArray, httpAction.ResponseHandler.Defaultvalue)
 			passResultIntoSessionMap(resultsArray, httpAction, sessionMap)			
 		} else {
-			log.Error("Regexp failed to apply")
+			log.Errorf("Regexp '%s' failed to apply", httpAction.ResponseHandler.Regex)
+			return false
 		}
 	}
+
+	return true
 }
 
 /**
@@ -246,13 +256,13 @@ func passResultIntoSessionMap(resultsArray []string, httpAction HttpAction, sess
 
 	if resultCount > 0 {
 		switch httpAction.ResponseHandler.Index {
-		case config.FIRST:
+		case config.RE_FIRST:
 			sessionMap[httpAction.ResponseHandler.Variable] = resultsArray[0]
 			break
-		case config.LAST:
+		case config.RE_LAST:
 			sessionMap[httpAction.ResponseHandler.Variable] = resultsArray[resultCount-1]
 			break
-		case config.RANDOM:
+		case config.RE_RANDOM:
 			if resultCount > 1 {
 				sessionMap[httpAction.ResponseHandler.Variable] = resultsArray[rand.Intn(resultCount-1)]
 			} else {

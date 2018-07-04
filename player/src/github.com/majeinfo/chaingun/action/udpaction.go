@@ -10,8 +10,9 @@ type UdpAction struct {
 	Title string `yaml:"title"`
 }
 
-func (t UdpAction) Execute(resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) {
+func (t UdpAction) Execute(resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) bool {
 	DoUdpRequest(t, resultsChannel, sessionMap)
+	return true
 }
 
 func NewUdpAction(a map[interface{}]interface{}) UdpAction {
