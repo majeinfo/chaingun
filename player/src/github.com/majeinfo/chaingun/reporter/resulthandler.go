@@ -16,11 +16,11 @@ var (
 /*
  * Starts the per second aggregator and then forwards any HttpRequestResult messages to it through the channel.
  */
-func AcceptResults(resChannel chan HttpReqResult, vuCount *int, bcast *chan []byte) {
+func AcceptResults(resChannel chan SampleReqResult, vuCount *int, bcast *chan []byte) {
 	log.Debug("AcceptResults")
 	pvuCount = vuCount
 	broadcast = bcast
-	perSecondAggregatorChannel := make(chan *HttpReqResult, 500)
+	perSecondAggregatorChannel := make(chan *SampleReqResult, 500)
 	stopNow = false
 	go aggregatePerSecondHandler(perSecondAggregatorChannel)
 
@@ -50,7 +50,7 @@ func StopResults() {
  * Loops indefinitely. The inner loop runs for exactly one second before submitting its
  * results to the WebSocket handler, then the aggregates are reset and restarted.
  */
-func aggregatePerSecondHandler(perSecondChannel chan *HttpReqResult) {
+func aggregatePerSecondHandler(perSecondChannel chan *SampleReqResult) {
 
 	for {
 		var totalReq int

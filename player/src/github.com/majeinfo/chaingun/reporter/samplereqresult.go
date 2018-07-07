@@ -1,6 +1,6 @@
 package reporter
 
-type HttpReqResult struct {
+type SampleReqResult struct {
 	Vid string
 	Type string
 	Latency int64

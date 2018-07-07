@@ -11,7 +11,7 @@ import (
 var udpconn *net.UDPConn
 
 // Accepts a UdpAction and a one-way channel to write the results to.
-func DoUdpRequest(udpAction UdpAction, resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) {
+func DoUdpRequest(udpAction UdpAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string) {
 
     address := SubstParams(sessionMap, udpAction.Address)
     payload := SubstParams(sessionMap, udpAction.Payload)
@@ -47,8 +47,8 @@ func DoUdpRequest(udpAction UdpAction, resultsChannel chan reporter.HttpReqResul
 
 }
 
-func buildUdpResult(vid string, contentLength int, status int, elapsed int64, title string) (reporter.HttpReqResult){
-    httpReqResult := reporter.HttpReqResult {
+func buildUdpResult(vid string, contentLength int, status int, elapsed int64, title string) (reporter.SampleReqResult){
+    sampleReqResult := reporter.SampleReqResult {
 		vid,
         "UDP",
         elapsed,
@@ -57,5 +57,5 @@ func buildUdpResult(vid string, contentLength int, status int, elapsed int64, ti
         title,
         time.Since(reporter.SimulationStart).Nanoseconds(),
     }
-    return httpReqResult
+    return sampleReqResult
 }

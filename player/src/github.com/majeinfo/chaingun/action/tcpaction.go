@@ -2,6 +2,7 @@ package action
 
 import (
    "github.com/majeinfo/chaingun/reporter"
+   "github.com/majeinfo/chaingun/config"   
 )
 
 type TcpAction struct {
@@ -10,7 +11,7 @@ type TcpAction struct {
 	Title string `yaml:"title"`
 }
 
-func (t TcpAction) Execute(resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) bool {
+func (t TcpAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
 	DoTcpRequest(t, resultsChannel, sessionMap)
 	return true
 }

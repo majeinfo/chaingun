@@ -79,6 +79,7 @@ iterations: 2		# MAND
 duration: 100		# MAND if iterations == -1. Time is in seconds
 rampup: 4		# MAND - time is in seconds
 users: 2		# MAND - number of VU to launch during the rampup period
+timeout: 10		# default value (in seconds)
 feeder:			# Only one Feeder can be defined
   type: csv		# MAND - csv if the only supported type
   filename: data1.csv	# MAND - the first line gives the columns and so the variable names

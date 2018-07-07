@@ -145,7 +145,9 @@ for t, list_idx in groupby_time:
         
     idx += 1
 
-x -= x[0]
+# Test if CSV file contains no data (only the header line)...
+if not x.empty:
+    x -= x[0]
 
 output.write('var elapsed_time = %d;\n' % total_elapsed_time)
 output.write('var total_requests = %d;\n' % total_requests)

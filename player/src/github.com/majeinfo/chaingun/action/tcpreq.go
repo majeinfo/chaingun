@@ -10,7 +10,7 @@ import (
 
 var conn net.Conn
 // Accepts a TcpAction and a one-way channel to write the results to.
-func DoTcpRequest(tcpAction TcpAction, resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) {
+func DoTcpRequest(tcpAction TcpAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string) {
 
     address := SubstParams(sessionMap, tcpAction.Address)
     payload := SubstParams(sessionMap, tcpAction.Payload)
@@ -38,8 +38,8 @@ func DoTcpRequest(tcpAction TcpAction, resultsChannel chan reporter.HttpReqResul
     resultsChannel <- buildTcpResult(sessionMap["UID"], 0, 200, elapsed.Nanoseconds(), tcpAction.Title)
 }
 
-func buildTcpResult(vid string, contentLength int, status int, elapsed int64, title string) (reporter.HttpReqResult){
-    httpReqResult := reporter.HttpReqResult {
+func buildTcpResult(vid string, contentLength int, status int, elapsed int64, title string) (reporter.SampleReqResult){
+    sampleReqResult := reporter.SampleReqResult {
 		vid,
         "TCP",
         elapsed,
@@ -48,5 +48,5 @@ func buildTcpResult(vid string, contentLength int, status int, elapsed int64, ti
         title,
         time.Since(reporter.SimulationStart).Nanoseconds(),
     }
-    return httpReqResult
+    return sampleReqResult
 }

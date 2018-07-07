@@ -1,0 +1,12 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+timeout: 3
+actions:
+  - ws:
+      title: Page 1
+      url: wss://echo.websocket.org/echo
+      body: hello
+      response:
+        regex: hello

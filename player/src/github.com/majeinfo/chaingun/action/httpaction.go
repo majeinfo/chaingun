@@ -1,11 +1,10 @@
 package action
 
 import (
-	"regexp"
+    "os"
     log "github.com/sirupsen/logrus"
-    "gopkg.in/xmlpath.v2"
-    "github.com/JumboInteractiveLimited/jsonpath"
     "github.com/majeinfo/chaingun/reporter"
+	"github.com/majeinfo/chaingun/config"    
 )
 
 type HttpAction struct {
@@ -16,34 +15,16 @@ type HttpAction struct {
     Accept          string              `yaml:"accept"`
     ContentType     string              `yaml:"contentType"`
     Title           string              `yaml:"title"`
-    ResponseHandler HttpResponseHandler `yaml:"response"`
+    ResponseHandler ResponseHandler     `yaml:"response"`
     StoreCookie     string              `yaml:"storeCookie"`
 }
 
-func (h HttpAction) Execute(resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) bool {
-    return DoHttpRequest(h, resultsChannel, sessionMap)
-}
-
-type HttpResponseHandler struct {
-    Jsonpaths []*jsonpath.Path `yaml:"jsonpath"`
-    Xmlpath *xmlpath.Path `yaml:"xmlpath"`
-    Regex *regexp.Regexp `yaml:"regex"`
-    Variable string `yaml:"variable"`
-    Index    string `yaml:"index"`
-    Defaultvalue string `yaml:"default_value"`
-}
-
-func stringInSlice(a string, list []string) bool {
-    for _, b := range list {
-        if b == a {
-            return true
-        }
-    }
-    return false
+func (h HttpAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
+    return DoHttpRequest(h, resultsChannel, sessionMap, playbook)
 }
 
 func NewHttpAction(a map[interface{}]interface{}) HttpAction {
-    var valid bool = true
+    valid := true
     if a["url"] == "" || a["url"] == nil {
         log.Error("Error: HttpAction must define a URL.")
         valid = false
@@ -63,69 +44,6 @@ func NewHttpAction(a map[interface{}]interface{}) HttpAction {
         valid = false
     }
 
-    if a["response"] != nil {
-        r := a["response"].(map[interface{}]interface{})
-        valid_index := []string{"first", "last", "random"}
-        if !stringInSlice(r["index"].(string), valid_index) {
-            log.Error("Error: HttpAction ResponseHandler must define an Index of either of: first, last or random.")
-            valid = false
-        }
-        if (r["jsonpath"] == nil || r["jsonpath"] == "") && (r["xmlpath"] == nil || r["xmlpath"] == "") && (r["regex"] == nil || r["regex"] == "") {
-            log.Error("Error: HttpAction ResponseHandler must define a Regexp, a Jsonpath or a Xmlpath.")
-            valid = false
-        }
-        if (r["jsonpath"] != nil && r["jsonpath"] != "") && (r["xmlpath"] != nil && r["xmlpath"] != "") && (r["regex"] != nil && r["regex"] != "") {
-            log.Error("Error: HttpAction ResponseHandler can only define either a Regexp, a Jsonpath OR a Xmlpath.")
-            valid = false
-        }
-
-        if r["variable"] == nil || r["variable"] == "" {
-            log.Error("Error: HttpAction ResponseHandler must define a Variable.")
-            valid = false
-        }
-    }
-
-    if !valid {
-        log.Fatalf("Your YAML defintion contains an invalid HttpAction, see errors listed above.")
-    }
-    
-    var responseHandler HttpResponseHandler
-    if a["response"] != nil {
-        response := a["response"].(map[interface{}]interface{})
-
-        if response["jsonpath"] != nil && response["jsonpath"] != "" {
-            var err error
-            //responseHandler.Jsonpath = response["jsonpath"].(string)
-            responseHandler.Jsonpaths, err = jsonpath.ParsePaths(response["jsonpath"].(string))
-            if err != nil {
-                log.Error("Jsonpath could not be compiled: %s", response["jsonpath"].(string))
-            }
-        }
-        if response["xmlpath"] != nil && response["xmlpath"] != "" {
-            // TODO perhaps compile Xmlpath expressions so we can validate early?            
-            //responseHandler.Xmlpath = response["xmlpath"].(string)
-            var err error
-            responseHandler.Xmlpath, err = xmlpath.Compile(response["xmlpath"].(string))
-            if err != nil {
-				log.Error("XmlPath could not be compiled: %s", response["xmlpath"].(string))
-			}
-        }
-        if response["regex"] != nil && response["regex"] != "" {
-			var err error
-            responseHandler.Regex, err = regexp.Compile(response["regex"].(string))
-            if err != nil {
-				log.Error("Regexp could not be compiled: %s", response["regex"].(string))
-			}
-        }
-        if response["default_value"] == nil {
-            response["default_value"] = ""
-        }
-
-        responseHandler.Variable = response["variable"].(string)
-        responseHandler.Index = response["index"].(string)
-        responseHandler.Defaultvalue = response["default_value"].(string)
-    }
-
     accept := "text/html,application/json,application/xhtml+xml,application/xml,text/plain"
     if a["accept"] != nil && len(a["accept"].(string)) > 0 {
         accept = a["accept"].(string)
@@ -139,6 +57,11 @@ func NewHttpAction(a map[interface{}]interface{}) HttpAction {
     var storeCookie string
     if a["storeCookie"] != nil && a["storeCookie"].(string) != "" {
         storeCookie = a["storeCookie"].(string)
+    }
+
+    responseHandler, err := NewResponseHandler(a)
+    if !valid || err != nil {
+        os.Exit(1)
     }
 
     httpAction := HttpAction{

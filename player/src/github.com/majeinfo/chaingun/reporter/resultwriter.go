@@ -69,9 +69,9 @@ func CloseResultsFile() {
 	opened = false
 }
 
-func WriteResult(httpResult *HttpReqResult) {
+func WriteResult(sampleResult *SampleReqResult) {
 	if output_type == "json" {
-		jsonString, err := json.Marshal(httpResult)
+		jsonString, err := json.Marshal(sampleResult)
 
 		if err != nil {
 			log.Fatal(err)
@@ -80,8 +80,8 @@ func WriteResult(httpResult *HttpReqResult) {
 		_, err = w.WriteString("|")
 	} else if output_type == "csv" {
 		s := fmt.Sprintf("%d,%s,%s,%s,%d,%d,%d\n",
-			httpResult.When, httpResult.Vid, httpResult.Type, httpResult.Title,
-			httpResult.Status, httpResult.Size, httpResult.Latency)
+			sampleResult.When, sampleResult.Vid, sampleResult.Type, sampleResult.Title,
+			sampleResult.Status, sampleResult.Size, sampleResult.Latency)
 		_, err = w.WriteString(s)
 	}
 

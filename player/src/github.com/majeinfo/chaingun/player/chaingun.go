@@ -144,10 +144,10 @@ func main() {
 		locdir := path.Dir(absdir) + "/../.."
 		log.Info("Launching graph builder:")
 		log.Infof("%s %s/python/viewer.py --data '%s' --output-dir '%s'",
-			*gp_python_cmd, locdir, outputfile, *gp_outputdir)
+			*gp_python_cmd, locdir, outputfile, dir)
 		cmd := exec.Command(*gp_python_cmd, locdir+"/python/viewer.py",
 			"--data", outputfile,
-			"--output-dir", *gp_outputdir)
+			"--output-dir", dir)
 		err = cmd.Run()
 		if err != nil {
 			log.Errorf("Viewer run failed: %s", err.Error())
@@ -196,7 +196,7 @@ func createPlaybook(data []byte, playbook *config.TestDef, actions *[]action.Act
 
 // Launch VUs
 func spawnUsers(playbook *config.TestDef, actions *[]action.Action) {
-	resultsChannel := make(chan reporter.HttpReqResult, 10000)
+	resultsChannel := make(chan reporter.SampleReqResult, 10000)
 	go reporter.AcceptResults(resultsChannel, &VU_count, &hub.broadcast)
 	VU_start = time.Now()
 	wg := sync.WaitGroup{}
@@ -221,7 +221,7 @@ func spawnUsers(playbook *config.TestDef, actions *[]action.Action) {
 }
 
 // Called once per each VU
-func launchActions(playbook *config.TestDef, resultsChannel chan reporter.HttpReqResult, wg *sync.WaitGroup, actions *[]action.Action, UID string) {
+func launchActions(playbook *config.TestDef, resultsChannel chan reporter.SampleReqResult, wg *sync.WaitGroup, actions *[]action.Action, UID string) {
 	var sessionMap = make(map[string]string)
 
 	i := 0
@@ -238,7 +238,7 @@ actionLoop:
 		for _, action := range *actions {
 			if action != nil {
 				//action.(Action).Execute(resultsChannel, sessionMap)
-				if !action.Execute(resultsChannel, sessionMap) {
+				if !action.Execute(resultsChannel, sessionMap, playbook) {
 					// An error occurred : continue, stop the vu or stop the test ?
 					switch playbook.OnError {
 					case config.ERR_CONTINUE:

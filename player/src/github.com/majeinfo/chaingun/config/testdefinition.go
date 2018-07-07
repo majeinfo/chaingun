@@ -18,6 +18,7 @@ type TestDef struct {
 	Users int `yaml:"users"`
 	Rampup int `yaml:"rampup"`
 	OnError string `yaml:"on_error"`					// continue (default) | stop_vu | stop_test
+	Timeout int `yaml:"timeout"`						// default is 10s
 	DataFeeder Feeder `yaml:"feeder"`
 	Actions []map[string]interface{} `yaml:"actions"`
 }
@@ -62,6 +63,9 @@ func ValidateTestDefinition(t *TestDef) (bool) {
 			log.Error("onerror parameter must be one of 'continue', 'stop_vu' or 'stop_test'")
 			valid = false
 		}
+	}
+	if t.Timeout == 0 {
+		t.Timeout = 10
 	}
     return valid
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func BuildActionList(playbook *config.TestDef) ([]Action, bool) {
-	var valid bool = true
+	valid := true
 	actions := make([]Action, len(playbook.Actions), len(playbook.Actions))
 	for _, element := range playbook.Actions {
 		for key, value := range element {
@@ -22,8 +22,12 @@ func BuildActionList(playbook *config.TestDef) ([]Action, bool) {
 			case "http":
 				action = NewHttpAction(actionMap)
 				break
+			case "ws":
+				action = NewWSAction(actionMap)
+				break
 			case "tcp":
 				action = NewTcpAction(actionMap)
+				break
 			case "udp":
 				action = NewUdpAction(actionMap)
 				break

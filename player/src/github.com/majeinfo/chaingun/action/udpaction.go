@@ -2,6 +2,7 @@ package action
 
 import (
    "github.com/majeinfo/chaingun/reporter"
+   "github.com/majeinfo/chaingun/config"   
 )
 
 type UdpAction struct {
@@ -10,7 +11,7 @@ type UdpAction struct {
 	Title string `yaml:"title"`
 }
 
-func (t UdpAction) Execute(resultsChannel chan reporter.HttpReqResult, sessionMap map[string]string) bool {
+func (t UdpAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
 	DoUdpRequest(t, resultsChannel, sessionMap)
 	return true
 }
