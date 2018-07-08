@@ -36,71 +36,67 @@ func stringInSlice(a string, list []string) bool {
 func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) {
 	valid := true
 	var responseHandler ResponseHandler
-	
-    if a["response"] != nil {
-		r := a["response"].(map[interface{}]interface{})
 		
-        valid_index := []string{"first", "last", "random"}
-        if r["index"] != nil && !stringInSlice(r["index"].(string), valid_index) {
-            log.Error("Error: HttpAction ResponseHandler must define an Index of either of: first, last or random.")
-            valid = false
-        }
-        if (r["jsonpath"] == nil || r["jsonpath"] == "") && (r["xmlpath"] == nil || r["xmlpath"] == "") && (r["regex"] == nil || r["regex"] == "") {
-            log.Error("Error: HttpAction ResponseHandler must define a Regexp, a Jsonpath or a Xmlpath.")
-            valid = false
-        }
-        if (r["jsonpath"] != nil && r["jsonpath"] != "") && (r["xmlpath"] != nil && r["xmlpath"] != "") && (r["regex"] != nil && r["regex"] != "") {
-            log.Error("Error: HttpAction ResponseHandler can only define either a Regexp, a Jsonpath OR a Xmlpath.")
-            valid = false
-        }
+	valid_index := []string{"first", "last", "random"}
+	if a["index"] != nil && !stringInSlice(a["index"].(string), valid_index) {
+		log.Error("Error: HttpAction ResponseHandler must define an Index of either of: first, last or random.")
+		valid = false
+	}
+	if (a["jsonpath"] == nil || a["jsonpath"] == "") && (a["xmlpath"] == nil || a["xmlpath"] == "") && (a["regex"] == nil || a["regex"] == "") {
+		log.Error("Error: HttpAction ResponseHandler must define a Regexp, a Jsonpath or a Xmlpath.")
+		valid = false
+	}
+	if (a["jsonpath"] != nil && a["jsonpath"] != "") && (a["xmlpath"] != nil && a["xmlpath"] != "") && (a["regex"] != nil && a["regex"] != "") {
+		log.Error("Error: HttpAction ResponseHandler can only define either a Regexp, a Jsonpath OR a Xmlpath.")
+		valid = false
+	}
 
-		/*
-		if !valid {
-			log.Fatalf("Your YAML definition contains an invalid Action, see errors listed above.")
+	/*
+	if !valid {
+		log.Fatalf("Your YAML definition contains an invalid Action, see errors listed above.")
+		valid = false
+	}
+	*/
+
+	if a["jsonpath"] != nil && a["jsonpath"] != "" {
+		var err error
+		//responseHandler.Jsonpath = response["jsonpath"].(string)
+		responseHandler.Jsonpaths, err = jsonpath.ParsePaths(a["jsonpath"].(string))
+		if err != nil {
+			log.Error("Jsonpath could not be compiled: %s", a["jsonpath"].(string))
 			valid = false
 		}
-		*/
+	}
+	if a["xmlpath"] != nil && a["xmlpath"] != "" {
+		// TODO perhaps compile Xmlpath expressions so we can validate early?            
+		//responseHandler.Xmlpath = response["xmlpath"].(string)
+		var err error
+		responseHandler.Xmlpath, err = xmlpath.Compile(a["xmlpath"].(string))
+		if err != nil {
+			log.Error("XmlPath could not be compiled: %s", a["xmlpath"].(string))
+			valid = false
+		}
+	}
+	if a["regex"] != nil && a["regex"] != "" {
+		var err error
+		responseHandler.Regex, err = regexp.Compile(a["regex"].(string))
+		if err != nil {
+			log.Error("Regexp could not be compiled: %s", a["regex"].(string))
+			valid = false
+		}
+	}
+	if a["default_value"] == nil {
+		a["default_value"] = ""
+	}
 
-        if r["jsonpath"] != nil && r["jsonpath"] != "" {
-            var err error
-            //responseHandler.Jsonpath = response["jsonpath"].(string)
-            responseHandler.Jsonpaths, err = jsonpath.ParsePaths(r["jsonpath"].(string))
-            if err != nil {
-				log.Error("Jsonpath could not be compiled: %s", r["jsonpath"].(string))
-				valid = false
-            }
-        }
-        if r["xmlpath"] != nil && r["xmlpath"] != "" {
-            // TODO perhaps compile Xmlpath expressions so we can validate early?            
-            //responseHandler.Xmlpath = response["xmlpath"].(string)
-            var err error
-            responseHandler.Xmlpath, err = xmlpath.Compile(r["xmlpath"].(string))
-            if err != nil {
-				log.Error("XmlPath could not be compiled: %s", r["xmlpath"].(string))
-				valid = false
-			}
-        }
-        if r["regex"] != nil && r["regex"] != "" {
-			var err error
-            responseHandler.Regex, err = regexp.Compile(r["regex"].(string))
-            if err != nil {
-				log.Error("Regexp could not be compiled: %s", r["regex"].(string))
-				valid = false
-			}
-        }
-        if r["default_value"] == nil {
-            r["default_value"] = ""
-        }
-
-        if r["variable"] != nil {
-			responseHandler.Variable = r["variable"].(string)
-		}
-        if r["index"] != nil {
-			responseHandler.Index = r["index"].(string)
-		}
-		if r["default_value"] != nil {
-			responseHandler.Defaultvalue = r["default_value"].(string)
-		}
+	if a["variable"] != nil {
+		responseHandler.Variable = a["variable"].(string)
+	}
+	if a["index"] != nil {
+		responseHandler.Index = a["index"].(string)
+	}
+	if a["default_value"] != nil {
+		responseHandler.Defaultvalue = a["default_value"].(string)
 	}
 	
 	if !valid {
@@ -113,7 +109,17 @@ func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) 
 /**
  *  Extract data from response according to the desired processor
  */
- func processResult(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {
+func processResult(responseHandlers []ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {
+	for _, res := range responseHandlers {
+		if !_processResult(res, sessionMap, responseBody) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func _processResult(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {	 
 	if responseHandler.Jsonpaths != nil {
 		return JsonProcessor(responseHandler, sessionMap, responseBody)
 	}
@@ -159,7 +165,7 @@ func JsonProcessor(responseHandler ResponseHandler, sessionMap map[string]string
 			log.Warning("Jsonpath failed to apply, uses default value")
 			resultsArray = append(resultsArray, responseHandler.Defaultvalue)		
 		} else {
-			log.Errorf("Jsonpath failed to apply - no default value given")
+			log.Errorf("Jsonpath %s failed to apply - no default value given", responseHandler.Jsonpaths)
 			return false
 		}		
 	}
@@ -199,18 +205,20 @@ func XmlPathProcessor(responseHandler ResponseHandler, sessionMap map[string]str
 	return true
 }
 
-// TODO: add flag to make regexp case-insensitive
 func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {
 	log.Debugf("Response processed by Regexp")
 
 	r := string(responseBody[:])
 	res := responseHandler.Regex.FindAllStringSubmatch(r, -1)
 	log.Debugf("Regex applied: %v", res)
-	if len(res) > 0 {
-		// TODO: value should be computed like "abc$1$xyz" (config)
+	if res != nil  && len(res) > 0 {
 		log.Debugf("Regexp matches: %v", res[0])
 		resultsArray := make([]string, 0, 10)
-		resultsArray = append(resultsArray, res[0][0])
+		if len(res[0]) > 1 {
+			resultsArray = append(resultsArray, res[0][1])
+		} else {
+			resultsArray = append(resultsArray, res[0][0])
+		}
 		passResultIntoSessionMap(resultsArray, responseHandler, sessionMap)
 	} else {
 		if responseHandler.Defaultvalue != "" {
@@ -219,7 +227,7 @@ func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]stri
 			resultsArray = append(resultsArray, responseHandler.Defaultvalue)
 			passResultIntoSessionMap(resultsArray, responseHandler, sessionMap)			
 		} else {
-			log.Errorf("Regexp '%s' failed to apply - no default value", responseHandler.Regex)
+			log.Errorf("Regexp '%s' failed to apply - no default value given", responseHandler.Regex)
 			return false
 		}
 	}

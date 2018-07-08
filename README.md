@@ -104,11 +104,11 @@ actions:
       body: name=${name}&age=${age}	# MAND for POST http action
       accept: "text/html,application/json"
       contentType: text/html
-      response:				# OPT
-        regex: "is: (.*)<br>"		# MAND must be one of regex/jsonpath/xmlpath
-        index: first			# MAND must be one of first/last/random
-        variable: address		# MAND
-        default_value: bob		# used when the regex failed
+      responses:				# OPT
+        - regex: "is: (.*)<br>"		# MAND must be one of regex/jsonpath/xmlpath
+          index: first			# MAND must be one of first/last/random
+          variable: address		# MAND
+          default_value: bob		# used when the regex failed
   - http:
       title: Page 5
       method: GET
@@ -119,27 +119,36 @@ actions:
       method: POST
       url: http://server/page4.php
       body: name=${name}&age=${age}
-      response:
-        regex: "is: (.*), (.*)<br>"
-        index: first
-        variable: address
+      responses:
+        - regex: "is: (.*), .*<br>"
+          index: first
+          variable: address
+        - regex: "(?i)is: .*, (.*)<br>"
+          index: first
+          variable: city
   - http:
       title: Page 5bis
       method: GET
-      url: http://server/page5.php?address=${address}
+      url: http://server/page5.php?address=${address}&city=${city}
   - http:
       title: Page 6
       method: POST
       url: http://server/page4.php
       body: name=${name}&age=${age}
-      response:
-        jsonpath: $.name+
-        index: first
-        variable: name
-        default_value: bob
+      responses:
+        - jsonpath: $.name+
+          index: first
+          variable: name
+          default_value: bob
 ```
 
 The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
+
+## How to test
+
+$ cd tests
+$ docker container run -d -p 8000:80 -v `pwd`/server:/var/www/html php:5.6-apache
+$ ./test_standalone_player.sh
 
 ## License
 Licensed under the MIT license.

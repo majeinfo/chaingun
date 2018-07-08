@@ -14,8 +14,6 @@ import (
 var cookie_prefix = "__cookie__"
 var cookie_prefix_length = len(cookie_prefix)
 
-// TODO: implements timeout !
-
 // Accepts a Httpaction and a one-way channel to write the results to.
 func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
 	req := buildHttpRequest(httpAction, sessionMap)
@@ -29,6 +27,7 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 	start := time.Now()
 	var DefaultTransport http.RoundTripper = &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		ResponseHeaderTimeout: time.Duration(playbook.Timeout) * time.Second,
 	}
 	resp, err := DefaultTransport.RoundTrip(req)
 
@@ -60,7 +59,7 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 	}
 
 	// if action specifies response action, parse using regexp/jsonpath
-	if !processResult(httpAction.ResponseHandler, sessionMap, responseBody) {
+	if !processResult(httpAction.ResponseHandlers, sessionMap, responseBody) {
 		return false
 	}
 	sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title)
@@ -81,7 +80,7 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) *http
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), nil)
 	}
 	if err != nil {
-		log.Fatal(err)
+		log.Errorf("http.newRequest failed in buildHttpRequest: %s", err)
 	}
 
 	// Add headers

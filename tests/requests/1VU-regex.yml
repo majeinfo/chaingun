@@ -1,0 +1,32 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+actions:
+  - http:
+      title: Page 1
+      method: GET
+      url: http://localhost:8000/page1.php
+      storeCookie: __all__
+  - http:
+      title: Page 1bis
+      method: GET
+      url: http://localhost:8000/page1.php
+  - http:
+      title: Page 2
+      method: GET
+      url: http://localhost:8000/page2.php?name=fred
+      responses:
+        - regex: "(?i)Hello (.*)<br>"
+          variable: name
+          index: first
+          default_value: alice
+        - regex: "(.*) .*<br>"
+          variable: salutations
+          index: first
+          default_value: Day or Night ?
+  - http:
+      title: Page 3
+      method: GET
+      url: http://localhost:8000/page3.php?name=${name}&salutations=${salutations}
+

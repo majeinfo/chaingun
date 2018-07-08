@@ -1,7 +1,6 @@
 package action
 
 import (
-    "os"
     log "github.com/sirupsen/logrus"
     "github.com/majeinfo/chaingun/reporter"
 	"github.com/majeinfo/chaingun/config"    
@@ -12,7 +11,7 @@ type WSAction struct {
     Url             string              `yaml:"url"`
     Body            string              `yaml:"body"`
     Title           string              `yaml:"title"`
-    ResponseHandler ResponseHandler 	`yaml:"response"`
+    ResponseHandlers []ResponseHandler 	`yaml:"responses"`
 }
 
 func (h WSAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
@@ -20,7 +19,7 @@ func (h WSAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionM
 }
 
 func NewWSAction(a map[interface{}]interface{}) WSAction {
-    var valid bool = true
+    valid := true
     if a["url"] == "" || a["url"] == nil {
         log.Error("Error: WSAction must define a URL.")
         valid = false
@@ -58,17 +57,22 @@ func NewWSAction(a map[interface{}]interface{}) WSAction {
         log.Fatalf("Your YAML defintion contains an invalid WSAction, see errors listed above.")
     }
     */
+    log.Debugf("%b", valid)
     
+    responseHandlers := make([]ResponseHandler, len(a["responses"].([]ResponseHandler)))
+
+    /*
     responseHandler, err := NewResponseHandler(a)
     if !valid || err != nil {
         os.Exit(1)
     }
+    */
 
     WSAction := WSAction{
         a["url"].(string),
         getBody(a),
         a["title"].(string),
-        responseHandler,
+        responseHandlers,
     }
 
 	log.Debugf("WSAction: %v", WSAction)

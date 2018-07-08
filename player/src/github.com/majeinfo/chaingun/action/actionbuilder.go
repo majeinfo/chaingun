@@ -12,6 +12,7 @@ func BuildActionList(playbook *config.TestDef) ([]Action, bool) {
 	valid := true
 	actions := make([]Action, len(playbook.Actions), len(playbook.Actions))
 	for _, element := range playbook.Actions {
+		log.Debugf("element=%v", element)
 		for key, value := range element {
 			var action Action
 			actionMap := value.(map[interface{}]interface{})

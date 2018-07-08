@@ -1,5 +1,5 @@
-var elapsed_time = 0;
-var total_requests = 0;
+var elapsed_time = 1;
+var total_requests = 1;
 var playbook_name = "None";
 
 $(function () {
@@ -17,7 +17,7 @@ $(function () {
             }, 
     
         xAxis: {
-            categories: [],
+            categories: [0],
             title: {
                 text: 'Elapsed Time (seconds)'
             },
@@ -33,27 +33,27 @@ $(function () {
         
         {
             name: '#VU',
-            data: []
+            data: [1.0]
         },
         
         {
             name: '#Req',
-            data: []
+            data: [1.0]
         },
         
         {
             name: 'Latency (in ms)',
-            data: []
+            data: [3.0]
         },
         
         {
             name: '#Errors',
-            data: []
+            data: [1.0]
         },
         
         {
             name: '#Rcv Bytes',
-            data: []
+            data: [14.0]
         },
         
         ]
@@ -72,7 +72,7 @@ $(function () {
             }, 
     
         xAxis: {
-            categories: [],
+            categories: [0],
             title: {
                 text: 'Elapsed Time (seconds)'
             },
@@ -85,6 +85,11 @@ $(function () {
         },          
         
         series: [
+        
+        {
+            name: 'Page 1',
+            data: [3.0]
+        },
         
         ]
             });

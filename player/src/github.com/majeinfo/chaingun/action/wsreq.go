@@ -35,7 +35,8 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 	bodyLen := 0
 	respCode := -1
 	ok := true
-	if wsAction.ResponseHandler.Regex != nil || wsAction.ResponseHandler.Jsonpaths != nil || wsAction.ResponseHandler.Xmlpath != nil {
+	//if wsAction.ResponseHandler.Regex != nil || wsAction.ResponseHandler.Jsonpaths != nil || wsAction.ResponseHandler.Xmlpath != nil {
+	if len(wsAction.ResponseHandlers) > 0 {
 		log.Debugf("Starts a new timeout for %d seconds before reading the message", playbook.Timeout)
 		ticker := time.NewTicker(time.Duration(playbook.Timeout) * time.Second)
 		defer ticker.Stop()
@@ -53,7 +54,7 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 			log.Debugf("WS ReadMessage recv: %s", responseBody)	
 
 			// if action specifies response action, parse using regexp/jsonpath
-			if !processResult(wsAction.ResponseHandler, sessionMap, responseBody) {
+			if !processResult(wsAction.ResponseHandlers, sessionMap, responseBody) {
 				ok = false
 			} else {
 				bodyLen = len(responseBody)

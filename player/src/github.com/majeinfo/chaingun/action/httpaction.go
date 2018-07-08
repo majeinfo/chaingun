@@ -1,7 +1,6 @@
 package action
 
 import (
-    "os"
     log "github.com/sirupsen/logrus"
     "github.com/majeinfo/chaingun/reporter"
 	"github.com/majeinfo/chaingun/config"    
@@ -15,7 +14,7 @@ type HttpAction struct {
     Accept          string              `yaml:"accept"`
     ContentType     string              `yaml:"contentType"`
     Title           string              `yaml:"title"`
-    ResponseHandler ResponseHandler     `yaml:"response"`
+    ResponseHandlers []ResponseHandler   `yaml:"responses"`
     StoreCookie     string              `yaml:"storeCookie"`
 }
 
@@ -59,9 +58,19 @@ func NewHttpAction(a map[interface{}]interface{}) HttpAction {
         storeCookie = a["storeCookie"].(string)
     }
 
-    responseHandler, err := NewResponseHandler(a)
-    if !valid || err != nil {
-        os.Exit(1)
+    var responseHandlers []ResponseHandler
+    if a["responses"] == nil {
+        responseHandlers = nil
+    } else {
+        responseHandlers = make([]ResponseHandler, len(a["responses"].([]interface {})))
+        for _, r1 := range a["responses"].([]interface {}) {
+            r2 := r1.(map[interface{}]interface{})
+            newResponse, err := NewResponseHandler(r2)
+            if !valid || err != nil {
+                log.Fatalf("Invalid Playbook")
+            }
+            responseHandlers = append(responseHandlers, newResponse)
+        }
     }
 
     httpAction := HttpAction{
@@ -72,7 +81,7 @@ func NewHttpAction(a map[interface{}]interface{}) HttpAction {
         accept,
         contentType,
         a["title"].(string),
-        responseHandler,
+        responseHandlers,
         storeCookie,
     }
 
