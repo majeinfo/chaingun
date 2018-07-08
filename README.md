@@ -33,9 +33,36 @@ you launch different Players (on different hosts !) in "daemon mode". Then you s
 interface of the Manager and you can drive the Players remotely. The results will be aggregated by
 the Manager.
 
-#### Run fro the command line
+#### Run from the command line
 
-To be completed...
+a) run a Player in standalone mode :
+
+	$ cd player/bin
+	$ ./player --output-dir /path/to/output/ --python-cmd /path/to/python3.6 --script /path/to/script.yml --verbose
+
+	--python-cmd is optional if PYTHON environment variable is set and points to at least a Python 3.6
+	--output-dir indicates where the results will be stored
+	--script is mandatory
+	--verbose is optional 
+
+b) run a Player in daemon mode :
+
+	$ cd player/bin
+	$ ./player --daemon --listen-addr 127.0.0.1:12345 --verbose
+
+	in daemon mode, the player will listen to the TCP port specified by --listen-addr option
+	(default is 127.0.0.1:12345) and will play the orders sent by the manager. This is the normal
+	mode in distributed mode.
+	--verbose is optional
+
+c) run the Manager (when Players are started as Daemons) :
+
+	You must have a valid Python 3.6+ or prepare a virtual environment for the Manager, then run it :
+
+	$ cd manager/server
+	$ python manage.py runserver 127.0.0.1:8000
+
+	Then open your browser and manage your Players !
 
 #### Run from container image
 
