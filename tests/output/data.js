@@ -43,7 +43,7 @@ $(function () {
         
         {
             name: 'Latency (in ms)',
-            data: [3.0]
+            data: [5.0]
         },
         
         {
@@ -88,7 +88,7 @@ $(function () {
         
         {
             name: 'Page 1',
-            data: [3.0]
+            data: [5.0]
         },
         
         ]

@@ -95,7 +95,7 @@ The verbose mode can be specified using the VERBOSE environment variable :
 
 	-e VERBOSE=1
 
-## YAML Script (=Playbook)
+## YAML Script (Playbook)
 
 This is a sample script. 
 Mandatory paremeters are marked with a "# MAND" pseudo-comment at the end of the line

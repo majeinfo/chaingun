@@ -14,8 +14,8 @@ type HttpAction struct {
     Accept          string              `yaml:"accept"`
     ContentType     string              `yaml:"contentType"`
     Title           string              `yaml:"title"`
-    ResponseHandlers []ResponseHandler   `yaml:"responses"`
     StoreCookie     string              `yaml:"storeCookie"`
+    ResponseHandlers []ResponseHandler   `yaml:"responses"`
 }
 
 func (h HttpAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
@@ -62,15 +62,26 @@ func NewHttpAction(a map[interface{}]interface{}) HttpAction {
     if a["responses"] == nil {
         responseHandlers = nil
     } else {
-        responseHandlers = make([]ResponseHandler, len(a["responses"].([]interface {})))
-        for _, r1 := range a["responses"].([]interface {}) {
-            r2 := r1.(map[interface{}]interface{})
-            newResponse, err := NewResponseHandler(r2)
-            if !valid || err != nil {
-                log.Fatalf("Invalid Playbook")
+        switch v := a["responses"].(type) {
+        case []interface {}:
+            responseHandlers = make([]ResponseHandler, len(v))
+            for _, r1 := range v {
+                r2 := r1.(map[interface{}]interface{})
+                newResponse, err := NewResponseHandler(r2)
+                if err != nil {
+                    valid = false
+                    break
+                }
+                responseHandlers = append(responseHandlers, newResponse)
             }
-            responseHandlers = append(responseHandlers, newResponse)
+        default:
+            log.Error("responses format is invalid")
+            valid = false
         }
+    }
+
+    if !valid {
+        log.Fatalf("Your YAML Playbook contains an invalid HTTPAction, see errors listed above.")
     }
 
     httpAction := HttpAction{
@@ -81,9 +92,11 @@ func NewHttpAction(a map[interface{}]interface{}) HttpAction {
         accept,
         contentType,
         a["title"].(string),
-        responseHandlers,
         storeCookie,
+        responseHandlers,
     }
+
+    log.Debugf("HTTPAction: %v", httpAction)
 
     return httpAction
 }

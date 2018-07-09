@@ -11,6 +11,7 @@ type WSAction struct {
     Url             string              `yaml:"url"`
     Body            string              `yaml:"body"`
     Title           string              `yaml:"title"`
+    StoreCookie     string              `yaml:"storeCookie"`
     ResponseHandlers []ResponseHandler 	`yaml:"responses"`
 }
 
@@ -29,49 +30,43 @@ func NewWSAction(a map[interface{}]interface{}) WSAction {
         valid = false
     }
 
-    if a["response"] != nil {
-        r := a["response"].(map[interface{}]interface{})
-        valid_index := []string{"first", "last", "random"}
-        if r["index"] != nil && !stringInSlice(r["index"].(string), valid_index) {
-            log.Error("Error: WSAction ResponseHandler must define an Index of either of: first, last or random.")
-            valid = false
-        }
-        if (r["jsonpath"] == nil || r["jsonpath"] == "") && (r["xmlpath"] == nil || r["xmlpath"] == "") && (r["regex"] == nil || r["regex"] == "") {
-            log.Error("Error: WSAction ResponseHandler must define a Regexp, a Jsonpath or a Xmlpath.")
-            valid = false
-        }
-        if (r["jsonpath"] != nil && r["jsonpath"] != "") && (r["xmlpath"] != nil && r["xmlpath"] != "") && (r["regex"] != nil && r["regex"] != "") {
-            log.Error("Error: WSAction ResponseHandler can only define either a Regexp, a Jsonpath OR a Xmlpath.")
-            valid = false
-		}
-		/*
-        if r["variable"] == nil || r["variable"] == "" {
-            log.Error("Error: WSAction ResponseHandler must define a Variable.")
-            valid = false
-		}
-		*/
+    var storeCookie string
+    if a["storeCookie"] != nil && a["storeCookie"].(string) != "" {
+        storeCookie = a["storeCookie"].(string)
     }
 
-    /*
+    var responseHandlers []ResponseHandler
+    if a["responses"] == nil {
+        responseHandlers = nil
+    } else {
+        switch v := a["responses"].(type) {
+        case []interface {}:
+            responseHandlers = make([]ResponseHandler, len(v))
+            for _, r1 := range v {
+                r2 := r1.(map[interface{}]interface{})
+                newResponse, err := NewResponseHandler(r2)
+                if err != nil {
+                    valid = false
+                    break
+                }
+                responseHandlers = append(responseHandlers, newResponse)
+            }
+        default:
+            log.Error("responses format is invalid")
+            valid = false
+        }
+    }
+
     if !valid {
-        log.Fatalf("Your YAML defintion contains an invalid WSAction, see errors listed above.")
+        log.Fatalf("Your YAML Playbook contains an invalid WSAction, see errors listed above.")
     }
-    */
-    log.Debugf("%b", valid)
-    
-    responseHandlers := make([]ResponseHandler, len(a["responses"].([]ResponseHandler)))
 
-    /*
-    responseHandler, err := NewResponseHandler(a)
-    if !valid || err != nil {
-        os.Exit(1)
-    }
-    */
 
     WSAction := WSAction{
         a["url"].(string),
         getBody(a),
         a["title"].(string),
+        storeCookie,
         responseHandlers,
     }
 
