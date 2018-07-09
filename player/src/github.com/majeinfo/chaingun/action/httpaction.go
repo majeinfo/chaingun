@@ -58,29 +58,9 @@ func NewHttpAction(a map[interface{}]interface{}) HttpAction {
         storeCookie = a["storeCookie"].(string)
     }
 
-    var responseHandlers []ResponseHandler
-    if a["responses"] == nil {
-        responseHandlers = nil
-    } else {
-        switch v := a["responses"].(type) {
-        case []interface {}:
-            responseHandlers = make([]ResponseHandler, len(v))
-            for _, r1 := range v {
-                r2 := r1.(map[interface{}]interface{})
-                newResponse, err := NewResponseHandler(r2)
-                if err != nil {
-                    valid = false
-                    break
-                }
-                responseHandlers = append(responseHandlers, newResponse)
-            }
-        default:
-            log.Error("responses format is invalid")
-            valid = false
-        }
-    }
+    responseHandlers, valid_resp  := NewResponseHandlers(a)
 
-    if !valid {
+    if !valid || !valid_resp {
         log.Fatalf("Your YAML Playbook contains an invalid HTTPAction, see errors listed above.")
     }
 

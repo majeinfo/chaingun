@@ -32,6 +32,34 @@ func stringInSlice(a string, list []string) bool {
     return false
 }
 
+// Build all the ResponseHandler from the Action described in YAML Playbook
+func NewResponseHandlers(a map[interface{}]interface{}) ([]ResponseHandler, bool) {
+	valid := true
+	var responseHandlers []ResponseHandler
+    if a["responses"] == nil {
+        responseHandlers = nil
+    } else {
+        switch v := a["responses"].(type) {
+        case []interface {}:
+            responseHandlers = make([]ResponseHandler, len(v))
+            for _, r1 := range v {
+                r2 := r1.(map[interface{}]interface{})
+                newResponse, err := NewResponseHandler(r2)
+                if err != nil {
+                    valid = false
+                    break
+                }
+                responseHandlers = append(responseHandlers, newResponse)
+            }
+        default:
+            log.Error("responses format is invalid")
+            valid = false
+        }
+	}
+	
+	return responseHandlers, valid
+}
+
 // Build the ResponseHandler from the Action described in YAML playbook
 func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) {
 	valid := true
