@@ -18,6 +18,7 @@ type TestDef struct {
 	Users int `yaml:"users"`
 	Rampup int `yaml:"rampup"`
 	OnError string `yaml:"on_error"`					// continue (default) | stop_vu | stop_test
+	HttpErrorCodes string `yaml:"http_error_codes"`
 	Timeout int `yaml:"timeout"`						// default is 10s
 	DfltValues Default `yaml:"default"`
 	DataFeeder Feeder `yaml:"feeder"`

@@ -108,6 +108,11 @@ rampup: 4		# MAND - time is in seconds
 users: 2		# MAND - number of VU to launch during the rampup period
 timeout: 10		# default value (in seconds)
 on_error: continue	# (default) or stop_vu | stop_test
+http_error_codes: 404,403,500	# if set, these HTTP response codes generates errors
+default:
+  server: www.google.com
+  port: 80
+  method: GET
 feeder:			# Only one Feeder can be defined
   type: csv		# MAND - csv if the only supported type
   filename: data1.csv	# MAND - the first line gives the columns and so the variable names

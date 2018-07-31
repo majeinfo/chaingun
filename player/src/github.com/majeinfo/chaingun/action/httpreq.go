@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"strconv"
+
 	log "github.com/sirupsen/logrus"
 	"crypto/tls"
 	"github.com/majeinfo/chaingun/config"
@@ -56,6 +58,13 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 				sessionMap[cookie_prefix+cookie.Name] = cookie.Value
 			}
 		}
+	}
+
+	// If the HTTP response code is listed in "http_error_codes" (404, 403, 500...), 
+	// the result is not processed and a false value is returned
+	if strings.Contains(playbook.HttpErrorCodes, strconv.FormatInt(int64(resp.StatusCode), 10)) {
+		log.Errorf("HTTP response code is considered as an error: %d", resp.StatusCode)
+		return false
 	}
 
 	// if action specifies response action, parse using regexp/jsonpath
