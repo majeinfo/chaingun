@@ -1,7 +1,7 @@
 package config
 
 import (
-    log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const RE_FIRST = "first"
@@ -19,8 +19,15 @@ type TestDef struct {
 	Rampup int `yaml:"rampup"`
 	OnError string `yaml:"on_error"`					// continue (default) | stop_vu | stop_test
 	Timeout int `yaml:"timeout"`						// default is 10s
+	DfltValues Default `yaml:"default"`
 	DataFeeder Feeder `yaml:"feeder"`
 	Actions []map[string]interface{} `yaml:"actions"`
+}
+
+type Default struct {
+	Server string `yaml:"server"`						// Host or Host:Port
+	Protocol string `yaml:"protocol"`
+	Method string `yaml:"method"`
 }
 
 type Feeder struct {
@@ -30,13 +37,12 @@ type Feeder struct {
 }
 
 // TODO: set default parms
-// default_host, default_protocol, default_port, default_method
 // cookie_manager": { "enabled" :True, "clear_on_each_iteration": True }
 
 
 // Validate the Test Definition Consistency
 func ValidateTestDefinition(t *TestDef) (bool) {
-    var valid bool = true
+    valid := true
     if t.Iterations <= 0 {
 		if t.Iterations == -1 {
 			if t.Duration < 1 {
@@ -64,10 +70,32 @@ func ValidateTestDefinition(t *TestDef) (bool) {
 			valid = false
 		}
 	}
+
+    if t.DfltValues.Method != "" && !IsValidHTTPMethod(t.DfltValues.Method) {
+        log.Error("Default Http Action must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: %s", t.DfltValues.Method)
+        valid = false
+    }	
+
 	if t.Timeout == 0 {
 		t.Timeout = 10
 	}
     return valid
+}
+
+// Check for method validity
+func IsValidHTTPMethod(method string) bool {
+	valid_methods := []string{"GET", "POST", "PUT", "HEAD", "DELETE"}
+
+	return StringInSlice(method, valid_methods)
+}
+
+func StringInSlice(a string, list []string) bool {
+    for _, b := range list {
+        if b == a {
+            return true
+        }
+    }
+    return false
 }
 
 // EOF

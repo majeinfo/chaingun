@@ -52,7 +52,10 @@ Arg_Error "--script dummy --python-cmd dummy" "Python interpreter .* does not ex
 # Test script syntax
 Syn_Error syntax/missing-iterations.yml 'Iterations not set, must be > 0'
 Syn_Error syntax/missing-duration.yml 'When Iterations is -1, Duration must be set'
+Syn_Error syntax/missing-method.yml 'Action has no Method and no default Method specified'
+Syn_Error syntax/missing-server.yml 'Host missing for URL'
 Syn_OK syntax/opt-duration.yml
+Syn_OK syntax/dflt-values.yml
 
 # Test JSON request
 Req_Error requests/1VU-json-bad.yml 'failed to apply - no default value given'

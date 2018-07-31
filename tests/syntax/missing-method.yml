@@ -1,0 +1,9 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+timeout: 3
+actions:
+  - http:
+      title: Page 1
+      url: www.google.com

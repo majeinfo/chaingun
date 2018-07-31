@@ -23,15 +23,6 @@ type ResponseHandler struct {
     Defaultvalue string `yaml:"default_value"`
 }
 
-func stringInSlice(a string, list []string) bool {
-    for _, b := range list {
-        if b == a {
-            return true
-        }
-    }
-    return false
-}
-
 // Build all the ResponseHandler from the Action described in YAML Playbook
 func NewResponseHandlers(a map[interface{}]interface{}) ([]ResponseHandler, bool) {
 	valid := true
@@ -66,16 +57,16 @@ func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) 
 	var responseHandler ResponseHandler
 		
 	valid_index := []string{"first", "last", "random"}
-	if a["index"] != nil && !stringInSlice(a["index"].(string), valid_index) {
-		log.Error("Error: HttpAction ResponseHandler must define an Index of either of: first, last or random.")
+	if a["index"] != nil && !config.StringInSlice(a["index"].(string), valid_index) {
+		log.Error("HttpAction ResponseHandler must define an Index of either of: first, last or random.")
 		valid = false
 	}
 	if (a["jsonpath"] == nil || a["jsonpath"] == "") && (a["xmlpath"] == nil || a["xmlpath"] == "") && (a["regex"] == nil || a["regex"] == "") {
-		log.Error("Error: HttpAction ResponseHandler must define a Regexp, a Jsonpath or a Xmlpath.")
+		log.Error("HttpAction ResponseHandler must define a Regexp, a Jsonpath or a Xmlpath.")
 		valid = false
 	}
 	if (a["jsonpath"] != nil && a["jsonpath"] != "") && (a["xmlpath"] != nil && a["xmlpath"] != "") && (a["regex"] != nil && a["regex"] != "") {
-		log.Error("Error: HttpAction ResponseHandler can only define either a Regexp, a Jsonpath OR a Xmlpath.")
+		log.Error("HttpAction ResponseHandler can only define either a Regexp, a Jsonpath OR a Xmlpath.")
 		valid = false
 	}
 

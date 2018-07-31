@@ -19,14 +19,17 @@ func (h WSAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionM
     return DoWSRequest(h, resultsChannel, sessionMap, playbook)
 }
 
-func NewWSAction(a map[interface{}]interface{}) WSAction {
+func NewWSAction(a map[interface{}]interface{}, dflt config.Default) WSAction {
     valid := true
     if a["url"] == "" || a["url"] == nil {
-        log.Error("Error: WSAction must define a URL.")
+        log.Error("WSAction must define a URL.")
         valid = false
+    } else {
+        valid = setDefaultURL(a, dflt)
     }
+
     if a["title"] == nil || a["title"] == "" {
-        log.Error("Error: WSAction must define a title.")
+        log.Error("WSAction must define a title.")
         valid = false
     }
 
@@ -40,7 +43,6 @@ func NewWSAction(a map[interface{}]interface{}) WSAction {
     if !valid || !valid_resp {
         log.Fatalf("Your YAML Playbook contains an invalid WSAction, see errors listed above.")
     }
-
 
     WSAction := WSAction{
         a["url"].(string),

@@ -2,6 +2,7 @@ package action
 
 import (
 	"io/ioutil"
+	"net/url"
 	"os"
 
 	"github.com/majeinfo/chaingun/config"
@@ -21,10 +22,10 @@ func BuildActionList(playbook *config.TestDef) ([]Action, bool) {
 				action = NewSleepAction(actionMap)
 				break
 			case "http":
-				action = NewHttpAction(actionMap)
+				action = NewHttpAction(actionMap, playbook.DfltValues)
 				break
 			case "ws":
-				action = NewWSAction(actionMap)
+				action = NewWSAction(actionMap, playbook.DfltValues)
 				break
 			case "tcp":
 				action = NewTcpAction(actionMap)
@@ -43,6 +44,38 @@ func BuildActionList(playbook *config.TestDef) ([]Action, bool) {
 		}
 	}
 	return actions, valid
+}
+
+// a["url"] must exists and not be nil or empty
+func setDefaultURL(a map[interface{}]interface{}, dflt config.Default) bool {
+	valid := true
+
+	u, err := url.Parse(a["url"].(string))
+	if err != nil {
+		log.Errorf("Wrong URL: %s", err)
+		valid = false
+	} 
+	if u.Scheme == "" {
+		if dflt.Protocol == "" {
+			log.Errorf("Scheme (protocol) missing for URL: %s", a["url"])
+			valid = false
+		} else {
+			u.Scheme = dflt.Protocol
+			log.Debugf("Use default protocol: %s", u.Scheme)
+		}
+	}
+	if u.Host == "" {
+		if dflt.Server == "" {
+			log.Errorf("Host missing for URL: %s", a["url"])
+			valid = false			
+		} else {
+			u.Host = dflt.Server
+			log.Debugf("Use default server: %s", u.Host)
+		}
+	}
+	a["url"] = u.String()
+
+	return valid
 }
 
 func getBody(action map[interface{}]interface{}) string {

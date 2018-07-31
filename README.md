@@ -107,6 +107,7 @@ duration: 100		# MAND if iterations == -1. Time is in seconds
 rampup: 4		# MAND - time is in seconds
 users: 2		# MAND - number of VU to launch during the rampup period
 timeout: 10		# default value (in seconds)
+on_error: continue	# (default) or stop_vu | stop_test
 feeder:			# Only one Feeder can be defined
   type: csv		# MAND - csv if the only supported type
   filename: data1.csv	# MAND - the first line gives the columns and so the variable names
@@ -173,9 +174,11 @@ The syntax for jsonpath is available at https://github.com/JumboInteractiveLimit
 
 ## How to test
 
+```
 $ cd tests
 $ docker container run -d -p 8000:80 -v `pwd`/server:/var/www/html php:5.6-apache
 $ ./test_standalone_player.sh
+```
 
 ## License
 Licensed under the MIT license.

@@ -22,24 +22,34 @@ func (h HttpAction) Execute(resultsChannel chan reporter.SampleReqResult, sessio
     return DoHttpRequest(h, resultsChannel, sessionMap, playbook)
 }
 
-func NewHttpAction(a map[interface{}]interface{}) HttpAction {
+func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpAction {
     valid := true
+
     if a["url"] == "" || a["url"] == nil {
-        log.Error("Error: HttpAction must define a URL.")
+        log.Error("HttpAction must define a URL.")
         valid = false
+    } else {
+        valid = setDefaultURL(a, dflt)
     }
-    valid_methods := []string{"GET", "POST", "PUT", "HEAD", "DELETE"}
-    if !stringInSlice(a["method"].(string), valid_methods) {
-        log.Error("Error: HttpAction must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE")
+
+    if a["method"] == nil || a["method"] == "" {
+        if dflt.Method == "" {
+            log.Error("Action has no Method and no default Method specified")
+            valid = false
+        } else {
+            a["method"] = dflt.Method
+        }
+    } else if !config.IsValidHTTPMethod(a["method"].(string)) {
+        log.Error("HttpAction must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE")
         valid = false
     }
     if a["title"] == nil || a["title"] == "" {
-        log.Error("Error: HttpAction must define a title.")
+        log.Error("HttpAction must define a title.")
         valid = false
     }
 
     if a["body"] != nil && a["template"] != nil {
-        log.Error("Error: A HttpAction can not define both a 'body' and a 'template'.")
+        log.Error("A HttpAction can not define both a 'body' and a 'template'.")
         valid = false
     }
 
