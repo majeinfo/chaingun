@@ -119,6 +119,7 @@ y = pd.Series(np.zeros(len(x)))
 nb_req = pd.Series(np.zeros(len(x)))
 mean_time = pd.Series(np.zeros(len(x)))
 errors = pd.Series(np.zeros(len(x)))
+errors_by_code = pd.Series(np.zeros(len(x)))
 rcv_bytes = pd.Series(np.zeros(len(x)))
 
 title_req = {}
@@ -135,7 +136,9 @@ for t, list_idx in groupby_time:
     nb_req[idx] = len(list_idx)
     total_requests += len(list_idx)
     mean_time[idx] = int(vals['Latency'].mean())
-    errors[idx] = len(np.where(vals['Status'] >= 400))
+    errors[idx] = len(np.where(vals['Status'] >= 400)[0])
+    errs = vals.groupby('Status')
+    #errors_by_code[idx] = vals.groupby('Status')
     rcv_bytes[idx] = int(np.sum(vals['Size']))
     groupby2 = vals.groupby('Vid')
     y[idx] = len(groupby2.groups)
@@ -172,10 +175,16 @@ graph(name='overall_stats', title='Overall Statistics per Second', xaxis=list(x)
 			])		    
 
 graph(name='stats_per_req', title='Latency per Request (in ms)', xaxis=list(x), 
-			xtitle='Elapsed Time (seconds)', ytitle='',
+			xtitle='Elapsed Time (seconds)', ytitle='time(ms)',
 		    series=[
 		        {'name': title, 'data': list(group) } for (title, group) in title_req.items()
 			])
+
+graph(name='errors_by_code', title='Error Codes per Second', xaxis=list(x),
+            xtitle='Elapsed Time (seconds)', ytitle='#err',
+            series=[
+
+            ])
 
 output.write("});\n")
 output.close()	
