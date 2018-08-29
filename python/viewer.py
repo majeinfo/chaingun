@@ -119,7 +119,7 @@ y = pd.Series(np.zeros(len(x)))
 nb_req = pd.Series(np.zeros(len(x)))
 mean_time = pd.Series(np.zeros(len(x)))
 errors = pd.Series(np.zeros(len(x)))
-errors_by_code = pd.Series(np.zeros(len(x)))
+errors_by_code = {}
 rcv_bytes = pd.Series(np.zeros(len(x)))
 
 title_req = {}
@@ -138,7 +138,11 @@ for t, list_idx in groupby_time:
     mean_time[idx] = int(vals['Latency'].mean())
     errors[idx] = len(np.where(vals['Status'] >= 400)[0])
     errs = vals.groupby('Status')
-    #errors_by_code[idx] = vals.groupby('Status')
+    for errcode, group in errs:
+        if errcode not in errors_by_code:
+            errors_by_code[errcode] = pd.Series(np.zeros(len(x)))
+        errors_by_code[errcode][idx] = len(group)
+
     rcv_bytes[idx] = int(np.sum(vals['Size']))
     groupby2 = vals.groupby('Vid')
     y[idx] = len(groupby2.groups)
@@ -183,7 +187,7 @@ graph(name='stats_per_req', title='Latency per Request (in ms)', xaxis=list(x),
 graph(name='errors_by_code', title='Error Codes per Second', xaxis=list(x),
             xtitle='Elapsed Time (seconds)', ytitle='#err',
             series=[
-
+                {'name': errcode, 'data': list(count) } for (errcode, count) in errors_by_code.items()
             ])
 
 output.write("});\n")
