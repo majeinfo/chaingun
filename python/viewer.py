@@ -112,7 +112,7 @@ except Exception as e:
 results.Timestamp = results.Timestamp // 1_000_000_000
 results.Latency = results.Latency // 1_000_000
 
-# Compute stats
+# Compute stats per time
 groupby_time = results.groupby('Timestamp')
 x = pd.Series([t for t, list_idx in groupby_time])
 y = pd.Series(np.zeros(len(x)))
@@ -152,6 +152,20 @@ for t, list_idx in groupby_time:
         
     idx += 1
 
+# Compute error stats for each request
+groupby_status = results.groupby('Status')
+errors_by_page = {}
+for title, group in groupby_title:
+    errors_by_page[title] = {}
+    groupby_errcode = group.groupby('Status')
+    for errcode, group in groupby_status:
+        try:
+            errors_by_page[title][errcode] = len(groupby_errcode.get_group(errcode))
+        except:
+            errors_by_page[title][errcode] = 0
+
+#print(errors_by_page)
+
 # Test if CSV file contains no data (only the header line)...
 if not x.empty:
     x -= x[0]
@@ -190,7 +204,26 @@ graph(name='errors_by_code', title='Error Codes per Second', xaxis=list(x),
                 {'name': errcode, 'data': list(count) } for (errcode, count) in errors_by_code.items()
             ])
 
+# Output HTTP code array
+first_row = True
+
+for k, v in errors_by_page.items():
+    if first_row:
+        first_row = False
+        row = '<tr><td>HTTP Codes</td>'
+        for k2 in v:
+            row += f'<td>{k2}</td>'
+        row += '</tr>'
+        output.write("$('#http_codes > thead').append('" + row + "');\n")
+
+    row = '<tr><td>' + k + '</td>'
+    for k2, v2 in v.items():
+        row += f'<td>{v2}</td>'
+    row += '</tr>'
+    output.write("$('#http_codes > tbody:last-child').append('" + row + "');\n")
+
 output.write("});\n")
+
 output.close()	
 
 # EOF
