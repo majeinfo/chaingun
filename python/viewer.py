@@ -210,16 +210,18 @@ first_row = True
 for k, v in errors_by_page.items():
     if first_row:
         first_row = False
-        row = '<tr><td>HTTP Codes</td>'
+        row = '<tr><th></th>'
         for k2 in v:
-            row += f'<td>{k2}</td>'
-        row += '</tr>'
+            row += f'<th>{k2}</th>'
+        row += '<th>#Req</th></tr>'
         output.write("$('#http_codes > thead').append('" + row + "');\n")
 
     row = '<tr><td>' + k + '</td>'
+    total = 0
     for k2, v2 in v.items():
         row += f'<td>{v2}</td>'
-    row += '</tr>'
+        total += v2
+    row += f'<td>{total}</td></tr>'
     output.write("$('#http_codes > tbody:last-child').append('" + row + "');\n")
 
 output.write("});\n")
