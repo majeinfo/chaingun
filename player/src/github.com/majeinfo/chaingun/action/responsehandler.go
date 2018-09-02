@@ -159,7 +159,6 @@ func _processResult(responseHandler ResponseHandler, sessionMap map[string]strin
 
 func JsonProcessor(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {
 	log.Debugf("Response processed by Json")
-	log.Debugf("responseHandler.Jsonpaths:", responseHandler.Jsonpaths)
 
 	eval, err := jsonpath.EvalPathsInBytes(responseBody, responseHandler.Jsonpaths)
 	if err != nil {
@@ -265,11 +264,11 @@ func passResultIntoSessionMap(resultsArray []string, responseHandler ResponseHan
 	if resultCount > 0 {
 		switch responseHandler.Index {
 		case config.RE_FIRST:
-			log.Debugf("First matching value:", resultsArray[0])
+			log.Debugf("First matching value: %s", resultsArray[0])
 			sessionMap[responseHandler.Variable] = resultsArray[0]
 			break
 		case config.RE_LAST:
-			log.Debugf("Last matching value:", resultsArray[resultCount-1])
+			log.Debugf("Last matching value: %s", resultsArray[resultCount-1])
 			sessionMap[responseHandler.Variable] = resultsArray[resultCount-1]
 			break
 		case config.RE_RANDOM:
@@ -278,7 +277,7 @@ func passResultIntoSessionMap(resultsArray []string, responseHandler ResponseHan
 			} else {
 				sessionMap[responseHandler.Variable] = resultsArray[0]
 			}
-			log.Debugf("Random matching value:", sessionMap[responseHandler.Variable])
+			log.Debugf("Random matching value: %s", sessionMap[responseHandler.Variable])
 			break
 		default:
 			log.Errorf("Internal error")

@@ -79,6 +79,7 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) *http.Request {
 	var req *http.Request
 	var err error
+
 	if httpAction.Body != "" {
 		reader := strings.NewReader(SubstParams(sessionMap, httpAction.Body))
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), reader)
@@ -92,6 +93,7 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) *http
 		log.Errorf("http.newRequest failed in buildHttpRequest: %s", err)
 	}
 
+	/*
 	// Add headers
 	req.Header.Add("Accept", httpAction.Accept)
 
@@ -102,6 +104,19 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) *http
 		if httpAction.Method == "POST" {
 			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		}
+	}
+	*/
+
+	// Add headers
+	hdr_content_type := false
+	for hdr, value := range httpAction.Headers {
+		req.Header.Add(hdr, SubstParams(sessionMap, value))
+		if hdr == "content-type" {
+			hdr_content_type = true
+		}
+	}
+	if !hdr_content_type && httpAction.Method == "POST" {
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")		
 	}
 
 	// Add cookies stored by subsequent requests in the sessionMap having the kludgy __cookie__ prefix

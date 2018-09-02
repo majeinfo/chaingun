@@ -133,10 +133,11 @@ actions:
   - http:
       title: Page 4
       method: POST
-      url: http://server/page4.php
+      url: http://server/page4.php              # variables are interpolated in URL
       body: name=${name}&age=${age}	# MAND for POST http action
-      accept: "text/html,application/json"
-      contentType: text/html
+      headers:
+        accept: "text/html,application/json"    # variables are interpolated in Headers
+        content-type: text/html
       responses:				# OPT
         - regex: "is: (.*)<br>"		# MAND must be one of regex/jsonpath/xmlpath
           index: first			# OPT must be one of first (default)/last/random
@@ -184,6 +185,9 @@ $ cd tests
 $ docker container run -d -p 8000:80 -v `pwd`/server:/var/www/html php:5.6-apache
 $ ./test_standalone_player.sh
 ```
+
+## TODO
+Add a "log" action with variable interpolation
 
 ## License
 Licensed under the MIT license.

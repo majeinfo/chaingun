@@ -1,6 +1,8 @@
 package action
 
 import (
+    "strings"
+
     log "github.com/sirupsen/logrus"
     "github.com/majeinfo/chaingun/reporter"
 	"github.com/majeinfo/chaingun/config"    
@@ -11,8 +13,9 @@ type HttpAction struct {
     Url             string              `yaml:"url"`
     Body            string              `yaml:"body"`
     Template        string              `yaml:"template"`
-    Accept          string              `yaml:"accept"`
-    ContentType     string              `yaml:"contentType"`
+    Headers         map[string]string   `yaml:"headers"`
+    //Accept          string              `yaml:"accept"`
+    //ContentType     string              `yaml:"contentType"`
     Title           string              `yaml:"title"`
     StoreCookie     string              `yaml:"storeCookie"`
     ResponseHandlers []ResponseHandler   `yaml:"responses"`
@@ -53,6 +56,7 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpActio
         valid = false
     }
 
+    /*
     accept := "text/html,application/json,application/xhtml+xml,application/xml,text/plain"
     if a["accept"] != nil && len(a["accept"].(string)) > 0 {
         accept = a["accept"].(string)
@@ -62,10 +66,22 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpActio
     if a["contentType"] != nil && len(a["contentType"].(string)) > 0 {
         contentType = a["contentType"].(string)
     }
+    */
 
     var storeCookie string
     if a["storeCookie"] != nil && a["storeCookie"].(string) != "" {
         storeCookie = a["storeCookie"].(string)
+    }
+
+    headers := make(map[string]string, 20)
+    if a["headers"] != nil {
+        for hdr, value := range (a["headers"].(map[interface{}]interface{})) {
+            log.Debugf("Header Key=%s / Value=%s", hdr.(string), value.(string))
+            headers[strings.ToLower(hdr.(string))] = value.(string)
+        }
+    }
+    if _, ok := headers["accept"]; !ok {
+        headers["accept"] = "text/html,application/json,application/xhtml+xml,application/xml,text/plain"
     }
 
     responseHandlers, valid_resp  := NewResponseHandlers(a)
@@ -79,8 +95,9 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpActio
         a["url"].(string),
         getBody(a),
         getTemplate(a),
-        accept,
-        contentType,
+        headers,
+        //accept,
+        //contentType,
         a["title"].(string),
         storeCookie,
         responseHandlers,
