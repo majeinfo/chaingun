@@ -87,6 +87,8 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) *http
 		reader := strings.NewReader(SubstParams(sessionMap, httpAction.Template))
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), reader)
 	} else {
+		log.Debugf("buildHttpRequest: %s", httpAction.Url)
+		log.Debugf("buildHttpRequest: %s", SubstParams(sessionMap, httpAction.Url))
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), nil)
 	}
 	if err != nil {
