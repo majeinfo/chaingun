@@ -280,6 +280,8 @@ func passResultIntoSessionMap(resultsArray []string, responseHandler ResponseHan
 			}
 			log.Debugf("Random matching value:", sessionMap[responseHandler.Variable])
 			break
+		default:
+			log.Errorf("Internal error")
 		}
 
 	} else {
