@@ -93,13 +93,15 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) *http
 	}
 
 	// Add headers
-	if httpAction.Method == "POST" {
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	}
 	req.Header.Add("Accept", httpAction.Accept)
+
 	//req.Header.Add("Connection", "Keep-Alive")
 	if httpAction.ContentType != "" {
 		req.Header.Add("Content-Type", httpAction.ContentType)
+	} else {
+		if httpAction.Method == "POST" {
+			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		}
 	}
 
 	// Add cookies stored by subsequent requests in the sessionMap having the kludgy __cookie__ prefix
