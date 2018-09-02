@@ -139,7 +139,7 @@ actions:
       contentType: text/html
       responses:				# OPT
         - regex: "is: (.*)<br>"		# MAND must be one of regex/jsonpath/xmlpath
-          index: first			# MAND must be one of first/last/random
+          index: first			# OPT must be one of first (default)/last/random
           variable: address		# MAND
           default_value: bob		# used when the regex failed
   - http:

@@ -61,6 +61,9 @@ func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) 
 		log.Error("HttpAction ResponseHandler must define an Index of either of: first, last or random.")
 		valid = false
 	}
+	if a["index"] == nil {
+		a["index"] = "first"
+	}
 	if (a["jsonpath"] == nil || a["jsonpath"] == "") && (a["xmlpath"] == nil || a["xmlpath"] == "") && (a["regex"] == nil || a["regex"] == "") {
 		log.Error("HttpAction ResponseHandler must define a Regexp, a Jsonpath or a Xmlpath.")
 		valid = false
@@ -156,6 +159,7 @@ func _processResult(responseHandler ResponseHandler, sessionMap map[string]strin
 
 func JsonProcessor(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {
 	log.Debugf("Response processed by Json")
+	log.Debugf("responseHandler.Jsonpaths:", responseHandler.Jsonpaths)
 
 	eval, err := jsonpath.EvalPathsInBytes(responseBody, responseHandler.Jsonpaths)
 	if err != nil {
@@ -174,6 +178,7 @@ func JsonProcessor(responseHandler ResponseHandler, sessionMap map[string]string
 			break
 		}
 	}
+
 	if eval.Error != nil {
 		log.Errorf("Error while evaluating jsonpath: %s", eval.Error)
 		return false
@@ -260,9 +265,11 @@ func passResultIntoSessionMap(resultsArray []string, responseHandler ResponseHan
 	if resultCount > 0 {
 		switch responseHandler.Index {
 		case config.RE_FIRST:
+			log.Debugf("First matching value:", resultsArray[0])
 			sessionMap[responseHandler.Variable] = resultsArray[0]
 			break
 		case config.RE_LAST:
+			log.Debugf("Last matching value:", resultsArray[resultCount-1])
 			sessionMap[responseHandler.Variable] = resultsArray[resultCount-1]
 			break
 		case config.RE_RANDOM:
@@ -271,11 +278,13 @@ func passResultIntoSessionMap(resultsArray []string, responseHandler ResponseHan
 			} else {
 				sessionMap[responseHandler.Variable] = resultsArray[0]
 			}
+			log.Debugf("Random matching value:", sessionMap[responseHandler.Variable])
 			break
 		}
 
 	} else {
 		// TODO how to handle requested, but missing result?
+		log.Errorf("No value found in Response")
 	}
 }
 
