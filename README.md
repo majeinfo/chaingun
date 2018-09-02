@@ -110,8 +110,8 @@ timeout: 10		# default value (in seconds)
 on_error: continue	# (default) or stop_vu | stop_test
 http_error_codes: 404,403,500	# if set, these HTTP response codes generates errors
 default:
-  server: www.google.com
-  port: 80
+  server: www.google.com:80     # port number is optional
+  protocol: http                # could be https
   method: GET
 feeder:			# Only one Feeder can be defined
   type: csv		# MAND - csv if the only supported type
