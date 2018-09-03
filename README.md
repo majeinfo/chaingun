@@ -143,6 +143,8 @@ actions:
           index: first			# OPT must be one of first (default)/last/random
           variable: address		# MAND
           default_value: bob		# used when the regex failed
+  - log:
+      message: Address value is ${address}
   - http:
       title: Page 5
       method: GET
