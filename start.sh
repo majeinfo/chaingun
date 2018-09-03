@@ -21,7 +21,7 @@ standalone)
 		exit 1
 	fi
 	cd player
-	bin/player --script "$2" --output-dir /output --python-cmd /usr/bin/python3 ${VERBOSE_MODE}
+	bin/player --script "$2" --output-dir /tmp/output --python-cmd /usr/bin/python3 ${VERBOSE_MODE}
 ;;
 
 manager)
