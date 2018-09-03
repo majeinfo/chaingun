@@ -41,7 +41,6 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 	elapsed := time.Since(start)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		//log.Fatal(err)
 		log.Printf("Reading HTTP response failed: %s", err)
 		sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], 0, resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title)
 		resultsChannel <- sampleReqResult
@@ -87,37 +86,21 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) *http
 		reader := strings.NewReader(SubstParams(sessionMap, httpAction.Template))
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), reader)
 	} else {
-		log.Debugf("buildHttpRequest: %s", httpAction.Url)
-		log.Debugf("buildHttpRequest: %s", SubstParams(sessionMap, httpAction.Url))
-		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), nil)
+		// Hack: the Path has been concatened with EscapedPath() (from net/url.go)
+		// We must re-convert strings like $%7Bxyz%7D into ${xyz} to make variable substitution work !
+		unescaped_url := RedecodeEscapedPath(httpAction.Url)
+		//req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), nil)
+		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), nil)
 	}
 	if err != nil {
 		log.Errorf("http.newRequest failed in buildHttpRequest: %s", err)
 	}
 
-	/*
 	// Add headers
-	req.Header.Add("Accept", httpAction.Accept)
-
-	//req.Header.Add("Connection", "Keep-Alive")
-	if httpAction.ContentType != "" {
-		req.Header.Add("Content-Type", httpAction.ContentType)
-	} else {
-		if httpAction.Method == "POST" {
-			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		}
-	}
-	*/
-
-	// Add headers
-	hdr_content_type := false
 	for hdr, value := range httpAction.Headers {
 		req.Header.Add(hdr, SubstParams(sessionMap, value))
-		if hdr == "content-type" {
-			hdr_content_type = true
-		}
 	}
-	if !hdr_content_type && httpAction.Method == "POST" {
+	if _, ok := httpAction.Headers["content-type"]; !ok && httpAction.Method == "POST" {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")		
 	}
 

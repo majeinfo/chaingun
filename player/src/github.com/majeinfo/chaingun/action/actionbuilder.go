@@ -33,6 +33,9 @@ func BuildActionList(playbook *config.TestDef) ([]Action, bool) {
 			case "udp":
 				action = NewUdpAction(actionMap)
 				break
+			case "log":
+				action = NewLogAction(actionMap)
+				break
 			default:
 				valid = false
 				log.Errorf("Unknown action type encountered: %s", key)
@@ -73,6 +76,8 @@ func setDefaultURL(a map[interface{}]interface{}, dflt config.Default) bool {
 			log.Debugf("Use default server: %s", u.Host)
 		}
 	}
+
+	// The "Path" value must be added unescaped because it can contains variables (like ${...}) 
 	a["url"] = u.String()
 
 	return valid
@@ -82,9 +87,9 @@ func getBody(action map[interface{}]interface{}) string {
 	//var body string = ""
 	if action["body"] != nil {
 		return action["body"].(string)
-	} else {
-		return ""
 	}
+
+	return ""
 }
 
 func getTemplate(action map[interface{}]interface{}) string {
@@ -93,7 +98,7 @@ func getTemplate(action map[interface{}]interface{}) string {
 		dir, _ := os.Getwd()
 		templateData, _ := ioutil.ReadFile(dir + "/templates/" + templateFile)
 		return string(templateData)
-	} else {
-		return ""
 	}
+
+	return ""
 }

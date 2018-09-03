@@ -14,8 +14,6 @@ type HttpAction struct {
     Body            string              `yaml:"body"`
     Template        string              `yaml:"template"`
     Headers         map[string]string   `yaml:"headers"`
-    //Accept          string              `yaml:"accept"`
-    //ContentType     string              `yaml:"contentType"`
     Title           string              `yaml:"title"`
     StoreCookie     string              `yaml:"storeCookie"`
     ResponseHandlers []ResponseHandler   `yaml:"responses"`
@@ -26,6 +24,7 @@ func (h HttpAction) Execute(resultsChannel chan reporter.SampleReqResult, sessio
 }
 
 func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpAction {
+    log.Debugf("NewhttpAction=%v", a)
     valid := true
 
     if a["url"] == "" || a["url"] == nil {
@@ -56,18 +55,6 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpActio
         valid = false
     }
 
-    /*
-    accept := "text/html,application/json,application/xhtml+xml,application/xml,text/plain"
-    if a["accept"] != nil && len(a["accept"].(string)) > 0 {
-        accept = a["accept"].(string)
-    }
-
-    var contentType string
-    if a["contentType"] != nil && len(a["contentType"].(string)) > 0 {
-        contentType = a["contentType"].(string)
-    }
-    */
-
     var storeCookie string
     if a["storeCookie"] != nil && a["storeCookie"].(string) != "" {
         storeCookie = a["storeCookie"].(string)
@@ -83,6 +70,7 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpActio
     if _, ok := headers["accept"]; !ok {
         headers["accept"] = "text/html,application/json,application/xhtml+xml,application/xml,text/plain"
     }
+    headers["user-agent"] = "chaingun-by-JD"
 
     responseHandlers, valid_resp  := NewResponseHandlers(a)
 
@@ -96,8 +84,6 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpActio
         getBody(a),
         getTemplate(a),
         headers,
-        //accept,
-        //contentType,
         a["title"].(string),
         storeCookie,
         responseHandlers,
