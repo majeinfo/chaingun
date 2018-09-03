@@ -189,7 +189,9 @@ $ ./test_standalone_player.sh
 ```
 
 ## TODO
-Add a "log" action with variable interpolation
+- add a way to get HTTP Headers values in responses
+- add a way to get the HTTP return code from responses
+- add a way to upload external files
 
 ## License
 Licensed under the MIT license.
