@@ -28,7 +28,7 @@ Players can be run in standalone mode : this is the easiest way to proceed and m
 sufficient when the expected test load can be ensured by only one Player. In such a case
 the Manager is not needed.
 
-If you need many Players to be coordinated to stress the same server in the same time,
+If you need many Players to be coordinated to stress the same server(s) in the same time,
 you launch different Players (on different hosts !) in "daemon mode". Then you start the Web
 interface of the Manager and you can drive the Players remotely. The results will be aggregated by
 the Manager.
@@ -98,7 +98,7 @@ The verbose mode can be specified using the VERBOSE environment variable :
 ## YAML Script (Playbook)
 
 This is a sample script. 
-Mandatory paremeters are marked with a "# MAND" pseudo-comment at the end of the line
+Mandatory parameters are marked with a "# MAND" pseudo-comment at the end of the line
 
 ```
 ---
@@ -115,7 +115,7 @@ default:
   method: GET
 feeder:			# Only one Feeder can be defined
   type: csv		# MAND - csv if the only supported type
-  filename: data1.csv	# MAND - the first line gives the columns and so the variable names
+  filename: data1.csv	# MAND - the first line gives the column names and so the variable names
   separator: ","	# MAND
 actions:
   - http:
@@ -189,9 +189,11 @@ $ ./test_standalone_player.sh
 ```
 
 ## TODO
-- add a way to get HTTP Headers values in responses
+- add a way to extract HTTP Headers values from responses
 - add a way to get the HTTP return code from responses
-- add a way to upload external files
+- add a way to upload inline or external files
+- sleep action should take its time in seconds or milliseconds
+- add a web interface to create/import/export Playbooks
 
 ## License
 Licensed under the MIT license.
