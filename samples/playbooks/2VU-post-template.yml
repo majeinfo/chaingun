@@ -1,0 +1,32 @@
+---
+iterations: 1
+users: 1
+rampup: 2
+
+default:
+  server: www.delamarche.com
+  protocol: http
+  method: GET
+
+feeder:
+  type: csv
+  filename: data1.csv
+  separator: ","
+
+actions:
+  - http:
+      title: Page 1
+      url: /page1.php
+      storeCookie: __all__
+  - http:
+      title: Page 3
+      url: /page3.php?nom=${nom}
+  - http:
+      title: Page 4
+      method: POST
+      url: /page4.php
+      template: tpl/template1.tpl
+      response:
+        regex: "is: (.*)<br>"
+        index: first
+        variable: address

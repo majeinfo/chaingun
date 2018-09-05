@@ -19,5 +19,8 @@ gopkg.in
 gorilla
 sirupsen
 tobyhede
+mdempsky
 JumboInteractiveLimited
-tests/output/
+tests/output/*
+tests/server/uploads/*
+tests/samples/*

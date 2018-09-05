@@ -3,14 +3,19 @@ package action
 import (
 	"io/ioutil"
 	"net/url"
-	"os"
 
 	"github.com/majeinfo/chaingun/config"
 	log "github.com/sirupsen/logrus"
 )
 
-func BuildActionList(playbook *config.TestDef) ([]Action, bool) {
+var (
+	gp_script_dir string
+)
+
+func BuildActionList(playbook *config.TestDef, script_dir string) ([]Action, bool) {
+	gp_script_dir = script_dir
 	valid := true
+
 	actions := make([]Action, len(playbook.Actions), len(playbook.Actions))
 	for _, element := range playbook.Actions {
 		log.Debugf("element=%v", element)
@@ -95,10 +100,19 @@ func getBody(action map[interface{}]interface{}) string {
 func getTemplate(action map[interface{}]interface{}) string {
 	if action["template"] != nil {
 		var templateFile = action["template"].(string)
-		dir, _ := os.Getwd()
-		templateData, _ := ioutil.ReadFile(dir + "/templates/" + templateFile)
-		return string(templateData)
+		log.Debugf("getTemplate: %s", templateFile)
+
+		if templateFile[0] != '/' {
+			templateData, _ := ioutil.ReadFile(gp_script_dir + "/" + templateFile)
+			log.Debugf("templateData: %s", string(templateData))
+			return string(templateData)
+		} else {
+			templateData, _ := ioutil.ReadFile(templateFile)
+			log.Debugf("templateData: %s", string(templateData))
+			return string(templateData)
+		}
 	}
 
+	log.Debugf("no template data")
 	return ""
 }

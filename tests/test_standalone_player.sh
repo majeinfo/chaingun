@@ -78,6 +78,9 @@ Req_Error requests/feeder-bad-file.yml 'Cannot open CSV file'
 Req_Error requests/feeder-bad-type.yml 'Unsupported feeder type: xls'
 Req_OK requests/2VU-csv.yml
 
+# Test POST body/template
+Req_OK requests/2VU-post-template.yml
+
 # Test Timeout behaviour
 Req_Error requests/1VU-http-timeout.yml 'HTTP request failed: net/http: timeout awaiting response headers'
 # TODO: test timeout with ws

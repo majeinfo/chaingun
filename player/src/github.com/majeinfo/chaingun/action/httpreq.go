@@ -21,7 +21,6 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 	req := buildHttpRequest(httpAction, sessionMap)
 	if req.Method != "POST" {
 		log.Debugf("New Request: Method: %s, URL: %s", req.Method, req.URL)
-
 	} else {
 		log.Debugf("New Request: Method: %s, URL: %s, Body: %s", req.Method, req.URL, req.Body)
 	}
@@ -79,17 +78,17 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) *http
 	var req *http.Request
 	var err error
 
+	// Hack: the Path has been concatened with EscapedPath() (from net/url.go)
+	// We must re-convert strings like $%7Bxyz%7D into ${xyz} to make variable substitution work !
+	unescaped_url := RedecodeEscapedPath(httpAction.Url)
+
 	if httpAction.Body != "" {
 		reader := strings.NewReader(SubstParams(sessionMap, httpAction.Body))
-		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), reader)
+		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), reader)
 	} else if httpAction.Template != "" {
 		reader := strings.NewReader(SubstParams(sessionMap, httpAction.Template))
-		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), reader)
+		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), reader)
 	} else {
-		// Hack: the Path has been concatened with EscapedPath() (from net/url.go)
-		// We must re-convert strings like $%7Bxyz%7D into ${xyz} to make variable substitution work !
-		unescaped_url := RedecodeEscapedPath(httpAction.Url)
-		//req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), nil)
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), nil)
 	}
 	if err != nil {

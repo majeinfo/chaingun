@@ -170,7 +170,7 @@ func main() {
 	}
 }
 
-// Create a Playbook fro the YAML data
+// Create a Playbook from the YAML data
 func createPlaybook(data []byte, playbook *config.TestDef, actions *[]action.Action) bool {
 	err := yaml.UnmarshalStrict([]byte(data), playbook)
 	if err != nil {
@@ -184,7 +184,7 @@ func createPlaybook(data []byte, playbook *config.TestDef, actions *[]action.Act
 	}
 
 	var isValid bool
-	*actions, isValid = action.BuildActionList(playbook)
+	*actions, isValid = action.BuildActionList(playbook, path.Dir(*gp_scriptfile))
 	if !isValid {
 		return false
 	}
