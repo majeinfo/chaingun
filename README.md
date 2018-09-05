@@ -176,6 +176,14 @@ actions:
           index: first
           variable: name
           default_value: bob
+  - http:
+      title: Page 7
+      method: POST
+      url: /demo/form.php
+      template: tpl/mytemplate.tpl	# POST needs body or template
+					# template refers to a file which contents
+					# will be used as the request body. Variables
+					# are interpolated in the file contents.
 ```
 
 The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
