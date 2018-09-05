@@ -24,3 +24,4 @@ JumboInteractiveLimited
 tests/output/*
 tests/server/uploads/*
 tests/samples/*
+player/results/*

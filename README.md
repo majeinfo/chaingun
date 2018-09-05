@@ -109,27 +109,38 @@ users: 2		# MAND - number of VU to launch during the rampup period
 timeout: 10		# default value (in seconds)
 on_error: continue	# (default) or stop_vu | stop_test
 http_error_codes: 404,403,500	# if set, these HTTP response codes generates errors
+
 default:
   server: www.google.com:80     # port number is optional
   protocol: http                # could be https
   method: GET
+
 feeder:			# Only one Feeder can be defined
   type: csv		# MAND - csv if the only supported type
   filename: data1.csv	# MAND - the first line gives the column names and so the variable names
   separator: ","	# MAND
+
 actions:
+  # A simple GET
   - http:
       title: Page 1			# MAND for http action
       method: GET			# MAND for http action (GET/POST/PUT/HEAD/DELETE)
       url: http://server/page1.php	# MAND for http action
       # name of Cookie to store. __all__ catches all cookies !
       storeCookie: __all__
+
+  # Wait 
   - sleep:
-      duration: 5			# MAND - time is in seconds
+      duration: 500			# MAND - time is in milli-seconds
+
+  # GET with variable interpolation - the variable comes from the "feeder" file
   - http:
       title: Page 3
       method: GET
       url: http://server/page3.php?name=${name}
+
+  # POST with application/x-www-form-urlencoded by default
+  # Extracts value from response using regexp
   - http:
       title: Page 4
       method: POST
@@ -143,13 +154,20 @@ actions:
           index: first			# OPT must be one of first (default)/last/random
           variable: address		# MAND
           default_value: bob		# used when the regex failed
+
+  # Simple log...
   - log:
       message: Address value is ${address}
+
+  # GET with variable interpolation - the variable comes from previous POST response
   - http:
       title: Page 5
       method: GET
       # ${address} is the value extracted from the previous response !
       url: http://server/page5.php?address=${address}
+
+  # POST with variable interpolation in the request
+  # Extracts value from response using regexps
   - http:
       title: Page 4bis
       method: POST
@@ -162,10 +180,14 @@ actions:
         - regex: "(?i)is: .*, (.*)<br>"
           index: first
           variable: city
+
+  # Variable interpolation is possible in the URL
   - http:
       title: Page 5bis
       method: GET
       url: http://server/page5.php?address=${address}&city=${city}
+
+  # POST with extraction from response using JSON    
   - http:
       title: Page 6
       method: POST
@@ -176,6 +198,8 @@ actions:
           index: first
           variable: name
           default_value: bob
+
+  # POST with content specified using a template file       
   - http:
       title: Page 7
       method: POST

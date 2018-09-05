@@ -7,11 +7,11 @@ import (
 )
 
 type SleepAction struct {
-	Duration int `yaml:"duration"`
+	Duration int `yaml:"duration"`		// in milli-seconds
 }
 
 func (s SleepAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
-	time.Sleep(time.Duration(s.Duration) * time.Second)
+	time.Sleep(time.Duration(s.Duration) * time.Millisecond)
 	return true
 }
 
