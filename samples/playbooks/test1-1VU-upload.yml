@@ -1,0 +1,19 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+actions:
+  - http:
+      title: Page upload
+      method: POST
+      url: http://www.delamarche.com/upload.php
+      formdata:
+        - name: nom
+          value: bob
+        - name: adresse
+          value: rue des Buissonnets
+        - name: fileToUpload
+          value: un_fichier.txt
+          type: file
+        - name: submit
+          value: "1"

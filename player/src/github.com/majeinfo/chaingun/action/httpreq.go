@@ -3,9 +3,13 @@ package action
 import (
 	"io/ioutil"
 	"net/http"
+	"mime/multipart"
+	"path/filepath"
+	"bytes"
 	"strings"
 	"time"
 	"strconv"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 	"crypto/tls"
@@ -18,7 +22,11 @@ var cookie_prefix_length = len(cookie_prefix)
 
 // Accepts a Httpaction and a one-way channel to write the results to.
 func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
-	req := buildHttpRequest(httpAction, sessionMap)
+	req, err := buildHttpRequest(httpAction, sessionMap)
+	if err != nil {
+		log.Error(err)
+		return false
+	}
 	if req.Method != "POST" {
 		log.Debugf("New Request: Method: %s, URL: %s", req.Method, req.URL)
 	} else {
@@ -74,25 +82,57 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 	return true
 }
 
-func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) *http.Request {
+func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) (*http.Request, error) {
 	var req *http.Request
 	var err error
+	log.Debug("buildHttpRequest")
 
 	// Hack: the Path has been concatened with EscapedPath() (from net/url.go)
 	// We must re-convert strings like $%7Bxyz%7D into ${xyz} to make variable substitution work !
 	unescaped_url := RedecodeEscapedPath(httpAction.Url)
 
 	if httpAction.Body != "" {
+		// BODY
 		reader := strings.NewReader(SubstParams(sessionMap, httpAction.Body))
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), reader)
 	} else if httpAction.Template != "" {
+		// TEMPLATE
 		reader := strings.NewReader(SubstParams(sessionMap, httpAction.Template))
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), reader)
+	} else if len(httpAction.FormDatas) > 0 {
+		// FORM-DATA
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+
+		for _, formdata := range httpAction.FormDatas {
+			if formdata.Type != "file" {
+				// TODO: should apply variable interpolation
+				_ = writer.WriteField(formdata.Name, formdata.Value)
+			} else {
+				part, err := writer.CreateFormFile(formdata.Name, filepath.Base(formdata.Value))
+				if err != nil {
+					err := fmt.Errorf("Error while creating FormFile Part: %s", err)
+					return nil, err
+				}
+				_, err = part.Write(formdata.Content)
+			}
+		}	  
+
+		err = writer.Close()
+  		if err != nil {
+			  err := fmt.Errorf("Error while closing the FormData Writer: %s", err)
+			return nil, err
+  		}
+
+  		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), body)
+  		req.Header.Set("Content-Type", writer.FormDataContentType())
 	} else {
+		// DEFAULT
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), nil)
 	}
 	if err != nil {
-		log.Errorf("http.newRequest failed in buildHttpRequest: %s", err)
+		err := fmt.Errorf("http.newRequest failed in buildHttpRequest: %s", err)
+		return nil, err
 	}
 
 	// Add headers
@@ -115,6 +155,6 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) *http
 		}
 	}
 
-	return req
+	return req, nil
 }
 

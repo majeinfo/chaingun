@@ -43,17 +43,17 @@ $(function () {
         
         {
             name: 'Latency (in ms)',
-            data: [4.0]
+            data: [168.0]
         },
         
         {
             name: '#Errors',
-            data: [1.0]
+            data: [0.0]
         },
         
         {
             name: '#Rcv Bytes',
-            data: [14.0]
+            data: [42.0]
         },
         
         ]
@@ -80,17 +80,54 @@ $(function () {
         
         yAxis: {
                title: {
-                  text: ''
+                  text: 'time(ms)'
                },
         },          
         
         series: [
         
         {
-            name: 'Page 1',
-            data: [4.0]
+            name: 'Page upload',
+            data: [168.0]
         },
         
         ]
             });
+    var errors_by_code = Highcharts.chart('errors_by_code', {
+
+	    title: {
+            text: 'Error Codes per Second'
+        },
+        
+        legend: {
+               layout: 'horizontal',
+               align: 'center',
+               verticalAlign: 'bottom',
+               borderWidth: 0
+            }, 
+    
+        xAxis: {
+            categories: [0],
+            title: {
+                text: 'Elapsed Time (seconds)'
+            },
+        },
+        
+        yAxis: {
+               title: {
+                  text: '#err'
+               },
+        },          
+        
+        series: [
+        
+        {
+            name: '200',
+            data: [1.0]
+        },
+        
+        ]
+            });
+$('#http_codes > thead').append('<tr><th></th><th>200</th><th>#Req</th></tr>');
+$('#http_codes > tbody:last-child').append('<tr><td>Page upload</td><td>1</td><td>1</td></tr>');
 });

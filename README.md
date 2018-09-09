@@ -208,6 +208,14 @@ actions:
 					# template refers to a file which contents
 					# will be used as the request body. Variables
 					# are interpolated in the file contents.
+
+  # File upload
+  - http:
+      title: Page 8
+      method: POST
+      url: http://server/page4.php
+      body: name=${name}&age=${age}     # Optional
+      upload_file: /path/to/file        # no variable interpolation                    
 ```
 
 The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
@@ -226,6 +234,7 @@ $ ./test_standalone_player.sh
 - add a way to upload inline or external files
 - sleep action should take its time in seconds or milliseconds
 - add a web interface to create/import/export Playbooks
+- template files and uploaded files are not supported in distributed mode
 
 ## License
 Licensed under the MIT license.

@@ -40,7 +40,7 @@ func NewResponseHandlers(a map[interface{}]interface{}) ([]ResponseHandler, bool
                     valid = false
                     break
                 }
-                responseHandlers = append(responseHandlers, newResponse)
+				responseHandlers = append(responseHandlers, newResponse)
             }
         default:
             log.Error("responses format is invalid")

@@ -1,6 +1,7 @@
 package action
 
 import (
+    "errors"
     "strings"
 
     log "github.com/sirupsen/logrus"
@@ -13,10 +14,19 @@ type HttpAction struct {
     Url             string              `yaml:"url"`
     Body            string              `yaml:"body"`
     Template        string              `yaml:"template"`
+    FormDatas       []FormData          `yaml:"formdatas"`
     Headers         map[string]string   `yaml:"headers"`
     Title           string              `yaml:"title"`
     StoreCookie     string              `yaml:"storeCookie"`
-    ResponseHandlers []ResponseHandler   `yaml:"responses"`
+    ResponseHandlers []ResponseHandler  `yaml:"responses"`
+}
+
+// These data will be sent with
+type FormData struct {
+    Name    string      `yaml:"name"`
+    Value   string      `yaml:"name"`
+    Type    string      `yaml:"type"`
+    Content []byte
 }
 
 func (h HttpAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
@@ -50,8 +60,13 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpActio
         valid = false
     }
 
-    if a["body"] != nil && a["template"] != nil {
-        log.Error("A HttpAction can not define both a 'body' and a 'template'.")
+    // Check formdatas
+    nu := 0
+    if a["body"] != nil { nu ++ }
+    if a["template"] != nil { nu++ }
+    if a["formdata"] != nil { nu++ }
+    if nu > 1 {
+        log.Error("A HttpAction can contain a single 'body' or a 'template' or a 'formdata'.")
         valid = false
     }
 
@@ -72,9 +87,10 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpActio
     }
     headers["user-agent"] = "chaingun-by-JD"
 
-    responseHandlers, valid_resp  := NewResponseHandlers(a)
+    formdatas, validData := NewFormDatas(a)
+    responseHandlers, validResp  := NewResponseHandlers(a)
 
-    if !valid || !valid_resp {
+    if !valid || !validResp || !validData {
         log.Fatalf("Your YAML Playbook contains an invalid HTTPAction, see errors listed above.")
     }
 
@@ -83,6 +99,7 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpActio
         a["url"].(string),
         getBody(a),
         getTemplate(a),
+        formdatas,
         headers,
         a["title"].(string),
         storeCookie,
@@ -92,4 +109,67 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpActio
     log.Debugf("HTTPAction: %v", httpAction)
 
     return httpAction
+}
+
+// Build all the FormDatas from the Action described in YAML Playbook
+func NewFormDatas(a map[interface{}]interface{}) ([]FormData, bool) {
+	valid := true
+	var formDatas []FormData
+    if a["formdata"] == nil {
+        formDatas = nil
+    } else {
+        switch v := a["formdata"].(type) {
+        case []interface {}:
+            formDatas = make([]FormData, len(v))
+            for idx, r1 := range v {
+                r2 := r1.(map[interface{}]interface{})
+                log.Debugf("formdata=%v", r2)
+                newFormData, err := NewFormData(r2)
+                if err != nil {
+                    valid = false
+                    break
+                }
+                formDatas[idx] = newFormData
+            }
+        default:
+            log.Error("formdata format is invalid")
+            valid = false
+        }
+	}
+	
+	return formDatas, valid
+}
+
+func NewFormData(a map[interface{}]interface{}) (FormData, error) {
+	valid := true
+	var formData FormData
+        
+    if a["name"] == nil {
+        log.Error("FormData must have a 'name' attribute.")
+        valid = false
+    } else {
+        formData.Name = a["name"].(string)
+    }
+    if a["value"] == nil {
+        log.Error("FormData must have a 'value' attribute.")
+        valid = false
+    } else {
+        formData.Value = a["value"].(string)
+    }
+
+    if a["type"] != nil && valid {
+        formData.Type = a["type"].(string)
+        if formData.Type != "file" {
+            log.Error("'type' attribute of FormData must be 'file'.")
+            valid = false
+        } else {
+            formData.Content = getFileToUpload(formData.Value)
+        }
+    }
+
+	if !valid {
+		return formData, errors.New("Errors occurred during FormData block analysis.")
+	}
+
+    return formData, nil
 }

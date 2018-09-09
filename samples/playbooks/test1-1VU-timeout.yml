@@ -13,8 +13,8 @@ actions:
       title: Page 2
       method: GET
       url: http://www.delamarche.com/page2_timeout.php
-      response:
-        regex: Bonjour
+      responses:
+        - regex: Bonjour
   - http:
       title: Page SSL
       method: GET

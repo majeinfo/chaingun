@@ -8,11 +8,11 @@ actions:
       method: GET
       url: http://www.w3schools.com/xml/cd_catalog.xml
       accept: text/xml
-      response:
-              xmlpath: ///TITLE
-              jsonpath: $[*].id+
-              variable: noteTo
-              index: random # first, random, last
+      responses:
+        - xmlpath: ///TITLE
+          jsonpath: $[*].id+
+          variable: noteTo
+          index: random # first, random, last
   - sleep:
       duration: 3
 

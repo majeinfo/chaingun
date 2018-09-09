@@ -12,11 +12,11 @@ actions:
       title: Page 2
       method: GET
       url: http://www.delamarche.com/page2-json.php
-      response:
-        jsonpath: $.NOM+
-        variable: nom
-        index: first
-        default_value: alice
+      responses:
+        - jsonpath: $.NOM+
+          variable: nom
+          index: first
+          default_value: alice
   - http:
       title: Page 3
       method: GET

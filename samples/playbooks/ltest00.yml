@@ -8,10 +8,10 @@ actions:
       method: GET
       url: http://localhost:9183/courses
       accept: json
-      response:
-        jsonpath: $[*].id+
-        variable: courseId
-        index: random # first, random, last
+      responses:
+        - jsonpath: $[*].id+
+          variable: courseId
+          index: random # first, random, last
   - sleep:
       duration: 3
   - http:

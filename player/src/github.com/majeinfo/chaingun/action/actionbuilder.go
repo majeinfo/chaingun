@@ -102,12 +102,19 @@ func getTemplate(action map[interface{}]interface{}) string {
 		var templateFile = action["template"].(string)
 		log.Debugf("getTemplate: %s", templateFile)
 
+		// TODO: should check if template file has been found - how to do in distributed mode ?
 		if templateFile[0] != '/' {
-			templateData, _ := ioutil.ReadFile(gp_script_dir + "/" + templateFile)
+			templateData, err := ioutil.ReadFile(gp_script_dir + "/" + templateFile)
+			if err != nil {
+				log.Errorf("Error while reading template file %s: %v", gp_script_dir + "/" + templateFile, err)
+			}
 			log.Debugf("templateData: %s", string(templateData))
 			return string(templateData)
 		} else {
-			templateData, _ := ioutil.ReadFile(templateFile)
+			templateData, err := ioutil.ReadFile(templateFile)
+			if err != nil {
+				log.Errorf("Error while reading template file %s: %v", templateFile)
+			}
 			log.Debugf("templateData: %s", string(templateData))
 			return string(templateData)
 		}
@@ -115,4 +122,25 @@ func getTemplate(action map[interface{}]interface{}) string {
 
 	log.Debugf("no template data")
 	return ""
+}
+
+func getFileToUpload(filename string) []byte {
+	log.Debugf("getFileToUpload: %s", filename)
+
+	// TODO: should check if  file has been found - how to do in distributed mode ?
+	if filename[0] != '/' {
+		content, err := ioutil.ReadFile(gp_script_dir + "/" + filename)
+		if err != nil {
+			log.Errorf("Error while reading file %s: %v", gp_script_dir + "/" + filename, err)
+		}
+		log.Debugf("content: %s", string(content))
+		return content
+	} else {
+		content, err := ioutil.ReadFile(filename)
+		if err != nil {
+			log.Errorf("Error while reading file %s: %v", filename)
+		}
+		log.Debugf("content: %s", string(content))
+		return content
+	}
 }

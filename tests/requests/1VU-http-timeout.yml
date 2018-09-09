@@ -9,6 +9,8 @@ actions:
       method: GET
       url: http://localhost:8000/page1.php
       storeCookie: __all__
+  - sleep:
+      duration: 1000
   - http:
       title: Page 2
       method: GET

@@ -13,10 +13,10 @@ actions:
       method: GET
       url: http://localhost:9183/courses
       accept: json
-      response:
-        jsonpath: $[*].id+
-        variable: courseId
-        index: random # first, random, last
+      responses:
+        - jsonpath: $[*].id+
+          variable: courseId
+          index: random # first, random, last
   - sleep:
       duration: 3
   - http:
@@ -24,9 +24,9 @@ actions:
       method: GET
       url: http://localhost:9183/courses/${courseId}
       accept: json
-      response:
-        jsonpath: $.author+
-        variable: author
-        index: first # first, random, last
+      responses:
+        - jsonpath: $.author+
+          variable: author
+          index: first # first, random, last
   - sleep:
         duration: 3

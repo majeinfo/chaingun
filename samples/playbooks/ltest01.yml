@@ -7,10 +7,10 @@
       method: GET
       url: http://127.0.0.1:8080/courses
       accept: json # optional
-      response:
-        find: '"id":[0-9],'
-        var: courseId
-        index: random # first, random, last
+      responses:
+        - find: '"id":[0-9],'
+          var: courseId
+          index: random # first, random, last
     - type: sleep
       duration: 3
     - type: http
