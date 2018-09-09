@@ -33,14 +33,15 @@ func NewResponseHandlers(a map[interface{}]interface{}) ([]ResponseHandler, bool
         switch v := a["responses"].(type) {
         case []interface {}:
             responseHandlers = make([]ResponseHandler, len(v))
-            for _, r1 := range v {
+            for idx, r1 := range v {
                 r2 := r1.(map[interface{}]interface{})
                 newResponse, err := NewResponseHandler(r2)
                 if err != nil {
                     valid = false
                     break
                 }
-				responseHandlers = append(responseHandlers, newResponse)
+				//responseHandlers = append(responseHandlers, newResponse)
+				responseHandlers[idx] = newResponse
             }
         default:
             log.Error("responses format is invalid")

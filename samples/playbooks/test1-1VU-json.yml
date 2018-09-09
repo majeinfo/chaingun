@@ -17,7 +17,11 @@ actions:
           variable: nom
           index: first
           default_value: alice
+        - jsonpath: $.AGE+
+          variable: age
+          index: first
+          default_value: "99"
   - http:
       title: Page 3
       method: GET
-      url: http://www.delamarche.com/page3.php?nom=${nom}
+      url: http://www.delamarche.com/page3.php?nom=${nom}&age=${age}
