@@ -231,7 +231,6 @@ $ ./test_standalone_player.sh
 ## TODO
 - add a way to extract HTTP Headers values from responses
 - add a way to get the HTTP return code from responses
-- add a way to upload inline or external files
 - sleep action should take its time in seconds or milliseconds
 - add a web interface to create/import/export Playbooks
 - template files and uploaded files are not supported in distributed mode

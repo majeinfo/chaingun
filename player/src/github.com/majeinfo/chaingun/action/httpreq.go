@@ -17,8 +17,10 @@ import (
 	"github.com/majeinfo/chaingun/reporter"
 )
 
-var cookie_prefix = "__cookie__"
-var cookie_prefix_length = len(cookie_prefix)
+var (
+	cookie_prefix = "__cookie__"
+	cookie_prefix_length = len(cookie_prefix)
+)
 
 // Accepts a Httpaction and a one-way channel to write the results to.
 func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
@@ -107,7 +109,7 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) (*htt
 		for _, formdata := range httpAction.FormDatas {
 			if formdata.Type != "file" {
 				// TODO: should apply variable interpolation
-				_ = writer.WriteField(formdata.Name, formdata.Value)
+				_ = writer.WriteField(formdata.Name, SubstParams(sessionMap, formdata.Value))
 			} else {
 				part, err := writer.CreateFormFile(formdata.Name, filepath.Base(formdata.Value))
 				if err != nil {
