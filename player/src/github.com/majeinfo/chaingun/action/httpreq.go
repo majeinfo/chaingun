@@ -32,7 +32,7 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 	if req.Method != "POST" {
 		log.Debugf("New Request: Method: %s, URL: %s", req.Method, req.URL)
 	} else {
-		log.Debugf("New Request: Method: %s, URL: %s, Body: %s", req.Method, req.URL, req.Body)
+		log.Debugf("New Request: Method: %s, URL: %s, Body: %v", req.Method, req.URL, req.Body)
 	}
 
 	start := time.Now()
@@ -67,21 +67,22 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 			}
 		}
 	}
+	valid := true
 
 	// If the HTTP response code is listed in "http_error_codes" (404, 403, 500...), 
 	// the result is not processed and a false value is returned
 	if strings.Contains(playbook.HttpErrorCodes, strconv.FormatInt(int64(resp.StatusCode), 10)) {
 		log.Errorf("HTTP response code is considered as an error: %d", resp.StatusCode)
-		return false
+		valid = false
 	}
 
 	// if action specifies response action, parse using regexp/jsonpath
-	if !processResult(httpAction.ResponseHandlers, sessionMap, responseBody) {
-		return false
+	if valid && !processResult(httpAction.ResponseHandlers, sessionMap, responseBody) {
+		valid = false
 	}
 	sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title)
 	resultsChannel <- sampleReqResult
-	return true
+	return valid
 }
 
 func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) (*http.Request, error) {

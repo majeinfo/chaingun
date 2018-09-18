@@ -9,6 +9,7 @@ const RE_LAST = "last"
 const RE_RANDOM = "random"
 
 const ERR_CONTINUE = "continue"
+const ERR_STOP_ITERATION = "stop_iteration"
 const ERR_STOP_VU = "stop_vu"
 const ERR_STOP_TEST = "stop_test"
 
@@ -66,8 +67,8 @@ func ValidateTestDefinition(t *TestDef) (bool) {
 	if t.OnError == "" {
 		t.OnError = ERR_CONTINUE
 	} else {
-		if t.OnError != ERR_CONTINUE && t.OnError != ERR_STOP_TEST && t.OnError != ERR_STOP_VU {
-			log.Error("onerror parameter must be one of 'continue', 'stop_vu' or 'stop_test'")
+		if t.OnError != ERR_CONTINUE && t.OnError != ERR_STOP_TEST && t.OnError != ERR_STOP_VU && t.OnError != ERR_STOP_ITERATION {
+			log.Error("onerror parameter must be one of 'continue', 'stop_iteration', stop_vu' or 'stop_test'")
 			valid = false
 		}
 	}

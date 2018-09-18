@@ -107,7 +107,7 @@ duration: 100		# MAND if iterations == -1. Time is in seconds
 rampup: 4		# MAND - time is in seconds
 users: 2		# MAND - number of VU to launch during the rampup period
 timeout: 10		# default value (in seconds)
-on_error: continue	# (default) or stop_vu | stop_test
+on_error: continue	# (default) or stop_iteration | stop_vu | stop_test
 http_error_codes: 404,403,500	# if set, these HTTP response codes generates errors
 
 default:

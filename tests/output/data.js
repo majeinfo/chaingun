@@ -1,5 +1,5 @@
 var elapsed_time = 1;
-var total_requests = 1;
+var total_requests = 3;
 var playbook_name = "None";
 
 $(function () {
@@ -38,12 +38,12 @@ $(function () {
         
         {
             name: '#Req',
-            data: [1.0]
+            data: [3.0]
         },
         
         {
             name: 'Latency (in ms)',
-            data: [168.0]
+            data: [165.0]
         },
         
         {
@@ -53,7 +53,7 @@ $(function () {
         
         {
             name: '#Rcv Bytes',
-            data: [42.0]
+            data: [52.0]
         },
         
         ]
@@ -87,8 +87,18 @@ $(function () {
         series: [
         
         {
-            name: 'Page upload',
-            data: [168.0]
+            name: 'Page 1',
+            data: [164.0]
+        },
+        
+        {
+            name: 'Page 2',
+            data: [169.0]
+        },
+        
+        {
+            name: 'Page 3',
+            data: [163.0]
         },
         
         ]
@@ -123,11 +133,13 @@ $(function () {
         
         {
             name: '200',
-            data: [1.0]
+            data: [3.0]
         },
         
         ]
             });
 $('#http_codes > thead').append('<tr><th></th><th>200</th><th>#Req</th></tr>');
-$('#http_codes > tbody:last-child').append('<tr><td>Page upload</td><td>1</td><td>1</td></tr>');
+$('#http_codes > tbody:last-child').append('<tr><td>Page 1</td><td>1</td><td>1</td></tr>');
+$('#http_codes > tbody:last-child').append('<tr><td>Page 2</td><td>1</td><td>1</td></tr>');
+$('#http_codes > tbody:last-child').append('<tr><td>Page 3</td><td>1</td><td>1</td></tr>');
 });
