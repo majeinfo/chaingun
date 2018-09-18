@@ -41,6 +41,7 @@ a) run a Player in standalone mode :
 	$ ./player --output-dir /path/to/output/ --python-cmd /path/to/python3.6 --script /path/to/script.yml --verbose
 
 	--python-cmd is optional if PYTHON environment variable is set and points to at least a Python 3.6
+	--viewer indicates the path to the viewer.py script that build the HTML page with results
 	--output-dir indicates where the results will be stored
 	--script is mandatory
 	--verbose is optional 

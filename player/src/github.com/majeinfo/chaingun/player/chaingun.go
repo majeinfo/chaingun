@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -32,6 +31,7 @@ var (
 	gp_outputdir      *string
 	gp_outputtype     *string
 	gp_python_cmd     *string
+	gp_viewerfile	  *string
 
 	gp_playbook config.TestDef
 	gp_actions  []action.Action
@@ -47,6 +47,7 @@ func command_line() {
 	gp_outputdir = flag.String("output-dir", "", "Set the output directory")
 	gp_outputtype = flag.String("output-type", "csv", "Set the output type in file (csv/default, json)")
 	gp_python_cmd = flag.String("python-cmd", "", "Select the Python Interpreter to create the graphs")
+	gp_viewerfile = flag.String("viewer", "", "Give the location of viewer.py script")
 
 	flag.Parse()
 
@@ -68,6 +69,9 @@ func command_line() {
 		}
 		if _, err := os.Stat(*gp_python_cmd); os.IsNotExist(err) {
 			log.Fatalf("Python interpreter %s does not exist.", *gp_python_cmd)
+		}
+		if *gp_viewerfile == "" {
+			log.Fatal("When not started as a daemon, needs the location of the viewer.py script")
 		}
 	} else {
 		// Either listen-addr or connect-to must be specified
@@ -137,15 +141,9 @@ func main() {
 
 		// Build graphs
 		log.Info("Launching Viewer")
-		absdir, err := filepath.Abs(os.Args[0])
-		if err != nil {
-			log.Fatalf("Cannot compute absolute path for %s: %s", os.Args[0], err)
-		}
-		locdir := path.Dir(absdir) + "/../.."
-		log.Info("Launching graph builder:")
-		log.Infof("%s %s/python/viewer.py --data '%s' --output-dir '%s'",
-			*gp_python_cmd, locdir, outputfile, dir)
-		cmd := exec.Command(*gp_python_cmd, locdir+"/python/viewer.py",
+		log.Infof("%s %s --data '%s' --output-dir '%s'",
+			*gp_python_cmd, *gp_viewerfile, outputfile, dir)
+		cmd := exec.Command(*gp_python_cmd, *gp_viewerfile,
 			"--data", outputfile,
 			"--output-dir", dir)
 		err = cmd.Run()
