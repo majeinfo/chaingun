@@ -235,6 +235,7 @@ actionLoop:
 		feedSession(playbook, sessionMap)
 
 		// Iterate over the actions. Note the use of the command-pattern like Execute method on the Action interface
+	iterLoop:
 		for _, action := range *actions {
 			if action != nil {
 				//action.(Action).Execute(resultsChannel, sessionMap)
@@ -244,6 +245,9 @@ actionLoop:
 					case config.ERR_CONTINUE:
 						log.Info("Continue on error")
 						break
+					case config.ERR_STOP_ITERATION:
+						log.Info("Stop this iteration")
+						break iterLoop
 					case config.ERR_STOP_TEST:
 						log.Info("Stop test on error")
 						gp_daemon_status = STOPPING_NOW
