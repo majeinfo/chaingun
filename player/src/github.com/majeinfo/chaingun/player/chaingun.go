@@ -32,6 +32,7 @@ var (
 	gp_outputtype     *string
 	gp_python_cmd     *string
 	gp_viewerfile	  *string
+	gp_no_log		  *bool
 
 	gp_playbook config.TestDef
 	gp_actions  []action.Action
@@ -48,6 +49,7 @@ func command_line() {
 	gp_outputtype = flag.String("output-type", "csv", "Set the output type in file (csv/default, json)")
 	gp_python_cmd = flag.String("python-cmd", "", "Select the Python Interpreter to create the graphs")
 	gp_viewerfile = flag.String("viewer", "", "Give the location of viewer.py script")
+	gp_no_log = flag.Bool("no-log", false, "Disable the 'log' actions from the Script")
 
 	flag.Parse()
 
@@ -56,6 +58,7 @@ func command_line() {
 		log_level = log.DebugLevel
 	}
 	log.SetLevel(log_level)
+	action.DisableAction(*gp_no_log)
 
 	if !*gp_is_daemon {
 		if *gp_scriptfile == "" {

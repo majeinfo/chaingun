@@ -38,13 +38,15 @@ the Manager.
 a) run a Player in standalone mode :
 
 	$ cd player/bin
-	$ ./player --output-dir /path/to/output/ --python-cmd /path/to/python3.6 --script /path/to/script.yml --verbose
+	$ ./player --output-dir /path/to/output/ --python-cmd /path/to/python3.6 --script /path/to/script.yml \
+               --viewer /path/to/viewer.py --verbose
 
 	--python-cmd is optional if PYTHON environment variable is set and points to at least a Python 3.6
 	--viewer indicates the path to the viewer.py script that build the HTML page with results
 	--output-dir indicates where the results will be stored
 	--script is mandatory
 	--verbose is optional 
+    --no-log disabled the 'log actions' (see below for the actions)
 
 b) run a Player in daemon mode :
 
@@ -55,6 +57,7 @@ b) run a Player in daemon mode :
 	(default is 127.0.0.1:12345) and will play the orders sent by the manager. This is the normal
 	mode in distributed mode.
 	--verbose is optional
+    --no-log disabled the 'log actions' (see below for the actions)
 
 c) run the Manager (when Players are started as Daemons) :
 

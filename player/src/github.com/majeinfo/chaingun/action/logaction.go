@@ -10,11 +10,22 @@ type LogAction struct {
 	Message string	`yaml:"message"`
 }
 
+var (
+	disable_log bool = false
+)
+
 func (s LogAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
+	if disable_log {
+		return true
+	}
 	log.Infof("[LOG] %s", SubstParams(sessionMap, s.Message))
 	return true
 }
 
 func NewLogAction(a map[interface{}]interface{}) LogAction {
 	return LogAction{a["message"].(string)}
+}
+
+func DisableAction(no_log bool) {
+	disable_log = no_log
 }
