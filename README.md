@@ -33,6 +33,9 @@ you launch different Players (on different hosts !) in "daemon mode". Then you s
 interface of the Manager and you can drive the Players remotely. The results will be aggregated by
 the Manager.
 
+Data for feeder can be sent to the Players after sending them the Playbook script.
+Other fils such as Template of files to be uploaded must be sent to the Players before the Playbook script.
+
 #### Run from the command line
 
 a) run a Player in standalone mode :
@@ -74,7 +77,7 @@ a) run a Player in standalone mode :
 
 	$ docker container run -it -v /path/to/scripts:/scripts \
 				   -v /path/to/output/dir:/output \
-				   majeinfo/chaingun standalone script.yml
+				   majeinfo/chaingun standalone /scripts/script.yml
 
 b) run a Player in daemon mode :
 
@@ -237,7 +240,6 @@ $ ./test_standalone_player.sh
 - add a way to get the HTTP return code from responses
 - sleep action should take its time in seconds or milliseconds
 - add a web interface to create/import/export Playbooks
-- template files and uploaded files are not supported in distributed mode
 
 ## License
 Licensed under the MIT license.

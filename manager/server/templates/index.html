@@ -70,6 +70,7 @@
                                 <div class="col-lg-8 text-right">
                                     <button type="button" class="add-row btn btn-primary" onclick="AddInjector()">Add Injector</button>
                                     <button type="button" class="add-row btn btn-primary" onclick="GetAllStatus()">Get Status</button>
+                                    <label id="label_fibut" class="btn btn-primary">Send File<input id="fibut" type="file" hidden style="display:none;" onchange="OpenAllDataFile(event)"></label>
                                     <label id="label_scriptbut" class="btn btn-primary">Send Script<input id="scriptbut" type="file" hidden style="display:none;" onchange="OpenAllFile(event)"></label>
                                     <label id="label_dfbut" class="btn btn-primary">Send Data<input id="dfbut" type="file" hidden style="display:none;" onchange="OpenAllDataFeedFile(event)"></label>
                                     <button type="button" class="add-row btn btn-primary" onclick="StartAll()">Start</button>
@@ -106,6 +107,7 @@
                                     <td class="center">
                                         <button id="connbut1" type="button" class="btn btn-primary" onclick="ConnectToWS(1)">Connect</button>
                                         <button id="statusbut1" type="button" class="btn btn-default" onclick="GetStatus(1)" disabled>Get Status</button>
+                                        <label id="label_fibut1" class="btn btn-default">Send File<input id="fibut1" type="file" hidden style="display:none;" onchange="OpenDataFile(1, event)" disabled></label>
                                         <label id="label_scriptbut1" class="btn btn-default">Send Script<input id="scriptbut1" type="file" hidden style="display:none;" onchange="OpenFile(1, event)" disabled></label>
                                         <label id="label_dfbut1" class="btn btn-default">Send Data<input id="dfbut1" type="file" hidden style="display:none;" onchange="OpenDataFeedFile(1, event)" disabled></label>
                                         <button id="startbut1" type="button" class="btn btn-default" onclick="Start(1)" disabled>Start</button>
@@ -158,7 +160,8 @@
 <script src="/static/vendor/metisMenu/metisMenu.js"></script>
 <script src="/static/vendor/raphael/raphael.js"></script>
 <script src="/static/vendor/morrisjs/morris.js"></script>
-<script src="/static/dist/js/sb-admin-2.js"></script>   
+<script src="/static/dist/js/sb-admin-2.js"></script>
+<!-- <script src="/static/js/js-yaml.min.js"></script> -->
     
 <script>
 var injector_count = 1;
@@ -224,7 +227,8 @@ function ConnectToWS(id) {
         but.text('Disconnect');
         info.text("Connected");
         EnableButton("#statusbut" + id);
-        EnableButton("#label_scriptbut" + id);
+        EnableButton("#dfbut" + id);
+        EnableButton("#fibut" + id);
         EnableButton("#scriptbut" + id);
         hostfield.attr("disabled", "disabled");
         GetStatus(id);
@@ -267,6 +271,7 @@ function ConnectToWS(id) {
             DisableButton("#startbut" + id);
             EnableButton("#label_dfbut" + id);
             EnableButton("#dfbut" + id);
+            EnableButton("#fibut" + id);
             DisplayError("Data feed needed: " + filename);
             break;
         case "results":
@@ -307,6 +312,7 @@ function _close_conn(id) {
     DisableButton("#scriptbut" + id);
     DisableButton("#label_dfbut" + id);
     DisableButton("#dfbut" + id);
+    DisableButton("#fibut" + id);
     DisableButton("#startbut" + id);
     DisableButton("#stopbut" + id);
     hostfield.removeAttr("disabled");    
@@ -429,6 +435,54 @@ function _sendDataFeed(id, filename, text) {
         return;
     }    
     ws_conns[host].send('{ "cmd": "datafeed", "moreinfo": "' + filename + '", "value": "' + btoa(text) + '" }');
+}
+
+function OpenAllDataFile(event) {
+    var rows_selected = _get_selected_rows();
+    if (!rows_selected) return;
+ 
+    var input = event.target;
+
+    var reader = new FileReader();
+    reader.onload = function() {
+        var text = reader.result;
+        console.log(text);
+
+        $.each(rows_selected, function(index, rowId){
+            console.log(index + 1);
+            _sendDataFile(index + 1, input.files[0].name, text);
+        });        
+    };
+    reader.onerror = function() {
+        DisplayError("Could not open and read file " + input.files[0].name)
+    }
+    reader.readAsText(input.files[0]);
+}
+
+function OpenDataFile(id, event) {
+    var input = event.target;
+
+    var reader = new FileReader();
+    reader.onload = function() {
+        var text = reader.result;
+        console.log(text);
+        _sendDataFile(id, input.files[0].name, text);
+    };
+    reader.onerror = function() {
+        DisplayError("Could not open and read file " + input.files[0].name)
+    }
+    reader.readAsText(input.files[0]);
+}
+
+function _sendDataFile(id, filename, text) {
+    var host = $("#ws_host" + id).val();
+    
+    console.log('send file');
+    if (!ws_conns[host]) {
+        DisplayError("Please connect the Injector, first !");
+        return;
+    }    
+    ws_conns[host].send('{ "cmd": "datafile", "moreinfo": "' + filename + '", "value": "' + btoa(text) + '" }');
 }
 
 function StartAll() {
@@ -846,6 +900,7 @@ function AddInjector() {
                     '<td class="center">' +
                         '<button id="connbut' + ic + '" type="button" class="btn btn-primary" onclick="ConnectToWS(' + ic + ')">Connect</button>&nbsp;' +
                         '<button id="statusbut' + ic + '" type="button" class="btn btn-default" onclick="GetStatus(' + ic + ')" disabled>Get Status</button>&nbsp;' +
+                        '<label id="label_fibut' + ic +'" class="btn btn-default">Send File<input id="fibut' + ic +'" type="file" hidden style="display:none;" onchange="OpenDataFile(' + ic +', event)" disabled></label>&nbsp;' +
                         '<label id="label_scriptbut' + ic +'" class="btn btn-default">Send Script<input id="scriptbut' + ic + '" type="file" hidden style="display:none;" onchange="OpenFile(' + ic + ', event)" disabled></label>&nbsp;' +
                         '<label id="label_dfbut' + ic +'" class="btn btn-default">Send Data<input id="dfbut' + ic +'" type="file" hidden style="display:none;" onchange="OpenDataFeedFile(' + ic +', event)" disabled></label>&nbsp;' +
                         '<button id="startbut' + ic + '" type="button" class="btn btn-default" onclick="Start(' + ic + ')" disabled>Start</button>&nbsp;' +

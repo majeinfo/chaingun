@@ -15,6 +15,6 @@ func (s SleepAction) Execute(resultsChannel chan reporter.SampleReqResult, sessi
 	return true
 }
 
-func NewSleepAction(a map[interface{}]interface{}) SleepAction {
-	return SleepAction{a["duration"].(int)}
+func NewSleepAction(a map[interface{}]interface{}) (SleepAction, bool) {
+	return SleepAction{a["duration"].(int)}, true
 }

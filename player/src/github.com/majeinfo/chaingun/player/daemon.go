@@ -102,6 +102,8 @@ func cmdHandler(c *Client, msg []byte) {
 		scriptCommand(c, &cmd)
 	case "datafeed":
 		handleDataFeed(c, &cmd)
+	case "datafile":
+		handleDataFile(c, &cmd)
 	case "get_results":
 		getResultsCommand(c, &cmd)
 	default:
@@ -216,6 +218,25 @@ func handleDataFeed(c *Client, cmd *PlayerCommand) {
 	str_data := string(data[:])
 	log.Debug(str_data)
 	feeder.CsvInline(gp_playbook.DataFeeder, str_data)
+}
+
+func handleDataFile(c *Client, cmd *PlayerCommand) {
+	sendStatusOKMsg(c, "File received")
+
+	data, err := base64.StdEncoding.DecodeString(cmd.Value)
+	if err != nil {
+		gp_daemon_status = IDLE
+		sendStatusError(c, "Error while decoding string from Base64")
+		return
+	}
+
+	// Save the file locally
+	err = ioutil.WriteFile(cmd.MoreInfo, data, 0644)
+	if err != nil {
+		gp_daemon_status = IDLE
+		sendStatusError(c, "Error while writing file " + cmd.MoreInfo)
+		return		
+	}
 }
 
 func getResultsCommand(c *Client, cmd *PlayerCommand) {

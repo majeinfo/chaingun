@@ -22,8 +22,8 @@ func (s LogAction) Execute(resultsChannel chan reporter.SampleReqResult, session
 	return true
 }
 
-func NewLogAction(a map[interface{}]interface{}) LogAction {
-	return LogAction{a["message"].(string)}
+func NewLogAction(a map[interface{}]interface{}) (LogAction, bool) {
+	return LogAction{a["message"].(string)}, true
 }
 
 func DisableAction(no_log bool) {

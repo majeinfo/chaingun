@@ -19,7 +19,7 @@ func (h WSAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionM
     return DoWSRequest(h, resultsChannel, sessionMap, playbook)
 }
 
-func NewWSAction(a map[interface{}]interface{}, dflt config.Default) WSAction {
+func NewWSAction(a map[interface{}]interface{}, dflt config.Default) (WSAction, bool) {
     valid := true
     if a["url"] == "" || a["url"] == nil {
         log.Error("WSAction must define a URL.")
@@ -54,5 +54,5 @@ func NewWSAction(a map[interface{}]interface{}, dflt config.Default) WSAction {
 
 	log.Debugf("WSAction: %v", WSAction)
 	
-    return WSAction
+    return WSAction, valid
 }

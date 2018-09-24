@@ -16,12 +16,12 @@ func (t UdpAction) Execute(resultsChannel chan reporter.SampleReqResult, session
 	return true
 }
 
-func NewUdpAction(a map[interface{}]interface{}) UdpAction {
+func NewUdpAction(a map[interface{}]interface{}) (UdpAction, bool) {
 
 	// TODO validation
 	return UdpAction{
 		a["address"].(string),
 		a["payload"].(string),
 		a["title"].(string),
-	}
+	}, true
 }

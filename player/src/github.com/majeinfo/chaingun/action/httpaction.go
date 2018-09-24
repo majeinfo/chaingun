@@ -33,7 +33,7 @@ func (h HttpAction) Execute(resultsChannel chan reporter.SampleReqResult, sessio
     return DoHttpRequest(h, resultsChannel, sessionMap, playbook)
 }
 
-func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpAction {
+func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) (HttpAction, bool) {
     log.Debugf("NewhttpAction=%v", a)
     valid := true
 
@@ -89,16 +89,18 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpActio
 
     formdatas, validData := NewFormDatas(a)
     responseHandlers, validResp  := NewResponseHandlers(a)
+    template, validTempl := getTemplate(a)
 
-    if !valid || !validResp || !validData {
-        log.Fatalf("Your YAML Playbook contains an invalid HTTPAction, see errors listed above.")
+    if !valid || !validResp || !validData || !validTempl {
+        log.Errorf("Your YAML Playbook contains an invalid HTTPAction, see errors listed above.")
+        valid = false
     }
 
     httpAction := HttpAction{
         a["method"].(string),
         a["url"].(string),
         getBody(a),
-        getTemplate(a),
+        template,
         formdatas,
         headers,
         a["title"].(string),
@@ -108,7 +110,7 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) HttpActio
 
     log.Debugf("HTTPAction: %v", httpAction)
 
-    return httpAction
+    return httpAction, valid
 }
 
 // Build all the FormDatas from the Action described in YAML Playbook
@@ -163,7 +165,7 @@ func NewFormData(a map[interface{}]interface{}) (FormData, error) {
             log.Error("'type' attribute of FormData must be 'file'.")
             valid = false
         } else {
-            formData.Content = getFileToUpload(formData.Value)
+            formData.Content, valid = getFileToUpload(formData.Value)
         }
     }
 

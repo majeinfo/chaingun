@@ -16,12 +16,12 @@ func (t TcpAction) Execute(resultsChannel chan reporter.SampleReqResult, session
 	return true
 }
 
-func NewTcpAction(a map[interface{}]interface{}) TcpAction {
+func NewTcpAction(a map[interface{}]interface{}) (TcpAction, bool) {
 
 	// TODO validation
 	return TcpAction{
 		a["address"].(string),
 		a["payload"].(string),
 		a["title"].(string),
-	}
+	}, true
 }
