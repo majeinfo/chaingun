@@ -46,6 +46,7 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 		log.Errorf("HTTP request failed: %s", err)
 		return false
 	} 
+	sessionMap["HTTP_Response"] = strconv.Itoa(resp.StatusCode)
 
 	elapsed := time.Since(start)
 	responseBody, err := ioutil.ReadAll(resp.Body)
@@ -56,7 +57,7 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 		return false
 	} 
 
-	log.Debugf("Received data: %s", responseBody)
+	log.Debugf("[HTTP REsponse=%d] Received data: %s", resp.StatusCode, responseBody)
 	defer resp.Body.Close()
 
 	if httpAction.StoreCookie != "" {

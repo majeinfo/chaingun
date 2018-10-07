@@ -280,6 +280,7 @@ func cleanSessionMapAndResetUID(UID string, sessionMap map[string]string) {
 		delete(sessionMap, k)
 	}
 	sessionMap["UID"] = UID
+	sessionMap["HTTP_Response"] = ""
 }
 
 func feedSession(playbook *config.TestDef, sessionMap map[string]string) {

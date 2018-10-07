@@ -1,0 +1,22 @@
+---
+iterations: 1
+users: 2
+rampup: 1
+
+actions:
+  - http:
+      title: Page 1
+      method: GET
+      url: http://localhost:8000/page1.php
+
+  - log:
+      message: HTTP Response=${HTTP_Response}
+
+  - http:
+      title: Page 2
+      method: GET
+      url: http://localhost:8000/pageX.php
+
+  - log:
+      message: HTTP Response=${HTTP_Response}
+
