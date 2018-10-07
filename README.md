@@ -166,6 +166,10 @@ actions:
   - log:
       message: Address value is ${address}
 
+  # The HTTP_Response variable is always set after a HTTP action
+  - log:
+      message: HTTP return code=${HTTP_Response}
+
   # GET with variable interpolation - the variable comes from previous POST response
   - http:
       title: Page 5
@@ -236,6 +240,8 @@ $ ./test_standalone_player.sh
 ```
 
 ## TODO
+- add a way to define global variables
+- add a way to add an action that can compute values for variabls (var = substr(var, 1, 5))
 - add a way to extract HTTP Headers values from responses
 - add a way to get the HTTP return code from responses
 - sleep action should take its time in seconds or milliseconds
