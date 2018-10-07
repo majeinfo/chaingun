@@ -24,6 +24,7 @@ type TestDef struct {
 	HttpErrorCodes string `yaml:"http_error_codes"`
 	Timeout int `yaml:"timeout"`						// default is 10s
 	DfltValues Default `yaml:"default"`
+	Variables map[string]string `yaml:"variables"`
 	DataFeeder Feeder `yaml:"feeder"`
 	Actions []map[string]interface{} `yaml:"actions"`
 }

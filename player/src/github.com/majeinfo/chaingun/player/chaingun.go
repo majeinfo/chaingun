@@ -230,7 +230,7 @@ actionLoop:
 	for (playbook.Iterations == -1) || (i < playbook.Iterations) {
 
 		// Make sure the sessionMap is cleared before each iteration - except for the UID which stays
-		cleanSessionMapAndResetUID(UID, sessionMap)
+		cleanSessionMapAndResetUID(UID, sessionMap, playbook)
 
 		// If we have feeder data, pop an item and push its key-value pairs into the sessionMap
 		feedSession(playbook, sessionMap)
@@ -274,13 +274,19 @@ actionLoop:
 	VU_count--
 }
 
-func cleanSessionMapAndResetUID(UID string, sessionMap map[string]string) {
+func cleanSessionMapAndResetUID(UID string, sessionMap map[string]string, playbook *config.TestDef) {
 	// Optimization? Delete all entries rather than reallocate map from scratch for each new iteration.
 	for k := range sessionMap {
 		delete(sessionMap, k)
 	}
+
+	// Set permanent variable and variables from playbook
 	sessionMap["UID"] = UID
 	sessionMap[config.HTTP_RESPONSE] = ""
+
+	for k, v := range playbook.Variables {
+		sessionMap[k] = v
+	}
 }
 
 func feedSession(playbook *config.TestDef, sessionMap map[string]string) {

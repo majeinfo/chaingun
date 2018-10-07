@@ -122,6 +122,10 @@ default:
   protocol: http                # could be https
   method: GET
 
+variables:		# You can define here variables that can be reused later
+  customer: bob
+  amount: 1000
+
 feeder:			# Only one Feeder can be defined
   type: csv		# MAND - csv if the only supported type
   filename: data1.csv	# MAND - the first line gives the column names and so the variable names
@@ -162,9 +166,9 @@ actions:
           variable: address		# MAND
           default_value: bob		# used when the regex failed
 
-  # Simple log...
+  # Simple log... (the customer is defined in the global variables section)
   - log:
-      message: Address value is ${address}
+      message: Address value is ${address} (customer=${customer})
 
   # The HTTP_Response variable is always set after a HTTP action
   - log:
