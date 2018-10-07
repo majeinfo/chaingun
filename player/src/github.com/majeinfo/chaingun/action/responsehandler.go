@@ -86,7 +86,7 @@ func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) 
 		//responseHandler.Jsonpath = response["jsonpath"].(string)
 		responseHandler.Jsonpaths, err = jsonpath.ParsePaths(a["jsonpath"].(string))
 		if err != nil {
-			log.Error("Jsonpath could not be compiled: %s", a["jsonpath"].(string))
+			log.Errorf("Jsonpath could not be compiled: %s", a["jsonpath"].(string))
 			valid = false
 		}
 	}
@@ -96,7 +96,7 @@ func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) 
 		var err error
 		responseHandler.Xmlpath, err = xmlpath.Compile(a["xmlpath"].(string))
 		if err != nil {
-			log.Error("XmlPath could not be compiled: %s", a["xmlpath"].(string))
+			log.Errorf("XmlPath could not be compiled: %s", a["xmlpath"].(string))
 			valid = false
 		}
 	}
@@ -104,7 +104,7 @@ func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) 
 		var err error
 		responseHandler.Regex, err = regexp.Compile(a["regex"].(string))
 		if err != nil {
-			log.Error("Regexp could not be compiled: %s", a["regex"].(string))
+			log.Errorf("Regexp could not be compiled: %s", a["regex"].(string))
 			valid = false
 		}
 	}
