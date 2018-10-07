@@ -46,7 +46,7 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 		log.Errorf("HTTP request failed: %s", err)
 		return false
 	} 
-	sessionMap["HTTP_Response"] = strconv.Itoa(resp.StatusCode)
+	sessionMap[config.HTTP_RESPONSE] = strconv.Itoa(resp.StatusCode)
 
 	elapsed := time.Since(start)
 	responseBody, err := ioutil.ReadAll(resp.Body)

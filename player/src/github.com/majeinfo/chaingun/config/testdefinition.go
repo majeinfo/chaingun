@@ -4,6 +4,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const HTTP_RESPONSE = "HTTP_Response"
+
 const RE_FIRST = "first"
 const RE_LAST = "last"
 const RE_RANDOM = "random"
