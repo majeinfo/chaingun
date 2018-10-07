@@ -1,0 +1,12 @@
+---
+iterations: 1
+users: 2
+rampup: 1
+variables:
+  v1: bob
+  v2: 30
+
+actions:
+  - log:
+      message: v1=${v1}, v2=${v2}
+
