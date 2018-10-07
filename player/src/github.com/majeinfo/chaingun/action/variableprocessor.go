@@ -8,7 +8,7 @@ import (
     log "github.com/sirupsen/logrus"	
 )
 
-var re = regexp.MustCompile("\\$\\{([a-zA-Z0-9]{0,})\\}")
+var re = regexp.MustCompile("\\$\\{([a-zA-Z0-9_]{0,})\\}")
 
 func SubstParams(sessionMap map[string]string, textData string) string {
 	if strings.ContainsAny(textData, "${") {
