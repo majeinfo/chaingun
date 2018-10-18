@@ -6,12 +6,13 @@ http://callistaenterprise.se/blogg/teknik/2015/11/22/gotling/
 (Thanks to Erik Lupander)
 
 ## What it does
-- Provides high-throughput load testing of HTTP services
+- Provides high-throughput load testing of HTTP/TCP/UDP/WS services
     - Supports GET, POST, PUT and DELETE
     - Request URLs and bodies can contain ${paramName} parameters
-    - ${paramName} values can be extracted from HTTP response bodies and bound to a User context
+    - ${paramName} values can be extracted from HTTP response bodies and bound to a User context. User defined variables are also supported
     - Capturing Set-Cookie response headers
     - POST data can be inlined or read from template files
+    - variables can be feed from an external CSV file
 
 ## Building
 
@@ -25,16 +26,16 @@ Chaingun is made of 2 parts :
 - a Manager that provides a Web interface to manage the Players
 
 Players can be run in standalone mode : this is the easiest way to proceed and may be
-sufficient when the expected test load can be ensured by only one Player. In such a case
+sufficient when the expected test load can be applied by only one Player. In such a case
 the Manager is not needed.
 
-If you need many Players to be coordinated to stress the same server(s) in the same time,
+If you need many Players to be coordinated to stress the same server(s) at the same time,
 you launch different Players (on different hosts !) in "daemon mode". Then you start the Web
 interface of the Manager and you can drive the Players remotely. The results will be aggregated by
 the Manager.
 
 Data for feeder can be sent to the Players after sending them the Playbook script.
-Other fils such as Template of files to be uploaded must be sent to the Players before the Playbook script.
+Other files such as Template of files to be uploaded must be sent to the Players before the Playbook script.
 
 #### Run from the command line
 
@@ -45,11 +46,11 @@ a) run a Player in standalone mode :
                --viewer /path/to/viewer.py --verbose
 
 	--python-cmd is optional if PYTHON environment variable is set and points to at least a Python 3.6
-	--viewer indicates the path to the viewer.py script that build the HTML page with results
+	--viewer indicates the path to the viewer.py script that builds the HTML page containing the results
 	--output-dir indicates where the results will be stored
-	--script is mandatory
+	--script sets the name of the script file and is mandatory
 	--verbose is optional 
-    --no-log disabled the 'log actions' (see below for the actions)
+	--no-log disables the 'log actions' (see below for the actions)
 
 b) run a Player in daemon mode :
 
@@ -60,7 +61,7 @@ b) run a Player in daemon mode :
 	(default is 127.0.0.1:12345) and will play the orders sent by the manager. This is the normal
 	mode in distributed mode.
 	--verbose is optional
-    --no-log disabled the 'log actions' (see below for the actions)
+	--no-log disables the 'log actions' (see below for the actions)
 
 c) run the Manager (when Players are started as Daemons) :
 
@@ -244,10 +245,8 @@ $ ./test_standalone_player.sh
 ```
 
 ## TODO
-- add a way to define global variables
-- add a way to add an action that can compute values for variabls (var = substr(var, 1, 5))
+- add a way to add an action that can compute values for variables (var = substr(var, 1, 5))
 - add a way to extract HTTP Headers values from responses
-- add a way to get the HTTP return code from responses
 - sleep action should take its time in seconds or milliseconds
 - add a web interface to create/import/export Playbooks
 
