@@ -41,6 +41,8 @@ func BuildActionList(playbook *config.TestDef, script_dir string) ([]Action, boo
 			case "log":
 				action, valid = NewLogAction(actionMap)
 				break
+			case "setvar":
+				action, valid = NewSetVarAction(actionMap)
 			default:
 				valid = false
 				log.Errorf("Unknown action type encountered: %s", key)
@@ -64,7 +66,7 @@ func setDefaultURL(a map[interface{}]interface{}, dflt config.Default) bool {
 	if err != nil {
 		log.Errorf("Wrong URL: %s", err)
 		valid = false
-	} 
+	}
 	if u.Scheme == "" {
 		if dflt.Protocol == "" {
 			log.Errorf("Scheme (protocol) missing for URL: %s", a["url"])
@@ -77,14 +79,14 @@ func setDefaultURL(a map[interface{}]interface{}, dflt config.Default) bool {
 	if u.Host == "" {
 		if dflt.Server == "" {
 			log.Errorf("Host missing for URL: %s", a["url"])
-			valid = false			
+			valid = false
 		} else {
 			u.Host = dflt.Server
 			log.Debugf("Use default server: %s", u.Host)
 		}
 	}
 
-	// The "Path" value must be added unescaped because it can contains variables (like ${...}) 
+	// The "Path" value must be added unescaped because it can contains variables (like ${...})
 	a["url"] = u.String()
 
 	return valid
@@ -108,7 +110,7 @@ func getTemplate(action map[interface{}]interface{}) (string, bool) {
 		if templateFile[0] != '/' {
 			templateData, err := ioutil.ReadFile(gp_script_dir + "/" + templateFile)
 			if err != nil {
-				log.Errorf("Error while reading template file %s: %v", gp_script_dir + "/" + templateFile, err)
+				log.Errorf("Error while reading template file %s: %v", gp_script_dir+"/"+templateFile, err)
 				return "", false
 			}
 			log.Debugf("templateData: %s", string(templateData))
@@ -135,7 +137,7 @@ func getFileToUpload(filename string) ([]byte, bool) {
 	if filename[0] != '/' {
 		content, err := ioutil.ReadFile(gp_script_dir + "/" + filename)
 		if err != nil {
-			log.Errorf("Error while reading file %s: %v", gp_script_dir + "/" + filename, err)
+			log.Errorf("Error while reading file %s: %v", gp_script_dir+"/"+filename, err)
 			return nil, false
 		}
 		log.Debugf("content: %s", string(content))
