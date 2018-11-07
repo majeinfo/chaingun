@@ -1,0 +1,47 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+timeout: 3
+actions:
+  - setvar:
+      variable: my_var
+      expression: "3 + 4"
+
+  - log:
+      message: "valeur de my_var=${my_var}"
+
+  - setvar:
+      variable: my_var
+      expression: "3.2 * 4.5 / 3.0"
+
+  - log:
+      message: "valeur de my_var=${my_var}"
+
+  - setvar:
+      variable: my_var
+      expression: "2 * my_var"
+
+  - log:
+      message: "valeur de my_var=${my_var}"
+
+  - setvar:
+      variable: my_var
+      expression: '"3" + "4"'
+
+  - log:
+      message: "valeur de my_var=${my_var}"
+
+  - setvar:
+      variable: my_var
+      expression: "5 < 4"
+
+  - log:
+      message: "valeur de my_var=${my_var}"
+
+  - setvar:
+      variable: my_var
+      expression: "3 < 4"
+
+  - log:
+      message: "valeur de my_var=${my_var}"
