@@ -243,6 +243,9 @@ actions:
       # int, string and bool (floats are converted into ints)
       # supported operators are described here:
       #   https://github.com/Knetic/govaluate/blob/master/MANUAL.md
+      # supported functions are:
+      # - strlen(string)
+      # - substr((string, start, end)
 ```
 
 The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
@@ -256,7 +259,6 @@ $ ./test_standalone_player.sh
 ```
 
 ## TODO
-- add a way to add an action that can compute values for variables (var = substr(var, 1, 5))
 - add a way to extract HTTP Headers values from responses
 - sleep action should take its time in seconds or milliseconds
 - add a web interface to create/import/export Playbooks
