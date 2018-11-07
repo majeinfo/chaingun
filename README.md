@@ -6,13 +6,13 @@ http://callistaenterprise.se/blogg/teknik/2015/11/22/gotling/
 (Thanks to Erik Lupander)
 
 ## What it does
-- Provides high-throughput load testing of HTTP/TCP/UDP/WS services
-    - Supports GET, POST, PUT and DELETE
-    - Request URLs and bodies can contain ${paramName} parameters
-    - ${paramName} values can be extracted from HTTP response bodies and bound to a User context. User defined variables are also supported
-    - Capturing Set-Cookie response headers
-    - POST data can be inlined or read from template files
-    - variables can be feed from an external CSV file
+- Provides high-throughput load testing of HTTP/TCP/UDP/WS services (through Standalone or Distributed Modes)
+- Supports GET, POST, PUT and DELETE
+- Request URLs and bodies can contain ${paramName} parameters
+- ${paramName} values can be extracted from HTTP response bodies and bound to a User context. User defined variables are also supported
+- Capturing Set-Cookie response headers
+- POST data can be inlined or read from template files
+- variables can be feed from an external CSV file
 
 ## Building
 
@@ -43,7 +43,7 @@ a) run a Player in standalone mode :
 
 	$ cd player/bin
 	$ ./player --output-dir /path/to/output/ --python-cmd /path/to/python3.6 --script /path/to/script.yml \
-               --viewer /path/to/viewer.py --verbose
+               --viewer ../../python/viewer.py --verbose
 
 	--python-cmd is optional if PYTHON environment variable is set and points to at least a Python 3.6
 	--viewer indicates the path to the viewer.py script that builds the HTML page containing the results
@@ -232,6 +232,17 @@ actions:
       url: http://server/page4.php
       body: name=${name}&age=${age}     # Optional
       upload_file: /path/to/file        # no variable interpolation                    
+
+  # Compute formula with variables
+  - setvar:
+      name: my_var
+      expression: "2 * age"
+
+      # notes on expressions:
+      # variable interpolation is possible, supported returned types are
+      # int, string and bool (floats are converted into ints)
+      # supported operators are described here:
+      #   https://github.com/Knetic/govaluate/blob/master/MANUAL.md
 ```
 
 The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
