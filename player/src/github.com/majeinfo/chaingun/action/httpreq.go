@@ -1,24 +1,24 @@
 package action
 
 import (
-	"io/ioutil"
-	"net/http"
-	"mime/multipart"
-	"path/filepath"
 	"bytes"
+	"fmt"
+	"io/ioutil"
+	"mime/multipart"
+	"net/http"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
-	"fmt"
 
-	log "github.com/sirupsen/logrus"
 	"crypto/tls"
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
-	cookie_prefix = "__cookie__"
+	cookie_prefix        = "__cookie__"
 	cookie_prefix_length = len(cookie_prefix)
 )
 
@@ -37,7 +37,7 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 
 	start := time.Now()
 	var DefaultTransport http.RoundTripper = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 		ResponseHeaderTimeout: time.Duration(playbook.Timeout) * time.Second,
 	}
 	resp, err := DefaultTransport.RoundTrip(req)
@@ -45,7 +45,7 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 	if err != nil {
 		log.Errorf("HTTP request failed: %s", err)
 		return false
-	} 
+	}
 	sessionMap[config.HTTP_RESPONSE] = strconv.Itoa(resp.StatusCode)
 
 	elapsed := time.Since(start)
@@ -55,9 +55,9 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 		sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], 0, resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title)
 		resultsChannel <- sampleReqResult
 		return false
-	} 
+	}
 
-	log.Debugf("[HTTP REsponse=%d] Received data: %s", resp.StatusCode, responseBody)
+	log.Debugf("[HTTP Response=%d] Received data: %s", resp.StatusCode, responseBody)
 	defer resp.Body.Close()
 
 	if httpAction.StoreCookie != "" {
@@ -70,7 +70,7 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 	}
 	valid := true
 
-	// If the HTTP response code is listed in "http_error_codes" (404, 403, 500...), 
+	// If the HTTP response code is listed in "http_error_codes" (404, 403, 500...),
 	// the result is not processed and a false value is returned
 	if strings.Contains(playbook.HttpErrorCodes, strconv.FormatInt(int64(resp.StatusCode), 10)) {
 		log.Errorf("HTTP response code is considered as an error: %d", resp.StatusCode)
@@ -78,7 +78,7 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 	}
 
 	// if action specifies response action, parse using regexp/jsonpath
-	if valid && !processResult(httpAction.ResponseHandlers, sessionMap, responseBody) {
+	if valid && !processResult(httpAction.ResponseHandlers, sessionMap, responseBody, resp.Header) {
 		valid = false
 	}
 	sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title)
@@ -120,16 +120,16 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) (*htt
 				}
 				_, err = part.Write(formdata.Content)
 			}
-		}	  
+		}
 
 		err = writer.Close()
-  		if err != nil {
-			  err := fmt.Errorf("Error while closing the FormData Writer: %s", err)
+		if err != nil {
+			err := fmt.Errorf("Error while closing the FormData Writer: %s", err)
 			return nil, err
-  		}
+		}
 
-  		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), body)
-  		req.Header.Set("Content-Type", writer.FormDataContentType())
+		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
 	} else {
 		// DEFAULT
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), nil)
@@ -144,7 +144,7 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) (*htt
 		req.Header.Add(hdr, SubstParams(sessionMap, value))
 	}
 	if _, ok := httpAction.Headers["content-type"]; !ok && httpAction.Method == "POST" {
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")		
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	}
 
 	// Add cookies stored by subsequent requests in the sessionMap having the kludgy __cookie__ prefix
@@ -161,4 +161,3 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) (*htt
 
 	return req, nil
 }
-

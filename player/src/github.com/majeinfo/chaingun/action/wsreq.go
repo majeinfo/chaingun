@@ -1,11 +1,11 @@
 package action
 
 import (
-	"time"
-	log "github.com/sirupsen/logrus"
 	"github.com/gorilla/websocket"
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
+	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 // TODO: manage cookies !
@@ -29,7 +29,7 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 		if err != nil {
 			log.Errorf("WS WriteMessage failed: %s", err)
 			return false
-		}	
+		}
 	}
 
 	bodyLen := 0
@@ -51,14 +51,14 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 				log.Errorf("WS ReadMessage error: %s", err)
 				ok = false
 			}
-			log.Debugf("WS ReadMessage recv: %s", responseBody)	
+			log.Debugf("WS ReadMessage recv: %s", responseBody)
 
 			// if action specifies response action, parse using regexp/jsonpath
-			if !processResult(wsAction.ResponseHandlers, sessionMap, responseBody) {
+			if !processResult(wsAction.ResponseHandlers, sessionMap, responseBody, nil) {
 				ok = false
 			} else {
 				bodyLen = len(responseBody)
-				respCode = 0	
+				respCode = 0
 			}
 		}()
 

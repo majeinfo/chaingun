@@ -2,6 +2,7 @@
 #
 PLAYER=../player/bin/player
 PYTHON=/usr/local/bin/python3.6
+VIEWER="--viewer ../../chaingun/python/viewer.py"
 #VERBOSE=--verbose
 
 function Arg_Error {
@@ -13,7 +14,7 @@ function Arg_Error {
 }
 
 function Syn_Error {
-	if "$PLAYER" --output-dir output/ --python-cmd "$PYTHON" $VERBOSE --script "$1" 2>&1 | grep "$2" >/dev/null 2>&1; then
+	if "$PLAYER" --output-dir output/ --python-cmd "$PYTHON" $VERBOSE $VIEWER --script "$1" 2>&1 | grep "$2" >/dev/null 2>&1; then
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
@@ -21,7 +22,7 @@ function Syn_Error {
 }
 
 function Syn_OK {
-	if "$PLAYER" --output-dir output/ --python-cmd "$PYTHON" $VERBOSE --script "$1" >/dev/null 2>&1; then
+	if "$PLAYER" --output-dir output/ --python-cmd "$PYTHON" $VERBOSE $VIEWER --script "$1" >/dev/null 2>&1; then
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
@@ -29,7 +30,7 @@ function Syn_OK {
 }
 
 function Req_Error {
-	if "$PLAYER" --output-dir output/ --python-cmd "$PYTHON" $VERBOSE --script "$1" 2>&1 | grep "$2" >/dev/null 2>&1; then
+	if "$PLAYER" --output-dir output/ --python-cmd "$PYTHON" $VERBOSE $VIEWER --script "$1" 2>&1 | grep "$2" >/dev/null 2>&1; then
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
@@ -37,7 +38,7 @@ function Req_Error {
 }
 
 function Req_OK {
-	if "$PLAYER" --output-dir output/ --python-cmd "$PYTHON" $VERBOSE --script "$1" >/dev/null 2>&1; then
+	if "$PLAYER" --output-dir output/ --python-cmd "$PYTHON" $VERBOSE $VIEWER --script "$1" >/dev/null 2>&1; then
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
@@ -80,6 +81,7 @@ Req_OK requests/2VU-csv.yml
 
 # Test POST body/template
 Req_OK requests/2VU-post-template.yml
+Req_OK requests/2VU-extract-from-header.yml
 
 # Test Timeout behaviour
 Req_Error requests/1VU-http-timeout.yml 'HTTP request failed: net/http: timeout awaiting response headers'

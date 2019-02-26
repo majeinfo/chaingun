@@ -1,0 +1,26 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+timeout: 3
+actions:
+  - setvar:
+      variable: my_var
+      expression: '"hello"'
+
+  - log:
+      message: "my_var=${my_var}"
+
+  - setvar:
+      variable: my_len
+      expression: "strlen(my_var) * 2"
+
+  - log:
+      message: "my_len=${my_len}"
+
+  - setvar:
+      variable: my_subvar
+      expression: 'substr(my_var,1,3) + "xyz"'
+
+  - log:
+      message: "my_subvar=${my_subvar}"

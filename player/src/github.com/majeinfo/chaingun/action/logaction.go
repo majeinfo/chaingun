@@ -4,6 +4,7 @@ import (
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
 	log "github.com/sirupsen/logrus"
+	"net/url"
 )
 
 type LogAction struct {
@@ -18,7 +19,8 @@ func (s LogAction) Execute(resultsChannel chan reporter.SampleReqResult, session
 	if disable_log {
 		return true
 	}
-	log.Infof("[LOG] %s", SubstParams(sessionMap, s.Message))
+	unesc, _ := url.QueryUnescape(SubstParams(sessionMap, s.Message))
+	log.Infof("[LOG] %s", unesc)
 	return true
 }
 

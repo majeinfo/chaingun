@@ -1,0 +1,37 @@
+---
+iterations: 1
+users: 2
+rampup: 2
+feeder:
+  type: csv
+  filename: data1.csv
+  separator: ","
+actions:
+  - http:
+      title: Page 1
+      method: GET
+      url: http://localhost:8000/page1.php
+      storeCookie: __all__
+  - http:
+      title: Page 3
+      method: GET
+      url: http://localhost:8000/page3.php?name=${name}
+  - http:
+      title: Page 4
+      method: POST
+      url: http://localhost:8000/page4.php
+      template: tpl/template1.tpl
+      responses:
+        - from_header: Content-Type
+          regex: " *([^;]*)"
+          index: first
+          variable: content_type
+        - from_header: Content-XType
+          regex: "(.*)"
+          index: first
+          variable: content_xtype
+          default_value: "!!"
+
+  - log:
+      message: Content-Type is ${content_type} and Content-XType is ${content_xtype}
+

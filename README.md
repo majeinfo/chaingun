@@ -106,7 +106,8 @@ The verbose mode can be specified using the VERBOSE environment variable :
 ## YAML Script (Playbook)
 
 This is a sample script. 
-Mandatory parameters are marked with a "# MAND" pseudo-comment at the end of the line
+Mandatory parameters are marked with a "# MAND" pseudo-comment at the end of the line.
+Please note that wrong parameter names are not detected by the YAML parser !
 
 ```
 ---
@@ -166,6 +167,11 @@ actions:
           index: first			# OPT must be one of first (default)/last/random
           variable: address		# MAND
           default_value: bob		# used when the regex failed
+        - from_header: Via		# OPT HTTP Header name to extract the value from
+          regex: "(.*)"			# MAND 
+          index: first			# OPT must be one of first (default)/last/random
+          variable: proxy_via		# MAND
+          default_value: -		# used when the regex failed
 
   # Simple log... (the customer is defined in the global variables section)
   - log:
@@ -245,7 +251,7 @@ actions:
       #   https://github.com/Knetic/govaluate/blob/master/MANUAL.md
       # supported functions are:
       # - strlen(string)
-      # - substr((string, start, end)
+      # - substr(string, start, end)
 ```
 
 The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
@@ -260,7 +266,6 @@ $ ./test_standalone_player.sh
 
 ## TODO
 - add a way to extract HTTP Headers values from responses
-- sleep action should take its time in seconds or milliseconds
 - add a web interface to create/import/export Playbooks
 
 ## License
