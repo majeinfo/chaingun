@@ -7,16 +7,18 @@ import (
 	"net/url"
 )
 
+// LogAction describes a log Action
 type LogAction struct {
 	Message string `yaml:"message"`
 }
 
 var (
-	disable_log bool = false
+	disableLog bool
 )
 
+// Execute a log Action
 func (s LogAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
-	if disable_log {
+	if disableLog {
 		return true
 	}
 	unesc, _ := url.QueryUnescape(SubstParams(sessionMap, s.Message))
@@ -24,6 +26,7 @@ func (s LogAction) Execute(resultsChannel chan reporter.SampleReqResult, session
 	return true
 }
 
+// NewLogAction creates a new Log Action
 func NewLogAction(a map[interface{}]interface{}) (LogAction, bool) {
 	valid := true
 	if a["message"] == nil {
@@ -31,10 +34,10 @@ func NewLogAction(a map[interface{}]interface{}) (LogAction, bool) {
 		a["message"] = ""
 		valid = false
 	}
-	return LogAction{a["message"].(string)}, valid
+	return LogAction{Message: a["message"].(string)}, valid
 }
 
-// Called upon --no-log arg on command line
-func DisableAction(no_log bool) {
-	disable_log = no_log
+// DisableAction is called upon --no-log arg on command line
+func DisableAction(noLog bool) {
+	disableLog = noLog
 }

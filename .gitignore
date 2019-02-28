@@ -14,6 +14,7 @@ out
 pkg
 py36
 data
+eclipse
 golang.org
 gopkg.in
 gorilla
@@ -24,6 +25,8 @@ JumboInteractiveLimited
 tests/output/*
 tests/server/uploads/*
 tests/samples/*
+tests/output/data.csv
+tests/output/data.js
 player/results/*
 evaluate
 Knetic
@@ -35,3 +38,5 @@ rogpeppe
 stamblerre
 uudashr
 winterdrache.de
+js-yaml.min.js
+go-delve

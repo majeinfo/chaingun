@@ -4,36 +4,39 @@ import (
     "errors"
     "strings"
 
-    log "github.com/sirupsen/logrus"
+    "github.com/majeinfo/chaingun/config"
     "github.com/majeinfo/chaingun/reporter"
-	"github.com/majeinfo/chaingun/config"    
+    log "github.com/sirupsen/logrus"
 )
 
-type HttpAction struct {
-    Method          string              `yaml:"method"`
-    Url             string              `yaml:"url"`
-    Body            string              `yaml:"body"`
-    Template        string              `yaml:"template"`
-    FormDatas       []FormData          `yaml:"formdatas"`
-    Headers         map[string]string   `yaml:"headers"`
-    Title           string              `yaml:"title"`
-    StoreCookie     string              `yaml:"storeCookie"`
-    ResponseHandlers []ResponseHandler  `yaml:"responses"`
+// HTTPAction describes a HTTP Action
+type HTTPAction struct {
+    Method           string            `yaml:"method"`
+    URL              string            `yaml:"url"`
+    Body             string            `yaml:"body"`
+    Template         string            `yaml:"template"`
+    FormDatas        []FormData        `yaml:"formdatas"`
+    Headers          map[string]string `yaml:"headers"`
+    Title            string            `yaml:"title"`
+    StoreCookie      string            `yaml:"storeCookie"`
+    ResponseHandlers []ResponseHandler `yaml:"responses"`
 }
 
-// These data will be sent with
+// FormData describes the data that will be sent with the HTTP Request
 type FormData struct {
-    Name    string      `yaml:"name"`
-    Value   string      `yaml:"name"`
-    Type    string      `yaml:"type"`
+    Name    string `yaml:"name"`
+    Value   string `yaml:"name"`
+    Type    string `yaml:"type"`
     Content []byte
 }
 
-func (h HttpAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
-    return DoHttpRequest(h, resultsChannel, sessionMap, playbook)
+// Execute a HTTP Action
+func (h HTTPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
+    return DoHTTPRequest(h, resultsChannel, sessionMap, playbook)
 }
 
-func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) (HttpAction, bool) {
+// NewHTTPAction creates a new HTTP Action
+func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPAction, bool) {
     log.Debugf("NewhttpAction=%v", a)
     valid := true
 
@@ -62,9 +65,15 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) (HttpActi
 
     // Check formdatas
     nu := 0
-    if a["body"] != nil { nu ++ }
-    if a["template"] != nil { nu++ }
-    if a["formdata"] != nil { nu++ }
+    if a["body"] != nil {
+        nu++
+    }
+    if a["template"] != nil {
+        nu++
+    }
+    if a["formdata"] != nil {
+        nu++
+    }
     if nu > 1 {
         log.Error("A HttpAction can contain a single 'body' or a 'template' or a 'formdata'.")
         valid = false
@@ -77,7 +86,7 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) (HttpActi
 
     headers := make(map[string]string, 20)
     if a["headers"] != nil {
-        for hdr, value := range (a["headers"].(map[interface{}]interface{})) {
+        for hdr, value := range a["headers"].(map[interface{}]interface{}) {
             log.Debugf("Header Key=%s / Value=%s", hdr.(string), value.(string))
             headers[strings.ToLower(hdr.(string))] = value.(string)
         }
@@ -88,7 +97,7 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) (HttpActi
     headers["user-agent"] = "chaingun-by-JD"
 
     formdatas, validData := NewFormDatas(a)
-    responseHandlers, validResp  := NewResponseHandlers(a)
+    responseHandlers, validResp := NewResponseHandlers(a)
     template, validTempl := getTemplate(a)
 
     if !valid || !validResp || !validData || !validTempl {
@@ -96,16 +105,16 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) (HttpActi
         valid = false
     }
 
-    httpAction := HttpAction{
-        a["method"].(string),
-        a["url"].(string),
-        getBody(a),
-        template,
-        formdatas,
-        headers,
-        a["title"].(string),
-        storeCookie,
-        responseHandlers,
+    httpAction := HTTPAction{
+        Method:           a["method"].(string),
+        URL:              a["url"].(string),
+        Body:             getBody(a),
+        Template:         template,
+        FormDatas:        formdatas,
+        Headers:          headers,
+        Title:            a["title"].(string),
+        StoreCookie:      storeCookie,
+        ResponseHandlers: responseHandlers,
     }
 
     log.Debugf("HTTPAction: %v", httpAction)
@@ -113,15 +122,15 @@ func NewHttpAction(a map[interface{}]interface{}, dflt config.Default) (HttpActi
     return httpAction, valid
 }
 
-// Build all the FormDatas from the Action described in YAML Playbook
+// NewFormDatas builds all the FormDatas from the Action described in YAML Playbook
 func NewFormDatas(a map[interface{}]interface{}) ([]FormData, bool) {
-	valid := true
-	var formDatas []FormData
+    valid := true
+    var formDatas []FormData
     if a["formdata"] == nil {
         formDatas = nil
     } else {
         switch v := a["formdata"].(type) {
-        case []interface {}:
+        case []interface{}:
             formDatas = make([]FormData, len(v))
             for idx, r1 := range v {
                 r2 := r1.(map[interface{}]interface{})
@@ -137,15 +146,16 @@ func NewFormDatas(a map[interface{}]interface{}) ([]FormData, bool) {
             log.Error("formdata format is invalid")
             valid = false
         }
-	}
-	
-	return formDatas, valid
+    }
+
+    return formDatas, valid
 }
 
+// NewFormData build a new structure to handle form data to be sent
 func NewFormData(a map[interface{}]interface{}) (FormData, error) {
-	valid := true
-	var formData FormData
-        
+    valid := true
+    var formData FormData
+
     if a["name"] == nil {
         log.Error("FormData must have a 'name' attribute.")
         valid = false
@@ -169,9 +179,9 @@ func NewFormData(a map[interface{}]interface{}) (FormData, error) {
         }
     }
 
-	if !valid {
-		return formData, errors.New("Errors occurred during FormData block analysis.")
-	}
+    if !valid {
+        return formData, errors.New("Errors occurred during FormData block analysis")
+    }
 
     return formData, nil
 }

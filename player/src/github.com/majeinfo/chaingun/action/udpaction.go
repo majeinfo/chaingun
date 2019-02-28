@@ -1,27 +1,29 @@
 package action
 
 import (
-   "github.com/majeinfo/chaingun/reporter"
-   "github.com/majeinfo/chaingun/config"   
+	"github.com/majeinfo/chaingun/config"
+	"github.com/majeinfo/chaingun/reporter"
 )
 
-type UdpAction struct {
+// UDPAction describes a UDP Action
+type UDPAction struct {
 	Address string `yaml:"address"`
 	Payload string `yaml:"payload"`
-	Title string `yaml:"title"`
+	Title   string `yaml:"title"`
 }
 
-func (t UdpAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
-	DoUdpRequest(t, resultsChannel, sessionMap)
+// Execute an UDP Request
+func (t UDPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
+	DoUDPRequest(t, resultsChannel, sessionMap)
 	return true
 }
 
-func NewUdpAction(a map[interface{}]interface{}) (UdpAction, bool) {
-
+// NewUDPAction creates a new UDP Action
+func NewUDPAction(a map[interface{}]interface{}) (UDPAction, bool) {
 	// TODO validation
-	return UdpAction{
-		a["address"].(string),
-		a["payload"].(string),
-		a["title"].(string),
+	return UDPAction{
+		Address: a["address"].(string),
+		Payload: a["payload"].(string),
+		Title:   a["title"].(string),
 	}, true
 }

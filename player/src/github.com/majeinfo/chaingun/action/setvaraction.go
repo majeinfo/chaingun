@@ -9,12 +9,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// SetVarAction describes a setvar Action
 type SetVarAction struct {
 	Variable     string `yaml:"variable"`
 	Expression   string `yaml:"expression"`
 	CompiledExpr *govaluate.EvaluableExpression
 }
 
+// Execute a setvar Action
 func (s SetVarAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
 	// Create the variable if needed
 	if _, err := sessionMap[s.Variable]; !err {
@@ -57,6 +59,7 @@ func (s SetVarAction) Execute(resultsChannel chan reporter.SampleReqResult, sess
 	return true
 }
 
+// NewSetVarAction creates a new setvar Action
 func NewSetVarAction(a map[interface{}]interface{}) (SetVarAction, bool) {
 	valid := true
 	if a["variable"] == nil {

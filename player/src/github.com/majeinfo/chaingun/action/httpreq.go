@@ -18,13 +18,13 @@ import (
 )
 
 var (
-	cookie_prefix        = "__cookie__"
-	cookie_prefix_length = len(cookie_prefix)
+	cookiePrefix       = "__cookie__"
+	cookiePrefixLength = len(cookiePrefix)
 )
 
-// Accepts a Httpaction and a one-way channel to write the results to.
-func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
-	req, err := buildHttpRequest(httpAction, sessionMap)
+// DoHTTPRequest accepts a Httpaction and a one-way channel to write the results to.
+func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
+	req, err := buildHTTPRequest(httpAction, sessionMap)
 	if err != nil {
 		log.Error(err)
 		return false
@@ -64,7 +64,7 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 		for _, cookie := range resp.Cookies() {
 			if cookie.Name == httpAction.StoreCookie || httpAction.StoreCookie == "__all__" {
 				log.Debugf("Store cookie: %s=%s", httpAction.StoreCookie, cookie.Value)
-				sessionMap[cookie_prefix+cookie.Name] = cookie.Value
+				sessionMap[cookiePrefix+cookie.Name] = cookie.Value
 			}
 		}
 	}
@@ -86,23 +86,23 @@ func DoHttpRequest(httpAction HttpAction, resultsChannel chan reporter.SampleReq
 	return valid
 }
 
-func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) (*http.Request, error) {
+func buildHTTPRequest(httpAction HTTPAction, sessionMap map[string]string) (*http.Request, error) {
 	var req *http.Request
 	var err error
 	log.Debug("buildHttpRequest")
 
 	// Hack: the Path has been concatened with EscapedPath() (from net/url.go)
 	// We must re-convert strings like $%7Bxyz%7D into ${xyz} to make variable substitution work !
-	unescaped_url := RedecodeEscapedPath(httpAction.Url)
+	unescapedURL := RedecodeEscapedPath(httpAction.URL)
 
 	if httpAction.Body != "" {
 		// BODY
 		reader := strings.NewReader(SubstParams(sessionMap, httpAction.Body))
-		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), reader)
+		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescapedURL), reader)
 	} else if httpAction.Template != "" {
 		// TEMPLATE
 		reader := strings.NewReader(SubstParams(sessionMap, httpAction.Template))
-		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), reader)
+		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescapedURL), reader)
 	} else if len(httpAction.FormDatas) > 0 {
 		// FORM-DATA
 		body := &bytes.Buffer{}
@@ -128,11 +128,11 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) (*htt
 			return nil, err
 		}
 
-		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), body)
+		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescapedURL), body)
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 	} else {
 		// DEFAULT
-		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescaped_url), nil)
+		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescapedURL), nil)
 	}
 	if err != nil {
 		err := fmt.Errorf("http.newRequest failed in buildHttpRequest: %s", err)
@@ -149,9 +149,9 @@ func buildHttpRequest(httpAction HttpAction, sessionMap map[string]string) (*htt
 
 	// Add cookies stored by subsequent requests in the sessionMap having the kludgy __cookie__ prefix
 	for key, value := range sessionMap {
-		if strings.HasPrefix(key, cookie_prefix) {
+		if strings.HasPrefix(key, cookiePrefix) {
 			cookie := http.Cookie{
-				Name:  key[cookie_prefix_length:len(key)],
+				Name:  key[cookiePrefixLength:len(key)],
 				Value: value,
 			}
 

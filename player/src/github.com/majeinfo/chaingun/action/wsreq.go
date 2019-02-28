@@ -8,15 +8,16 @@ import (
 	"time"
 )
 
+// DoWSRequest handles requests made using WebSocket Protocol
 // TODO: manage cookies !
 func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
 	//req := buildWSRequest(wsAction, sessionMap)
-	log.Debugf("New Request: URL: %s", wsAction.Url)
+	log.Debugf("New Request: URL: %s", wsAction.URL)
 
 	start := time.Now()
 
 	// TODO: should be done once per VU and per script or this could be configurable (for HTTP/S too)
-	c, _, err := websocket.DefaultDialer.Dial(wsAction.Url, nil)
+	c, _, err := websocket.DefaultDialer.Dial(wsAction.URL, nil)
 	if err != nil {
 		log.Errorf("WS Connection failed: %s", err)
 		return false
@@ -66,7 +67,7 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 		case <-done:
 			break
 		case t := <-ticker.C:
-			log.Errorf("WS ReadMessage timeout", t)
+			log.Errorf("WS ReadMessage timeout %v", t)
 			ok = false
 			break
 		}

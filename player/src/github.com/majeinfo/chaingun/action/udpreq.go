@@ -1,23 +1,23 @@
 package action
 
 import (
-    "net"
     "fmt"
-    "time"
-    log "github.com/sirupsen/logrus"    
     "github.com/majeinfo/chaingun/reporter"
+    log "github.com/sirupsen/logrus"
+    "net"
+    "time"
 )
 
 var udpconn *net.UDPConn
 
-// Accepts a UdpAction and a one-way channel to write the results to.
-func DoUdpRequest(udpAction UdpAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string) {
+// DoUDPRequest accepts a UdpAction and a one-way channel to write the results to.
+func DoUDPRequest(udpAction UDPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string) {
 
     address := SubstParams(sessionMap, udpAction.Address)
     payload := SubstParams(sessionMap, udpAction.Payload)
 
     if udpconn == nil {
-        ServerAddr,err := net.ResolveUDPAddr("udp", address) //"127.0.0.1:10001")
+        ServerAddr, err := net.ResolveUDPAddr("udp", address) //"127.0.0.1:10001")
         if err != nil {
             log.Errorf("Error ResolveUDPAddr remote: %s", err.Error())
         }
@@ -35,7 +35,7 @@ func DoUdpRequest(udpAction UdpAction, resultsChannel chan reporter.SampleReqRes
     //defer Conn.Close()
     start := time.Now()
     if udpconn != nil {
-        _, err := fmt.Fprintf(udpconn, payload + "\r\n")
+        _, err := fmt.Fprintf(udpconn, payload+"\r\n")
         if err != nil {
             log.Errorf("UDP request failed with error: %s", err)
             udpconn = nil
@@ -43,19 +43,19 @@ func DoUdpRequest(udpAction UdpAction, resultsChannel chan reporter.SampleReqRes
     }
 
     elapsed := time.Since(start)
-    resultsChannel <- buildUdpResult(sessionMap["UID"], 0, 200, elapsed.Nanoseconds(), udpAction.Title)
+    resultsChannel <- buildUDPResult(sessionMap["UID"], 0, 200, elapsed.Nanoseconds(), udpAction.Title)
 
 }
 
-func buildUdpResult(vid string, contentLength int, status int, elapsed int64, title string) (reporter.SampleReqResult){
-    sampleReqResult := reporter.SampleReqResult {
-		vid,
-        "UDP",
-        elapsed,
-        contentLength,
-        status,
-        title,
-        time.Since(reporter.SimulationStart).Nanoseconds(),
+func buildUDPResult(vid string, contentLength int, status int, elapsed int64, title string) reporter.SampleReqResult {
+    sampleReqResult := reporter.SampleReqResult{
+        Vid:     vid,
+        Type:    "UDP",
+        Latency: elapsed,
+        Size:    contentLength,
+        Status:  status,
+        Title:   title,
+        When:    time.Since(reporter.SimulationStart).Nanoseconds(),
     }
     return sampleReqResult
 }

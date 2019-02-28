@@ -1,27 +1,29 @@
 package action
 
 import (
-   "github.com/majeinfo/chaingun/reporter"
-   "github.com/majeinfo/chaingun/config"   
+	"github.com/majeinfo/chaingun/config"
+	"github.com/majeinfo/chaingun/reporter"
 )
 
-type TcpAction struct {
+// TCPAction describes a TCP Action
+type TCPAction struct {
 	Address string `yaml:"address"`
 	Payload string `yaml:"payload"`
-	Title string `yaml:"title"`
+	Title   string `yaml:"title"`
 }
 
-func (t TcpAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
-	DoTcpRequest(t, resultsChannel, sessionMap)
+// Execute a TCP Action
+func (t TCPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
+	DoTCPRequest(t, resultsChannel, sessionMap)
 	return true
 }
 
-func NewTcpAction(a map[interface{}]interface{}) (TcpAction, bool) {
-
+// NewTCPAction createsa new TCP Action
+func NewTCPAction(a map[interface{}]interface{}) (TCPAction, bool) {
 	// TODO validation
-	return TcpAction{
-		a["address"].(string),
-		a["payload"].(string),
-		a["title"].(string),
+	return TCPAction{
+		Address: a["address"].(string),
+		Payload: a["payload"].(string),
+		Title:   a["title"].(string),
 	}, true
 }

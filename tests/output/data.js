@@ -1,5 +1,5 @@
-var elapsed_time = 1;
-var total_requests = 3;
+var elapsed_time = 2;
+var total_requests = 6;
 var playbook_name = "None";
 
 $(function () {
@@ -17,7 +17,7 @@ $(function () {
             }, 
     
         xAxis: {
-            categories: [0],
+            categories: [0, 1],
             title: {
                 text: 'Elapsed Time (seconds)'
             },
@@ -33,27 +33,27 @@ $(function () {
         
         {
             name: '#VU',
-            data: [1.0]
+            data: [1.0, 1.0]
         },
         
         {
             name: '#Req',
-            data: [3.0]
+            data: [3.0, 3.0]
         },
         
         {
             name: 'Latency (in ms)',
-            data: [165.0]
+            data: [1.0, 1.0]
         },
         
         {
             name: '#Errors',
-            data: [0.0]
+            data: [0.0, 0.0]
         },
         
         {
             name: '#Rcv Bytes',
-            data: [52.0]
+            data: [83.0, 85.0]
         },
         
         ]
@@ -72,7 +72,7 @@ $(function () {
             }, 
     
         xAxis: {
-            categories: [0],
+            categories: [0, 1],
             title: {
                 text: 'Elapsed Time (seconds)'
             },
@@ -88,17 +88,17 @@ $(function () {
         
         {
             name: 'Page 1',
-            data: [164.0]
-        },
-        
-        {
-            name: 'Page 2',
-            data: [169.0]
+            data: [3.0, 2.0]
         },
         
         {
             name: 'Page 3',
-            data: [163.0]
+            data: [1.0, 1.0]
+        },
+        
+        {
+            name: 'Page 4',
+            data: [1.0, 1.0]
         },
         
         ]
@@ -117,7 +117,7 @@ $(function () {
             }, 
     
         xAxis: {
-            categories: [0],
+            categories: [0, 1],
             title: {
                 text: 'Elapsed Time (seconds)'
             },
@@ -133,13 +133,13 @@ $(function () {
         
         {
             name: '200',
-            data: [3.0]
+            data: [3.0, 3.0]
         },
         
         ]
             });
 $('#http_codes > thead').append('<tr><th></th><th>200</th><th>#Req</th></tr>');
-$('#http_codes > tbody:last-child').append('<tr><td>Page 1</td><td>1</td><td>1</td></tr>');
-$('#http_codes > tbody:last-child').append('<tr><td>Page 2</td><td>1</td><td>1</td></tr>');
-$('#http_codes > tbody:last-child').append('<tr><td>Page 3</td><td>1</td><td>1</td></tr>');
+$('#http_codes > tbody:last-child').append('<tr><td>Page 1</td><td>2</td><td>2</td></tr>');
+$('#http_codes > tbody:last-child').append('<tr><td>Page 3</td><td>2</td><td>2</td></tr>');
+$('#http_codes > tbody:last-child').append('<tr><td>Page 4</td><td>2</td><td>2</td></tr>');
 });

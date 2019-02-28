@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+// ResponseHandler describes the actions to apply on returned data
 type ResponseHandler struct {
 	FromHeader   string           `yaml:"from_header"`
 	Jsonpaths    []*jsonpath.Path `yaml:"jsonpath"`
@@ -25,7 +26,7 @@ type ResponseHandler struct {
 	Defaultvalue string           `yaml:"default_value"`
 }
 
-// Build all the ResponseHandler from the Action described in YAML Playbook
+// NewResponseHandlers builds all the ResponseHandler from the Action described in YAML Playbook
 func NewResponseHandlers(a map[interface{}]interface{}) ([]ResponseHandler, bool) {
 	log.Debugf("NewResponseHandlers")
 
@@ -56,13 +57,13 @@ func NewResponseHandlers(a map[interface{}]interface{}) ([]ResponseHandler, bool
 	return responseHandlers, valid
 }
 
-// Build the ResponseHandler from the Action described in YAML playbook
+// NewResponseHandler builds the ResponseHandler from the Action described in YAML playbook
 func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) {
 	valid := true
 	var responseHandler ResponseHandler
 
-	valid_index := []string{"first", "last", "random"}
-	if a["index"] != nil && !config.StringInSlice(a["index"].(string), valid_index) {
+	validIndex := []string{"first", "last", "random"}
+	if a["index"] != nil && !config.StringInSlice(a["index"].(string), validIndex) {
 		log.Error("HttpAction ResponseHandler must define an Index of either of: first, last or random.")
 		valid = false
 	}
@@ -130,7 +131,7 @@ func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) 
 	}
 
 	if !valid {
-		return responseHandler, errors.New("Errors occurred during Response block analysis.")
+		return responseHandler, errors.New("Errors occurred during Response block analysis")
 	}
 
 	return responseHandler, nil
@@ -153,11 +154,11 @@ func processResult(responseHandlers []ResponseHandler, sessionMap map[string]str
 
 func _processResult(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte, respHeader http.Header) bool {
 	if responseHandler.Jsonpaths != nil {
-		return JsonProcessor(responseHandler, sessionMap, responseBody)
+		return JSONProcessor(responseHandler, sessionMap, responseBody)
 	}
 
 	if responseHandler.Xmlpath != nil {
-		return XmlPathProcessor(responseHandler, sessionMap, responseBody)
+		return XMLPathProcessor(responseHandler, sessionMap, responseBody)
 	}
 
 	if responseHandler.Regex != nil {
@@ -167,7 +168,8 @@ func _processResult(responseHandler ResponseHandler, sessionMap map[string]strin
 	return true
 }
 
-func JsonProcessor(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {
+// JSONProcessor applies JSON expression to extract data fro responses and fill variables
+func JSONProcessor(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {
 	log.Debugf("Response processed by Json")
 
 	eval, err := jsonpath.EvalPathsInBytes(responseBody, responseHandler.Jsonpaths)
@@ -198,7 +200,7 @@ func JsonProcessor(responseHandler ResponseHandler, sessionMap map[string]string
 			log.Warning("Jsonpath failed to apply, uses default value")
 			resultsArray = append(resultsArray, responseHandler.Defaultvalue)
 		} else {
-			log.Errorf("Jsonpath %s failed to apply - no default value given", responseHandler.Jsonpaths)
+			log.Errorf("Jsonpath %v failed to apply - no default value given", responseHandler.Jsonpaths)
 			return false
 		}
 	}
@@ -208,7 +210,8 @@ func JsonProcessor(responseHandler ResponseHandler, sessionMap map[string]string
 	return true
 }
 
-func XmlPathProcessor(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {
+// XMLPathProcessor extracts XML data from responses to fill variables
+func XMLPathProcessor(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {
 	log.Debugf("Response processed by XmlPath")
 
 	r := bytes.NewReader(responseBody)
@@ -238,8 +241,9 @@ func XmlPathProcessor(responseHandler ResponseHandler, sessionMap map[string]str
 	return true
 }
 
+// RegexpProcessor applies the Regexp from responses to fill variables
 func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte, respHeader http.Header) bool {
-	var r string = ""
+	var r string
 
 	log.Debugf("Response processed by Regexp")
 
@@ -327,15 +331,15 @@ func trimChar(s string, r byte) string {
 	return s
 }
 
-func buildSampleResult(action_type string, vid string, contentLength int, status int, elapsed int64, title string) reporter.SampleReqResult {
+func buildSampleResult(actionType string, vid string, contentLength int, status int, elapsed int64, title string) reporter.SampleReqResult {
 	sampleReqResult := reporter.SampleReqResult{
-		vid,
-		action_type,
-		elapsed,
-		contentLength,
-		status,
-		title,
-		time.Since(reporter.SimulationStart).Nanoseconds(),
+		Vid:     vid,
+		Type:    actionType,
+		Latency: elapsed,
+		Size:    contentLength,
+		Status:  status,
+		Title:   title,
+		When:    time.Since(reporter.SimulationStart).Nanoseconds(),
 	}
 	return sampleReqResult
 }
