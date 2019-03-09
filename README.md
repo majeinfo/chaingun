@@ -6,7 +6,7 @@ http://callistaenterprise.se/blogg/teknik/2015/11/22/gotling/
 (Thanks to Erik Lupander)
 
 ## What it does
-- Provides high-throughput load testing of HTTP/TCP/UDP/WS services (through Standalone or Distributed Modes)
+- Provides high-throughput load testing of HTTP/TCP/UDP/WS/MQTT services (through Standalone or Distributed Modes)
 - Supports GET, POST, PUT and DELETE
 - Request URLs and bodies can contain ${paramName} parameters
 - ${paramName} values can be extracted from HTTP response bodies and bound to a User context. User defined variables are also supported
@@ -238,6 +238,19 @@ actions:
       url: http://server/page4.php
       body: name=${name}&age=${age}     # Optional
       upload_file: /path/to/file        # no variable interpolation                    
+
+  # MQTT action is possible (beta)
+  - mqtt:
+      title: Temperature		# MAND
+      url: tcps://endpoint.iot.eu-west-1.amazonaws.com:8883/mqtt	# MAND
+      certificatepath: path/to/cert	# OPT needed if auth by certificate
+      privatekeypath: path/to/privkey	# OPT needed if auth by certificate
+      clientid: basicPubSub		# OPT "chaingun-by-JD" by default
+      topic: "sensors/room1"		# MAND
+      payload: "{ \"Temp\": \"20°C\" }"	# MAND format depends on your app
+      qos: 1				# OPT values can be 0, 1 (defult) or 2
+					# Variable interpolation is applied on
+					# url, payload and topic
 
   # Compute formula with variables
   - setvar:

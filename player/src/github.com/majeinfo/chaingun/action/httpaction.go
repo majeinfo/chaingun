@@ -60,6 +60,7 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPActi
     }
     if a["title"] == nil || a["title"] == "" {
         log.Error("HttpAction must define a title.")
+        a["title"] = ""
         valid = false
     }
 
