@@ -278,7 +278,6 @@ $ ./test_standalone_player.sh
 ```
 
 ## TODO
-- add a way to extract HTTP Headers values from responses
 - add a web interface to create/import/export Playbooks
 
 ## License
