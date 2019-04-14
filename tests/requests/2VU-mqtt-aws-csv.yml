@@ -1,0 +1,18 @@
+---
+iterations: 2
+users: 2
+rampup: 4
+feeder:
+  type: csv
+  filename: data1.csv
+  separator: ","
+actions:
+  - mqtt:
+      title: Page 1
+      url: tcps://a1k7rn6ftqm06i-ats.iot.eu-west-1.amazonaws.com:8883/mqtt
+      certificatepath: requests/JDThing1.cert.pem
+      privatekeypath: requests/JDThing1.private.key
+      clientid: basicPubSub
+      topic: "mesures/jd"
+      payload: "{ \"message\": \"${name}\" }"
+      qos: 1
