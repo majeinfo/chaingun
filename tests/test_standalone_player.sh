@@ -46,14 +46,15 @@ function Req_OK {
 }
 # Test player arguments
 Arg_Error "--output-dir /tmp/chaingun/output/ --python-cmd '$PYTHON'" "When not started as a daemon, needs a 'script' file"
-Arg_Error "--script dummy --python-cmd $PYTHON" "no such file or directory"
+Arg_Error "$VIEWER --output-dir /tmp/chaingun/output/ --script dummy --python-cmd $PYTHON" "no such file or directory"
+Arg_Error "--output-dir /tmp/chaingun/output/ --script dummy --python-cmd $PYTHON" "When not started as a daemon, needs the location of the viewer.py script"
 Arg_Error "--script dummy" "You must specify a Python interpreter"
 Arg_Error "--script dummy --python-cmd dummy" "Python interpreter .* does not exist"
 
 # Test script syntax
 Syn_Error syntax/missing-iterations.yml 'Iterations not set, must be > 0'
 Syn_Error syntax/missing-duration.yml 'When Iterations is -1, Duration must be set'
-Syn_Error syntax/missing-title.yml 'Action has no Title specified'
+Syn_Error syntax/missing-title.yml 'HttpAction must define a title'
 Syn_Error syntax/missing-method.yml 'Action has no Method and no default Method specified'
 Syn_Error syntax/missing-server.yml 'Host missing for URL'
 Syn_OK syntax/opt-duration.yml
@@ -68,6 +69,7 @@ Req_OK requests/1VU-json.yml
 Req_Error requests/1VU-regex-bad.yml 'failed to apply - no default value given'
 Req_Error requests/1VU-regex-default-value.yml 'Regexp failed to apply, uses default value'
 Req_OK requests/1VU-regex.yml
+Req_OK requests/1VU-regex-random.yml
 
 # Test "on_error" behaviour
 Req_Error requests/error-stop-test.yml 'Stop now'

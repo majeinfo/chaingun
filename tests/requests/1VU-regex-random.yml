@@ -1,0 +1,18 @@
+---
+iterations: 10
+users: 1
+rampup: 1
+actions:
+  - http:
+      title: Main Page
+      method: GET
+      url: http://localhost:8000/sommaire.html
+      responses:
+        - regex: "/country\\.php\\?name=([^\"]*)"
+          variable: name
+          index: random
+          default_value: FR
+  - http:
+      title: Country Page
+      method: GET
+      url: http://localhost:8000/country.php?name=${name}

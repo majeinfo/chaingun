@@ -260,19 +260,18 @@ func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]stri
 
 	res := responseHandler.Regex.FindAllStringSubmatch(r, -1)
 	log.Debugf("Regex applied: %v", res)
-	if res != nil && len(res) > 0 {
-		log.Debugf("Regexp matches: %v", res[0])
-		resultsArray := make([]string, 0, 10)
-		if len(res[0]) > 1 {
-			resultsArray = append(resultsArray, res[0][1])
-		} else {
-			resultsArray = append(resultsArray, res[0][0])
+	if res != nil && len(res) > 1 {
+		log.Debugf("Regexp matches at least: %v, count of matching substring=%d", res[0], len(res))
+		resultsArray := make([]string, len(res))
+		for i := 0; i < len(res); i++ {
+			//resultsArray = append(resultsArray, res[i][1])
+			resultsArray[i] = res[i][1]
 		}
 		passResultIntoSessionMap(resultsArray, responseHandler, sessionMap)
 	} else {
 		if responseHandler.Defaultvalue != "" {
 			log.Warning("Regexp failed to apply, uses default value")
-			resultsArray := make([]string, 0, 10)
+			resultsArray := make([]string, 1)
 			resultsArray = append(resultsArray, responseHandler.Defaultvalue)
 			passResultIntoSessionMap(resultsArray, responseHandler, sessionMap)
 		} else {
@@ -285,9 +284,9 @@ func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]stri
 }
 
 func passResultIntoSessionMap(resultsArray []string, responseHandler ResponseHandler, sessionMap map[string]string) {
-	resultCount := len(resultsArray)
+	log.Debugf("resultsArray=%v", resultsArray)
 
-	if resultCount > 0 {
+	if resultCount := len(resultsArray); resultCount > 0 {
 		switch responseHandler.Index {
 		case config.RE_FIRST:
 			log.Debugf("First matching value: %s", resultsArray[0])
@@ -299,7 +298,7 @@ func passResultIntoSessionMap(resultsArray []string, responseHandler ResponseHan
 			break
 		case config.RE_RANDOM:
 			if resultCount > 1 {
-				sessionMap[responseHandler.Variable] = resultsArray[rand.Intn(resultCount-1)]
+				sessionMap[responseHandler.Variable] = resultsArray[rand.Intn(resultCount)]
 			} else {
 				sessionMap[responseHandler.Variable] = resultsArray[0]
 			}
