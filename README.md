@@ -6,13 +6,14 @@ http://callistaenterprise.se/blogg/teknik/2015/11/22/gotling/
 (Thanks to Erik Lupander)
 
 ## What it does
-- Provides high-throughput load testing of HTTP/TCP/UDP/WS/MQTT services (through Standalone or Distributed Modes)
-- Supports GET, POST, PUT and DELETE
+- Provides high-throughput load testing of HTTP/TCP/UDP/WS/MQTT services
+- Supports Standalone or Distributed Modes
+- Supports GET, HEAD, POST, PUT and DELETE
 - Request URLs and bodies can contain ${paramName} parameters
 - ${paramName} values can be extracted from HTTP response bodies and bound to a User context. User defined variables are also supported
-- Capturing Set-Cookie response headers
+- Captures Set-Cookie response headers
 - POST data can be inlined or read from template files
-- variables can be feed from an external CSV file
+- Variables can be fed from an external CSV file
 
 ## Building
 
@@ -23,7 +24,7 @@ To be completed...
 Chaingun is made of 2 parts :
 
 - a Player which role is to inject requests to the tested server(s)
-- a Manager that provides a Web interface to manage the Players
+- an optional Manager that provides a Web interface to manage the Players
 
 Players can be run in standalone mode : this is the easiest way to proceed and may be
 sufficient when the expected test load can be applied by only one Player. In such a case
@@ -162,7 +163,7 @@ actions:
       headers:
         accept: "text/html,application/json"    # variables are interpolated in Headers
         content-type: text/html
-      responses:				# OPT
+      responses:			# OPT
         - regex: "is: (.*)<br>"		# MAND must be one of regex/jsonpath/xmlpath
           index: first			# OPT must be one of first (default)/last/random
           variable: address		# MAND
