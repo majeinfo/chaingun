@@ -76,7 +76,7 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 	elapsed := time.Since(start)
 	log.Debugf("elapsed time=%d", elapsed)
 
-	sampleReqResult := buildSampleResult("WS", sessionMap["UID"], bodyLen, respCode, elapsed.Nanoseconds(), wsAction.Title)
+	sampleReqResult := buildSampleResult("WS", sessionMap["UID"], bodyLen, respCode, elapsed.Nanoseconds(), wsAction.Title, wsAction.URL)
 	resultsChannel <- sampleReqResult
 
 	return ok

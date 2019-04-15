@@ -49,7 +49,7 @@ func initResultsFile() {
 	if output_type == "json" {
 		_, err = w.WriteString(string("var logdata = '"))
 	} else if output_type == "csv" {
-		_, err = w.WriteString("Timestamp,Vid,Type,Title,Status,Size,Latency\n")
+		_, err = w.WriteString("Timestamp,Vid,Type,Title,Status,Size,Latency,FullRequest\n")
 	}
 
 	if err != nil {
@@ -79,9 +79,9 @@ func WriteResult(sampleResult *SampleReqResult) {
 		_, err = w.WriteString(string(jsonString))
 		_, err = w.WriteString("|")
 	} else if output_type == "csv" {
-		s := fmt.Sprintf("%d,%s,%s,%s,%d,%d,%d\n",
+		s := fmt.Sprintf("%d,%s,%s,%s,%d,%d,%d,%s\n",
 			sampleResult.When, sampleResult.Vid, sampleResult.Type, sampleResult.Title,
-			sampleResult.Status, sampleResult.Size, sampleResult.Latency)
+			sampleResult.Status, sampleResult.Size, sampleResult.Latency, sampleResult.FullRequest)
 		_, err = w.WriteString(s)
 	}
 

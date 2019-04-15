@@ -74,7 +74,7 @@ func DoMQTTRequest(mqttAction MQTTAction, resultsChannel chan reporter.SampleReq
 		<-quit
 	*/
 
-	sampleReqResult := buildSampleResult("MQTT", sessionMap["UID"], 0, 0, elapsed.Nanoseconds(), mqttAction.Title)
+	sampleReqResult := buildSampleResult("MQTT", sessionMap["UID"], 0, 0, elapsed.Nanoseconds(), mqttAction.Title, realURL)
 	resultsChannel <- sampleReqResult
 
 	return true

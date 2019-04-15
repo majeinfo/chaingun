@@ -337,15 +337,16 @@ func trimChar(s string, r byte) string {
 	return s
 }
 
-func buildSampleResult(actionType string, vid string, contentLength int, status int, elapsed int64, title string) reporter.SampleReqResult {
+func buildSampleResult(actionType string, vid string, contentLength int, status int, elapsed int64, title string, fullreq string) reporter.SampleReqResult {
 	sampleReqResult := reporter.SampleReqResult{
-		Vid:     vid,
-		Type:    actionType,
-		Latency: elapsed,
-		Size:    contentLength,
-		Status:  status,
-		Title:   title,
-		When:    time.Since(reporter.SimulationStart).Nanoseconds(),
+		Vid:         vid,
+		Type:        actionType,
+		Latency:     elapsed,
+		Size:        contentLength,
+		Status:      status,
+		Title:       title,
+		When:        time.Since(reporter.SimulationStart).Nanoseconds(),
+		FullRequest: fullreq,
 	}
 	return sampleReqResult
 }

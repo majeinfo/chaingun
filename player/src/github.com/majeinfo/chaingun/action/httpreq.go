@@ -52,7 +52,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Reading HTTP response failed: %s", err)
-		sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], 0, resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title)
+		sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], 0, resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title, req.URL.String())
 		resultsChannel <- sampleReqResult
 		return false
 	}
@@ -81,7 +81,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	if valid && !processResult(httpAction.ResponseHandlers, sessionMap, responseBody, resp.Header) {
 		valid = false
 	}
-	sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title)
+	sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title, req.URL.String())
 	resultsChannel <- sampleReqResult
 	return valid
 }
