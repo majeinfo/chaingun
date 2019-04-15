@@ -31,8 +31,8 @@ var (
 	gp_outputdir      *string
 	gp_outputtype     *string
 	gp_python_cmd     *string
-	gp_viewerfile	  *string
-	gp_no_log		  *bool
+	gp_viewerfile     *string
+	gp_no_log         *bool
 
 	gp_playbook config.TestDef
 	gp_actions  []action.Action
@@ -75,6 +75,9 @@ func command_line() {
 		}
 		if *gp_viewerfile == "" {
 			log.Fatal("When not started as a daemon, needs the location of the viewer.py script")
+		}
+		if _, err := os.Stat(*gp_viewerfile); os.IsNotExist(err) {
+			log.Fatalf("The specified Viewer %s does not exist.", *gp_viewerfile)
 		}
 	} else {
 		// Either listen-addr or connect-to must be specified
@@ -175,7 +178,7 @@ func main() {
 func createPlaybook(data []byte, playbook *config.TestDef, actions *[]action.Action) bool {
 	err := yaml.UnmarshalStrict([]byte(data), playbook)
 	if err != nil {
-		log.Fatalf("YAML error: %v", err)		
+		log.Fatalf("YAML error: %v", err)
 	}
 	log.Debug("Playbook:")
 	log.Debug(playbook)
