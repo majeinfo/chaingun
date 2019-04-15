@@ -270,6 +270,8 @@ actions:
   # Assertion are possible and use the same syntax as "setvar"
   - assert:
       expression: "name == \"bob\""
+
+      # if the assertion fails, the action returns an error
 ```
 
 The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
