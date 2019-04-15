@@ -168,7 +168,7 @@ func _processResult(responseHandler ResponseHandler, sessionMap map[string]strin
 	return true
 }
 
-// JSONProcessor applies JSON expression to extract data fro responses and fill variables
+// JSONProcessor applies JSON expression to extract data from responses and fill variables
 func JSONProcessor(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {
 	log.Debugf("Response processed by Json")
 
@@ -179,12 +179,19 @@ func JSONProcessor(responseHandler ResponseHandler, sessionMap map[string]string
 	}
 
 	// TODO optimization: Don't reinitialize each time, reuse this somehow.
-	resultsArray := make([]string, 0, 10)
+	max_values := 20
+	resultsArray := make([]string, 0, max_values)
+	idx := 0
 	for {
 		if result, ok := eval.Next(); ok {
 			value := strings.TrimSpace(result.Pretty(false))
 			log.Debugf("JSON extracted value: %s", value)
-			resultsArray = append(resultsArray, trimChar(value, '"'))
+			idx++
+			if idx > max_values {
+				log.Errorf("Too many JSON values to extract (%d maximum), value %s ignored", max_values, value)
+			} else {
+				resultsArray = append(resultsArray, trimChar(value, '"'))
+			}
 		} else {
 			break
 		}

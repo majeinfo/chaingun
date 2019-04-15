@@ -64,6 +64,7 @@ Syn_OK syntax/dflt-values.yml
 Req_Error requests/1VU-json-bad.yml 'failed to apply - no default value given'
 Req_Error requests/1VU-json-default-value.yml 'Jsonpath failed to apply, uses default value'
 Req_OK requests/1VU-json.yml
+Req_OK requests/1VU-json-many.yml
 
 # Test Regex request
 Req_Error requests/1VU-regex-bad.yml 'failed to apply - no default value given'
