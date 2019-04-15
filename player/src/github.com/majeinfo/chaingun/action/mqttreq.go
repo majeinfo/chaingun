@@ -1,7 +1,6 @@
 package action
 
 import (
-	_ "fmt"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
