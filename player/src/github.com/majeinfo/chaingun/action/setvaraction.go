@@ -43,14 +43,17 @@ func (s SetVarAction) Execute(resultsChannel chan reporter.SampleReqResult, sess
 		switch result.(type) {
 		case float64:
 			sessionMap[s.Variable] = strconv.Itoa((int)(result.(float64)))
+			log.Debugf("setvar sets variable %s with value %s", s.Variable, sessionMap[s.Variable])
 		case string:
 			sessionMap[s.Variable] = result.(string)
+			log.Debugf("setvar sets variable %s with value %s", s.Variable, sessionMap[s.Variable])
 		case bool:
 			if result.(bool) {
 				sessionMap[s.Variable] = "1"
 			} else {
 				sessionMap[s.Variable] = "0"
 			}
+			log.Debugf("setvar sets variable %s with value %s", s.Variable, sessionMap[s.Variable])
 		default:
 			log.Errorf("Error when evaluating expression: unknown type %v", result)
 		}
@@ -73,20 +76,8 @@ func NewSetVarAction(a map[interface{}]interface{}) (SetVarAction, bool) {
 		valid = false
 	}
 
-	functions := map[string]govaluate.ExpressionFunction{
-		"strlen": func(args ...interface{}) (interface{}, error) {
-			length := len(args[0].(string))
-			return (float64)(length), nil
-		},
-		"substr": func(args ...interface{}) (interface{}, error) {
-			runes := []rune(args[0].(string))
-			safeSubstring := string(runes[int(args[1].(float64)):int(args[2].(float64))])
-			return safeSubstring, nil
-		},
-	}
-
 	//expression, err := govaluate.NewEvaluableExpression(a["expression"].(string))
-	expression, err := govaluate.NewEvaluableExpressionWithFunctions(a["expression"].(string), functions)
+	expression, err := govaluate.NewEvaluableExpressionWithFunctions(a["expression"].(string), getExpressionFunctions())
 	setVarAction := SetVarAction{
 		a["variable"].(string),
 		a["expression"].(string),

@@ -47,6 +47,8 @@ func BuildActionList(playbook *config.TestDef, scriptDir string) ([]Action, bool
 				break
 			case "setvar":
 				action, valid = NewSetVarAction(actionMap)
+			case "assert":
+				action, valid = NewAssertAction(actionMap)
 			default:
 				valid = false
 				log.Errorf("Unknown action type encountered: %s", key)

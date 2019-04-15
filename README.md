@@ -266,6 +266,10 @@ actions:
       # supported functions are:
       # - strlen(string)
       # - substr(string, start, end)
+
+  # Assertion are possible and use the same syntax as "setvar"
+  - assert:
+      expression: "name == \"bob\""
 ```
 
 The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
