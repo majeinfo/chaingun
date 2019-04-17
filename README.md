@@ -293,6 +293,9 @@ $ ./test_standalone_player.sh
 
 ## TODO
 - add a web interface to create/import/export Playbooks
+- implements the "connect-to" option to reverse the roles and cross through the firewalls
+- add a "when" clause to trigger actions
+- add options to handle SSL certificates
 
 ## License
 Licensed under the MIT license.
