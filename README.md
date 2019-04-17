@@ -1,23 +1,29 @@
 # chaingun
 golang & Python-based load test application using YAML documents as specification.
 
-The golang player (or injector) is base on Gotling project available here: 
+The golang player (or injector) is based on Gotling project available here: 
 http://callistaenterprise.se/blogg/teknik/2015/11/22/gotling/
 (Thanks to Erik Lupander)
 
 ## What it does
 - Provides high-throughput load testing of HTTP/TCP/UDP/WS/MQTT services
-- Supports Standalone or Distributed Modes
-- Supports GET, HEAD, POST, PUT and DELETE
-- Request URLs and bodies can contain ${paramName} parameters
-- ${paramName} values can be extracted from HTTP response bodies and bound to a User context. User defined variables are also supported
-- Captures Set-Cookie response headers
+- Supports standalone or distributed modes
+- Supports GET, HEAD, POST, PUT and DELETE HTTP methods
+- Requests and bodies can contain parameters (like ${paramName})
+- Parameter values can be extracted from HTTP response bodies and bound to a User context. User defined variables are also supported
+- Captures Set-Cookie HTTP response headers
 - POST data can be inlined or read from template files
 - Variables can be fed from an external CSV file
+- The distributed mode can be used to play different tests in the same time
 
 ## Building
 
-To be completed...
+	$ git clone https://github.com/majeinfo/chaingun
+	$ cd chaingun
+	$ export GOPATH=`pwd`/player
+	$ go get ./...
+	$ go install github.com/majeinfo/chaingun/player
+	$ player/bin/player -h
 
 ## Architecture
 
@@ -68,6 +74,7 @@ c) run the Manager (when Players are started as Daemons) :
 
 	You must have a valid Python 3.6+ or prepare a virtual environment for the Manager, then run it :
 
+	$ pip install -r requirements.txt --user
 	$ cd manager/server
 	$ python manage.py runserver 127.0.0.1:8000
 
