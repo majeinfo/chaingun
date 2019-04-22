@@ -6,7 +6,6 @@ import (
 	_ "math/rand"
 	_ "net"
 	"os"
-	"os/exec"
 	"path"
 	"strconv"
 	"sync"
@@ -135,7 +134,7 @@ func main() {
 		} else {
 			dir = *gp_outputdir
 		}
-		outputfile = dir + "/data.csv"
+		outputfile = dir + "/data." + *gp_outputtype
 		if err := reporter.InitReport(*gp_outputtype); err != nil {
 			log.Fatal(err)
 		}
@@ -147,16 +146,9 @@ func main() {
 		log.Infof("Building reports, please wait...")
 		reporter.CloseResultsFile()
 
-		// Build graphs
-		log.Info("Launching Viewer")
-		log.Infof("%s %s --data '%s' --output-dir '%s'",
-			*gp_python_cmd, *gp_viewerfile, outputfile, dir)
-		cmd := exec.Command(*gp_python_cmd, *gp_viewerfile,
-			"--data", outputfile,
-			"--output-dir", dir)
-		err = cmd.Run()
+		err = reporter.CloseReport(*gp_python_cmd, *gp_viewerfile, outputfile, dir)
 		if err != nil {
-			log.Errorf("Viewer run failed: %s", err.Error())
+			log.Error(err.Error())
 		}
 
 	} else {
