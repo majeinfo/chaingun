@@ -35,14 +35,15 @@ type PlayerStatus struct {
 
 // PlayerResults describes the structure of exchanged Results !
 type PlayerResults struct {
-	Type     string `json:"type"`
-	Status   string `json:"status"`
-	Level    string `json:"level"`
-	Msg      string `json:"msg"`
-	HostName string `json:"hostname"`
+	Type       string `json:"type"`
+	Status     string `json:"status"`
+	Level      string `json:"level"`
+	Msg        string `json:"msg"`
+	HostName   string `json:"hostname"`
 	ScriptFile string `json:"scriptfile"`
 }
 
+// Different states of remote daemon
 const (
 	IDLE DaemonStatus = 0 + iota
 	READY_TO_RUN
@@ -141,8 +142,10 @@ func _startCommand(c *Client) {
 	g_results_available = false
 	gp_outputfile = tmpfile.Name()
 	log.Infof("Open outputfile: %s", gp_outputfile)
-	reporter.InitReport(*gp_outputtype)
-	//reporter.OpenResultsFile(outputfile)
+	if err := reporter.InitReport(*gp_outputtype); err != nil {
+		sendStatusError(c, fmt.Sprintf("%s", err))
+		return
+	}
 	reporter.OpenTempResultsFile(tmpfile)
 
 	spawnUsers(&gp_playbook, &gp_actions)
@@ -234,8 +237,8 @@ func handleDataFile(c *Client, cmd *PlayerCommand) {
 	err = ioutil.WriteFile(cmd.MoreInfo, data, 0644)
 	if err != nil {
 		gp_daemon_status = IDLE
-		sendStatusError(c, "Error while writing file " + cmd.MoreInfo)
-		return		
+		sendStatusError(c, "Error while writing file "+cmd.MoreInfo)
+		return
 	}
 }
 
@@ -256,11 +259,11 @@ func getResultsCommand(c *Client, cmd *PlayerCommand) {
 
 	msg := string(data)
 	var resp = &PlayerResults{
-		Type:     "results",
-		Status:   statusString[gp_daemon_status],
-		Level:    "OK",
-		Msg:      msg,
-		HostName: cmd.Value,
+		Type:       "results",
+		Status:     statusString[gp_daemon_status],
+		Level:      "OK",
+		Msg:        msg,
+		HostName:   cmd.Value,
 		ScriptFile: *gp_scriptfile,
 	}
 	j, _ := json.Marshal(resp)

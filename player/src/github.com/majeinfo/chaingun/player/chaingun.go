@@ -136,7 +136,9 @@ func main() {
 			dir = *gp_outputdir
 		}
 		outputfile = dir + "/data.csv"
-		reporter.InitReport(*gp_outputtype)
+		if err := reporter.InitReport(*gp_outputtype); err != nil {
+			log.Fatal(err)
+		}
 		reporter.OpenResultsFile(outputfile)
 
 		spawnUsers(&gp_playbook, &gp_actions)

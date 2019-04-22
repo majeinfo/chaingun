@@ -46,9 +46,9 @@ func OpenTempResultsFile(tmpfile *os.File) {
 
 func initResultsFile() {
 	w = bufio.NewWriter(f)
-	if output_type == "json" {
+	if outputType == jsonOutput {
 		_, err = w.WriteString(string("var logdata = '"))
-	} else if output_type == "csv" {
+	} else if outputType == csvOutput {
 		_, err = w.WriteString("Timestamp,Vid,Type,Title,Status,Size,Latency,FullRequest\n")
 	}
 
@@ -59,7 +59,7 @@ func initResultsFile() {
 
 func CloseResultsFile() {
 	if opened {
-		if output_type == "json" {
+		if outputType == jsonOutput {
 			_, err = w.WriteString(string("';"))
 		}
 		w.Flush()
@@ -70,7 +70,7 @@ func CloseResultsFile() {
 }
 
 func WriteResult(sampleResult *SampleReqResult) {
-	if output_type == "json" {
+	if outputType == jsonOutput {
 		jsonString, err := json.Marshal(sampleResult)
 
 		if err != nil {
@@ -78,7 +78,7 @@ func WriteResult(sampleResult *SampleReqResult) {
 		}
 		_, err = w.WriteString(string(jsonString))
 		_, err = w.WriteString("|")
-	} else if output_type == "csv" {
+	} else if outputType == csvOutput {
 		s := fmt.Sprintf("%d,%s,%s,%s,%d,%d,%d,%s\n",
 			sampleResult.When, sampleResult.Vid, sampleResult.Type, sampleResult.Title,
 			sampleResult.Status, sampleResult.Size, sampleResult.Latency, sampleResult.FullRequest)

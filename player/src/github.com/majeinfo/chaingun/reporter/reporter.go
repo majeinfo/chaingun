@@ -1,18 +1,34 @@
 package reporter
 
 import (
+    "fmt"
     "time"
-    //log "github.com/sirupsen/logrus"
+)
+
+const (
+    jsonOutput = 0 + iota
+    csvOutput
 )
 
 var (
-    output_type string
+    outputTypeMap = map[string]int{
+        "json": jsonOutput,
+        "csv":  csvOutput,
+    }
+
+    outputType      int
     SimulationStart time.Time
 )
 
-func InitReport(otype string) {
+// InitReport initializes the report and memorizes the desired output type
+func InitReport(otype string) error {
+    if _, ok := outputTypeMap[otype]; !ok {
+        return fmt.Errorf("Unsupported output type %s", otype)
+    }
+
     SimulationStart = time.Now()
-    output_type = otype
+    outputType = outputTypeMap[otype]
+    return nil
 }
 
 // EOF
