@@ -23,8 +23,10 @@ var (
 	VU_start          time.Time
 	VU_count          int
 	gp_is_daemon      *bool
+	gp_is_manager     *bool
 	gp_valid_playbook bool = false
 	gp_listen_addr    *string
+	gp_manager_addr   *string
 	gp_connect_to     *string
 	gp_scriptfile     *string
 	gp_outputdir      *string
@@ -40,7 +42,9 @@ var (
 // Analyze the command line
 func command_line() {
 	gp_is_daemon = flag.Bool("daemon", false, "Set to start the Player as a Daemon")
-	gp_listen_addr = flag.String("listen-addr", "127.0.0.1:12345", "Address and port to listen to - in daemon and standalone mode")
+	gp_listen_addr = flag.String("listen-addr", "", "Address and port to listen to - in daemon and standalone mode")
+	gp_is_manager = flag.Bool("manager", false, "Set to activate the Web Interface Management")
+	gp_manager_addr = flag.String("manager-listen-addr", "127.0.0.1:8000", "Address and port to listen to - for the Manager Web Interface")
 	gp_connect_to = flag.String("connect-to", "", "Address and port to connect to - in daemon mode (not supported yet)")
 	verbose := flag.Bool("verbose", false, "Set verbose mode")
 	gp_scriptfile = flag.String("script", "", "Set the Script")
@@ -59,6 +63,7 @@ func command_line() {
 	log.SetLevel(log_level)
 	action.DisableAction(*gp_no_log)
 
+	// Do some command line consistency tests
 	if !*gp_is_daemon {
 		if *gp_scriptfile == "" {
 			log.Fatal("When not started as a daemon, needs a 'script' file")
@@ -99,15 +104,11 @@ func main() {
 
 	command_line()
 
-	if *gp_listen_addr != "" {
-		hub = newHub()
-	}
+	// Always creates a Hub for Accept Result in SpawnUsers
+	log.Debugf("*gp_listen_addr=%s", *gp_listen_addr)
+	hub = newHub()
 
 	if !*gp_is_daemon {
-
-		log.Debugf("Create server listening on: %s", *gp_listen_addr)
-		go startWsServer(*gp_listen_addr)
-
 		// Read the scenario from file
 		data, err := ioutil.ReadFile(*gp_scriptfile)
 		if err != nil {
