@@ -14,16 +14,30 @@ import (
 	"github.com/majeinfo/chaingun/action"
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/feeder"
+	"github.com/majeinfo/chaingun/manager"
 	"github.com/majeinfo/chaingun/reporter"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	standaloneMode = 0 + iota
+	daemonMode
+	managerMode
+)
+
+var (
+	modeTypeMap = map[string]int{
+		"standalone": standaloneMode,
+		"daemon":     daemonMode,
+		"manager":    managerMode,
+	}
+)
+
 var (
 	VU_start          time.Time
 	VU_count          int
-	gp_is_daemon      *bool
-	gp_is_manager     *bool
+	gp_mode           int
 	gp_valid_playbook bool = false
 	gp_listen_addr    *string
 	gp_manager_addr   *string
@@ -41,9 +55,8 @@ var (
 
 // Analyze the command line
 func command_line() {
-	gp_is_daemon = flag.Bool("daemon", false, "Set to start the Player as a Daemon")
-	gp_listen_addr = flag.String("listen-addr", "", "Address and port to listen to - in daemon and standalone mode")
-	gp_is_manager = flag.Bool("manager", false, "Set to activate the Web Interface Management")
+	mode := flag.String("mode", "standalone", "standalone(default)|daemon|manager")
+	gp_listen_addr = flag.String("listen-addr", "127.0.0.1:12345", "Address and port to listen to in daemon")
 	gp_manager_addr = flag.String("manager-listen-addr", "127.0.0.1:8000", "Address and port to listen to - for the Manager Web Interface")
 	gp_connect_to = flag.String("connect-to", "", "Address and port to connect to - in daemon mode (not supported yet)")
 	verbose := flag.Bool("verbose", false, "Set verbose mode")
@@ -63,10 +76,18 @@ func command_line() {
 	log.SetLevel(log_level)
 	action.DisableAction(*gp_no_log)
 
+	// Check the mode
+	var ok bool
+	gp_mode, ok = modeTypeMap[*mode]
+	if !ok {
+		log.Fatalf("Unknown mode value: %s (allowed values are: standalone, daemon or manager)", *mode)
+	}
+	log.Debugf("Player mode is %s", *mode)
+
 	// Do some command line consistency tests
-	if !*gp_is_daemon {
+	if gp_mode == standaloneMode {
 		if *gp_scriptfile == "" {
-			log.Fatal("When not started as a daemon, needs a 'script' file")
+			log.Fatal("When started in standalone mode, needs a 'script' file")
 		}
 		if *gp_python_cmd == "" {
 			*gp_python_cmd = os.Getenv("Python")
@@ -78,12 +99,13 @@ func command_line() {
 			log.Fatalf("Python interpreter %s does not exist.", *gp_python_cmd)
 		}
 		if *gp_viewerfile == "" {
-			log.Fatal("When not started as a daemon, needs the location of the viewer.py script")
+			log.Fatal("When started in standalone or manager mode, needs the location of the viewer.py script")
 		}
 		if _, err := os.Stat(*gp_viewerfile); os.IsNotExist(err) {
 			log.Fatalf("The specified Viewer %s does not exist.", *gp_viewerfile)
 		}
-	} else {
+	}
+	if gp_mode == daemonMode {
 		// Either listen-addr or connect-to must be specified
 		// WebSocket server must not be started
 		if *gp_listen_addr != "" && *gp_connect_to != "" {
@@ -104,11 +126,11 @@ func main() {
 
 	command_line()
 
-	// Always creates a Hub for Accept Result in SpawnUsers
-	log.Debugf("*gp_listen_addr=%s", *gp_listen_addr)
-	hub = newHub()
+	if gp_mode == standaloneMode {
+		// Always creates a Hub for Accept Result in SpawnUsers
+		log.Debugf("*gp_listen_addr=%s", *gp_listen_addr)
+		hub = newHub()
 
-	if !*gp_is_daemon {
 		// Read the scenario from file
 		data, err := ioutil.ReadFile(*gp_scriptfile)
 		if err != nil {
@@ -152,7 +174,11 @@ func main() {
 			log.Error(err.Error())
 		}
 
-	} else {
+	}
+	if gp_mode == daemonMode {
+		// Always creates a Hub for Accept Result in SpawnUsers
+		log.Debugf("*gp_listen_addr=%s", *gp_listen_addr)
+		hub = newHub()
 
 		if *gp_listen_addr != "" {
 			log.Debugf("Create server listening on: %s", *gp_listen_addr)
@@ -166,6 +192,10 @@ func main() {
 			*/
 			log.Fatal("connect-to mode is not yet implemented")
 		}
+	}
+	if gp_mode == managerMode {
+		log.Debugf("Start manager mode on this address: %s", *gp_manager_addr)
+		manager.Start(gp_manager_addr)
 	}
 }
 
