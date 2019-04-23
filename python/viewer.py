@@ -198,7 +198,7 @@ graph(name='stats_per_req', title='Latency per Request (in ms)', xaxis=list(x),
 		        {'name': title, 'data': list(group) } for (title, group) in title_req.items()
 			])
 
-graph(name='errors_by_code', title='Error Codes per Second', xaxis=list(x),
+graph(name='errors_by_code', title='HTTP return codes per second', xaxis=list(x),
             xtitle='Elapsed Time (seconds)', ytitle='#err',
             series=[
                 {'name': errcode, 'data': list(count) } for (errcode, count) in errors_by_code.items()
