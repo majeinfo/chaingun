@@ -104,8 +104,7 @@ func command_line() {
 		if _, err := os.Stat(*gp_viewerfile); os.IsNotExist(err) {
 			log.Fatalf("The specified Viewer %s does not exist.", *gp_viewerfile)
 		}
-	}
-	if gp_mode == daemonMode {
+	} else if gp_mode == daemonMode {
 		// Either listen-addr or connect-to must be specified
 		// WebSocket server must not be started
 		if *gp_listen_addr != "" && *gp_connect_to != "" {
@@ -174,8 +173,7 @@ func main() {
 			log.Error(err.Error())
 		}
 
-	}
-	if gp_mode == daemonMode {
+	} else if gp_mode == daemonMode {
 		// Always creates a Hub for Accept Result in SpawnUsers
 		log.Debugf("*gp_listen_addr=%s", *gp_listen_addr)
 		hub = newHub()
@@ -192,8 +190,7 @@ func main() {
 			*/
 			log.Fatal("connect-to mode is not yet implemented")
 		}
-	}
-	if gp_mode == managerMode {
+	} else if gp_mode == managerMode {
 		log.Debugf("Start manager mode on this address: %s", *gp_manager_addr)
 		manager.Start(gp_manager_addr)
 	}
