@@ -22,38 +22,37 @@ http://callistaenterprise.se/blogg/teknik/2015/11/22/gotling/
 	$ cd chaingun
 	$ export GOPATH=`pwd`/player
 	$ go get ./...
+	$ cd player/src
+	$ ../bin/statik -f -src=../../manager/go_web
 	$ go install github.com/majeinfo/chaingun/player
 	$ player/bin/player -h
 
 ## Architecture
 
-Chaingun is made of 2 parts :
+Chaingun is made of a single binary (named "player") that can serve multi purpose.
 
-- a Player which role is to inject requests to the tested server(s)
-- an optional Manager that provides a Web interface to manage the Players
+The "player" can be started in 3 different ways:
 
-Players can be run in standalone mode : this is the easiest way to proceed and may be
-sufficient when the expected test load can be applied by only one Player. In such a case
-the Manager is not needed.
+- the standalone mode (which is the default mode): this is the easiest way to proceed and may be
+sufficient when the expected test load can be applied by only one Player
 
-If you need many Players to be coordinated to stress the same server(s) at the same time,
-you launch different Players (on different hosts !) in "daemon mode". Then you start the Web
-interface of the Manager and you can drive the Players remotely. The results will be aggregated by
-the Manager.
+- the daemon mode: if you need many Players to be coordinated to stress the same server(s) at the same time,
+you launch different Players (on different hosts !) in "daemon mode"
 
-Data for feeder can be sent to the Players after sending them the Playbook script.
-Other files such as Template of files to be uploaded must be sent to the Players before the Playbook script.
+- the manager mode: the Player creates a Web interface that lets you manage other remote Players. 
+The results will be aggregated by the Web interface.
+
+Note for the daemon mode:
+	- Data for feeder can be sent to the Players after sending them the Playbook script.
+	- Other files such as Template of files to be uploaded must be sent to the Players before the Playbook script.
 
 #### Run from the command line
 
 a) run a Player in standalone mode :
 
 	$ cd player/bin
-	$ ./player --output-dir /path/to/output/ --python-cmd /path/to/python3.6 --script /path/to/script.yml \
-               --viewer ../../python/viewer.py --verbose
+	$ ./player --output-dir /path/to/output/ --script /path/to/script.yml
 
-	--python-cmd is optional if PYTHON environment variable is set and points to at least a Python 3.6
-	--viewer indicates the path to the viewer.py script that builds the HTML page containing the results
 	--output-dir indicates where the results will be stored
 	--script sets the name of the script file and is mandatory
 	--verbose is optional 
@@ -62,21 +61,25 @@ a) run a Player in standalone mode :
 b) run a Player in daemon mode :
 
 	$ cd player/bin
-	$ ./player --daemon --listen-addr 127.0.0.1:12345 --verbose
+	$ ./player --mode daemon --listen-addr 127.0.0.1:12345 
 
 	in daemon mode, the player will listen to the TCP port specified by --listen-addr option
 	(default is 127.0.0.1:12345) and will play the orders sent by the manager. This is the normal
 	mode in distributed mode.
+
 	--verbose is optional
 	--no-log disables the 'log actions' (see below for the actions)
 
 c) run the Manager (when Players are started as Daemons) :
 
-	You must have a valid Python 3.6+ or prepare a virtual environment for the Manager, then run it :
+	$ cd player/bin
+	$ ./player --mode manager --manager-listen-addr 127.0.0.1:8000 --repository-dir /tmp/chaingun
 
-	$ pip install -r requirements.txt --user
-	$ cd manager/server
-	$ python manage.py runserver 127.0.0.1:8000
+	in manager mode, the player will listen to the TCP port specified by --manager-listen-addr option
+	(default is 127.0.0.1:8000) and will offer a Web interface that manages the remote players.
+	The --repository-dir option gives the location of the results (default is ".")
+
+	--verbose is optional
 
 	Then open your browser and manage your Players !
 
@@ -295,7 +298,7 @@ $ ./test_standalone_player.sh
 - add a web interface to create/import/export Playbooks
 - implements the "connect-to" option to reverse the roles and cross through the firewalls
 - add a "when" clause to trigger actions
-- add options to handle SSL certificates
+- add options to handle SSL certificates ?
 
 ## License
 Licensed under the MIT license.

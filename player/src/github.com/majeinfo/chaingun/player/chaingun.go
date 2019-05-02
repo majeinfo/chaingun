@@ -24,6 +24,7 @@ const (
 	standaloneMode = 0 + iota
 	daemonMode
 	managerMode
+	graphOnlyMode
 )
 
 var (
@@ -31,6 +32,7 @@ var (
 		"standalone": standaloneMode,
 		"daemon":     daemonMode,
 		"manager":    managerMode,
+		"graph-only": graphOnlyMode,
 	}
 )
 
@@ -41,12 +43,11 @@ var (
 	gp_valid_playbook bool = false
 	gp_listen_addr    *string
 	gp_manager_addr   *string
+	gp_repositorydir  *string
 	gp_connect_to     *string
 	gp_scriptfile     *string
 	gp_outputdir      *string
 	gp_outputtype     *string
-	gp_python_cmd     *string
-	gp_viewerfile     *string
 	gp_no_log         *bool
 
 	gp_playbook config.TestDef
@@ -55,16 +56,15 @@ var (
 
 // Analyze the command line
 func command_line() {
-	mode := flag.String("mode", "standalone", "standalone(default)|daemon|manager")
+	mode := flag.String("mode", "standalone", "standalone(default)|daemon|manager|graph-only")
 	gp_listen_addr = flag.String("listen-addr", "127.0.0.1:12345", "Address and port to listen to in daemon")
 	gp_manager_addr = flag.String("manager-listen-addr", "127.0.0.1:8000", "Address and port to listen to - for the Manager Web Interface")
+	gp_repositorydir = flag.String("repository-dir", ".", "directory where to store results - in Manager mode only")
 	gp_connect_to = flag.String("connect-to", "", "Address and port to connect to - in daemon mode (not supported yet)")
 	verbose := flag.Bool("verbose", false, "Set verbose mode")
 	gp_scriptfile = flag.String("script", "", "Set the Script")
 	gp_outputdir = flag.String("output-dir", "", "Set the output directory")
 	gp_outputtype = flag.String("output-type", "csv", "Set the output type in file (csv/default, json)")
-	gp_python_cmd = flag.String("python-cmd", "", "Select the Python Interpreter to create the graphs")
-	gp_viewerfile = flag.String("viewer", "", "Give the location of viewer.py script")
 	gp_no_log = flag.Bool("no-log", false, "Disable the 'log' actions from the Script")
 
 	flag.Parse()
@@ -89,20 +89,10 @@ func command_line() {
 		if *gp_scriptfile == "" {
 			log.Fatal("When started in standalone mode, needs a 'script' file")
 		}
-		if *gp_python_cmd == "" {
-			*gp_python_cmd = os.Getenv("Python")
-			if *gp_python_cmd == "" {
-				log.Fatalf("You must specify a Python interpreter path with --python-cmd option or via the PYTHON environment variable")
-			}
-		}
-		if _, err := os.Stat(*gp_python_cmd); os.IsNotExist(err) {
-			log.Fatalf("Python interpreter %s does not exist.", *gp_python_cmd)
-		}
-		if *gp_viewerfile == "" {
-			log.Fatal("When started in standalone or manager mode, needs the location of the viewer.py script")
-		}
-		if _, err := os.Stat(*gp_viewerfile); os.IsNotExist(err) {
-			log.Fatalf("The specified Viewer %s does not exist.", *gp_viewerfile)
+	} else if gp_mode == graphOnlyMode {
+		// Use default parameters for outputdir and results
+		if *gp_scriptfile == "" {
+			log.Fatal("When started in graph-only mode, needs a 'script' filename")
 		}
 	} else if gp_mode == daemonMode {
 		// Either listen-addr or connect-to must be specified
@@ -148,15 +138,7 @@ func main() {
 
 		reporter.SimulationStart = time.Now()
 
-		var outputfile string
-		var dir string
-		if *gp_outputdir == "" {
-			d, _ := os.Getwd()
-			dir = d + "/results"
-		} else {
-			dir = *gp_outputdir
-		}
-		outputfile = dir + "/data." + *gp_outputtype
+		outputfile, dir := computeOutputFilename()
 		if err := reporter.InitReport(*gp_outputtype); err != nil {
 			log.Fatal(err)
 		}
@@ -168,11 +150,20 @@ func main() {
 		log.Infof("Building reports, please wait...")
 		reporter.CloseResultsFile()
 
-		err = reporter.CloseReport(*gp_python_cmd, *gp_viewerfile, outputfile, dir)
+		err = reporter.CloseReport(outputfile, dir, *gp_scriptfile)
 		if err != nil {
 			log.Error(err.Error())
 		}
+	} else if gp_mode == graphOnlyMode {
+		// Just the graph production
+		outputfile, dir := computeOutputFilename()
+		if err := reporter.InitReport(*gp_outputtype); err != nil {
+			log.Fatal(err)
+		}
 
+		if err := reporter.CloseReport(outputfile, dir, *gp_scriptfile); err != nil {
+			log.Error(err.Error())
+		}
 	} else if gp_mode == daemonMode {
 		// Always creates a Hub for Accept Result in SpawnUsers
 		log.Debugf("*gp_listen_addr=%s", *gp_listen_addr)
@@ -192,7 +183,7 @@ func main() {
 		}
 	} else if gp_mode == managerMode {
 		log.Debugf("Start manager mode on this address: %s", *gp_manager_addr)
-		manager.Start(gp_manager_addr)
+		manager.Start(gp_manager_addr, gp_repositorydir)
 	}
 }
 
@@ -322,6 +313,25 @@ func feedSession(playbook *config.TestDef, sessionMap map[string]string) {
 			sessionMap[item] = feedData[item]
 		}
 	}
+}
+
+// Compute the name of the output file (/path/to/data.csv)
+func computeOutputFilename() (string, string) {
+	var outputfile string
+	var dir string
+
+	if *gp_outputdir == "" {
+		d, _ := os.Getwd()
+		dir = d + "/results"
+	} else {
+		dir = *gp_outputdir
+	}
+	if dir[len(dir)-1] != '/' {
+		dir += "/"
+	}
+	outputfile = dir + "data." + *gp_outputtype
+
+	return outputfile, dir
 }
 
 // EOF

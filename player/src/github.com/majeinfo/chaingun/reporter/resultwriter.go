@@ -89,5 +89,4 @@ func WriteResult(sampleResult *SampleReqResult) {
 		log.Fatal(err)
 	}
 	w.Flush()
-
 }

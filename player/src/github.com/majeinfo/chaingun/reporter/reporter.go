@@ -2,9 +2,10 @@ package reporter
 
 import (
     "fmt"
-    "os/exec"
+    _ "os/exec"
     "time"
 
+    "github.com/majeinfo/chaingun/viewer"
     log "github.com/sirupsen/logrus"
 )
 
@@ -36,19 +37,13 @@ func InitReport(otype string) error {
 }
 
 // CloseReport Build the final report
-func CloseReport(pythonCmd string, viewerFile string, outputFile string, outputDir string) error {
+func CloseReport(outputFile, outputDir, scriptName string) error {
     if outputType == csvOutput {
         // Build graphs
         log.Info("Launching Viewer")
-        log.Infof("%s %s --data '%s' --output-dir '%s'",
-            pythonCmd, viewerFile, outputFile, outputDir)
-        cmd := exec.Command(pythonCmd, viewerFile,
-            "--data", outputFile,
-            "--output-dir", outputDir)
-        err = cmd.Run()
-        if err != nil {
-            return fmt.Errorf("Viewer run failed: %s", err.Error())
-        }
+        err := viewer.BuildGraphs(outputFile, scriptName, outputDir)
+        log.Info("Graphs generated")
+        return err
     }
 
     return nil

@@ -12,7 +12,7 @@ case "$1" in
 daemon)
 	LISTEN_ADDR=${2:-0.0.0.0:12345}
 	cd player
-	bin/player --daemon --listen-addr ${LISTEN_ADDR} ${VERBOSE_MODE}
+	bin/player --mode daemon --listen-addr ${LISTEN_ADDR} ${VERBOSE_MODE}
 ;;
 
 standalone)
@@ -21,12 +21,13 @@ standalone)
 		exit 1
 	fi
 	cd player
-	bin/player --script "$2" --output-dir /tmp/output --python-cmd /usr/bin/python3 --viewer /appli/chaingun/python/viewer.py ${VERBOSE_MODE}
+	bin/player --mode standalone --script "$2" --output-dir /tmp/output ${VERBOSE_MODE}
 ;;
 
 manager)
-	cd manager/server
-	python3 manage.py runserver "$2" 
+	LISTEN_ADDR=${2:-0.0.0.0:8000}
+	cd player
+	bin/player --mode manager --manager-listen-addr ${LISTEN_ADDR} ${VERBOSE_MODE}
 ;;
 
 *)
