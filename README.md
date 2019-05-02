@@ -93,17 +93,17 @@ a) run a Player in standalone mode :
 
 b) run a Player in daemon mode :
 
-	$ docker container run -it majeinfo/chaingun daemon [<IP>:<Listen_Port>]
+	$ docker container run -it -d majeinfo/chaingun daemon [<IP>:<Listen_Port>]
 
 	- default IP is 0.0.0.0 
 	- default port is 12345
 
 c) run the Manager (when Players are started as Daemons) :
 
-	$ docker container run -it -v /path/to/scripts:/scripts \
-				   -v /path/to/output/dir:/output \
-				   -v /path/to/data_and_graphs:/data \
-				   majeinfo/chaingun manager [<IP>:<Listen_Port>]
+	$ docker container run -it -d -v /path/to/scripts:/scripts \
+				      -v /path/to/output/dir:/output \
+				      -v /path/to/data_and_graphs:/data \
+				      majeinfo/chaingun manager [<IP>:<Listen_Port>]
 
 	- default IP is 0.0.0.0 
 	- default port is 8000
