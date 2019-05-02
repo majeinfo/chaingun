@@ -3,14 +3,14 @@ FROM debian:buster as builder
 RUN apt-get clean && apt-get update -y
 RUN apt-get install -y git golang
 
-RUN mkdir /appli && cd /appli && git clone https://github.com/majeinfo/chaingun.git
+RUN mkdir /appli && cd /appli && git clone -b embed_manager https://github.com/majeinfo/chaingun.git
 WORKDIR /appli/chaingun
 
 RUN export GOPATH=/appli/chaingun/player && \
-	cd /appli/chaingun/player/src/github.com && \
-	rm -rf gorilla sirupsen tobyhede && \
-	cd /appli/chaingun/player/src/github.com/majeinfo/chaingun/player && \
-	go get -d && \
+	cd /appli/chaingun && \
+	go get ./... && \
+	cd /appli/chaingun/player/src && \
+	../bin/player -f -src=../../manager/go_web && \
 	cd /appli/chaingun/player && \
 	go install github.com/majeinfo/chaingun/player
 
@@ -25,7 +25,7 @@ RUN sed -i '/^#.* fr_FR.UTF-8.* /s/^#//' /etc/locale.gen && locale-gen
 
 RUN mkdir /scripts /output /data /appli && \
 	cd /appli && \
-	git clone https://github.com/majeinfo/chaingun.git && \
+	git clone -b embed_manager https://github.com/majeinfo/chaingun.git && \
 	rm -rf Dockerfile start.sh player/src
 
 WORKDIR /appli/chaingun
