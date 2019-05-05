@@ -1,0 +1,17 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+timeout: 3
+actions:
+  - setvar:
+      variable: my_var
+      expression: '"hello"'
+
+  - log:
+      message: "my_var=${my_var}"
+
+  - setvar:
+      variable: formula error
+      expression: '(3 + 4) * '
+

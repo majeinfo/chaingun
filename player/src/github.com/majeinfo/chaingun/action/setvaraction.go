@@ -6,6 +6,7 @@ import (
 	"github.com/Knetic/govaluate"
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
+	"github.com/majeinfo/chaingun/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -24,21 +25,9 @@ func (s SetVarAction) Execute(resultsChannel chan reporter.SampleReqResult, sess
 		sessionMap[s.Variable] = ""
 	}
 
-	// Convert sessionMap into parameters for evaluation
-	parameters := make(map[string]interface{}, len(sessionMap))
-	for k, v := range sessionMap {
-		if i, err := strconv.ParseInt(v, 10, 64); err == nil {
-			parameters[k] = i
-		} else {
-			parameters[k] = v
-		}
-	}
+	result, err := utils.Evaluate(sessionMap, s.CompiledExpr, s.Expression)
 
-	result, err := s.CompiledExpr.Evaluate(parameters)
-	if err != nil {
-		log.Errorf("Expression evaluation failed: %s", s.Expression)
-		log.Errorf("%v", err)
-	} else {
+	if err == nil {
 		// Check the result type and convert it into strings (float are converted into integer)
 		switch result.(type) {
 		case float64:
@@ -76,7 +65,6 @@ func NewSetVarAction(a map[interface{}]interface{}) (SetVarAction, bool) {
 		valid = false
 	}
 
-	//expression, err := govaluate.NewEvaluableExpression(a["expression"].(string))
 	expression, err := govaluate.NewEvaluableExpressionWithFunctions(a["expression"].(string), getExpressionFunctions())
 	setVarAction := SetVarAction{
 		a["variable"].(string),

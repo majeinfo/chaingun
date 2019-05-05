@@ -52,8 +52,12 @@ Syn_Error syntax/missing-duration.yml 'When Iterations is -1, Duration must be s
 Syn_Error syntax/missing-title.yml 'HttpAction must define a title'
 Syn_Error syntax/missing-method.yml 'Action has no Method and no default Method specified'
 Syn_Error syntax/missing-server.yml 'Host missing for URL'
+Syn_Error syntax/setvar3.yml 'Undefined function strlenght'
+Syn_Error syntax/setvar4.yml 'Unexpected end of expression'
 Syn_OK syntax/opt-duration.yml
 Syn_OK syntax/dflt-values.yml
+Syn_OK syntax/setvar1.yml 
+Syn_OK syntax/setvar2.yml 
 
 # Test JSON request
 Req_Error requests/1VU-json-bad.yml 'failed to apply - no default value given'

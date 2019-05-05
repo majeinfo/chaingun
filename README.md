@@ -282,6 +282,11 @@ actions:
       expression: "name == \"bob\""
 
       # if the assertion fails, the action returns an error
+
+  # Each action can be conditioned by a "when" clause that must be true to trigger the action
+  - log:
+      message: "something..."
+      when: "var1 > 0"
 ```
 
 The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
@@ -297,7 +302,6 @@ $ ./test_standalone_player.sh
 ## TODO
 - add a web interface to create/import/export Playbooks
 - implements the "connect-to" option to reverse the roles and cross through the firewalls
-- add a "when" clause to trigger actions
 - add options to handle SSL certificates ?
 
 ## License

@@ -16,6 +16,7 @@ import (
 	"github.com/majeinfo/chaingun/feeder"
 	"github.com/majeinfo/chaingun/manager"
 	"github.com/majeinfo/chaingun/reporter"
+	"github.com/majeinfo/chaingun/utils"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -51,7 +52,7 @@ var (
 	gp_no_log         *bool
 
 	gp_playbook config.TestDef
-	gp_actions  []action.Action
+	gp_actions  []action.FullAction
 )
 
 // Analyze the command line
@@ -188,7 +189,7 @@ func main() {
 }
 
 // Create a Playbook from the YAML data
-func createPlaybook(data []byte, playbook *config.TestDef, actions *[]action.Action) bool {
+func createPlaybook(data []byte, playbook *config.TestDef, actions *[]action.FullAction) bool {
 	err := yaml.UnmarshalStrict([]byte(data), playbook)
 	if err != nil {
 		log.Fatalf("YAML error: %v", err)
@@ -212,7 +213,7 @@ func createPlaybook(data []byte, playbook *config.TestDef, actions *[]action.Act
 }
 
 // Launch VUs
-func spawnUsers(playbook *config.TestDef, actions *[]action.Action) {
+func spawnUsers(playbook *config.TestDef, actions *[]action.FullAction) {
 	resultsChannel := make(chan reporter.SampleReqResult, 10000)
 	go reporter.AcceptResults(resultsChannel, &VU_count, &hub.broadcast)
 	VU_start = time.Now()
@@ -238,7 +239,7 @@ func spawnUsers(playbook *config.TestDef, actions *[]action.Action) {
 }
 
 // Called once per each VU
-func launchActions(playbook *config.TestDef, resultsChannel chan reporter.SampleReqResult, wg *sync.WaitGroup, actions *[]action.Action, UID string) {
+func launchActions(playbook *config.TestDef, resultsChannel chan reporter.SampleReqResult, wg *sync.WaitGroup, actions *[]action.FullAction, UID string) {
 	var sessionMap = make(map[string]string)
 
 	i := 0
@@ -254,9 +255,32 @@ actionLoop:
 		// Iterate over the actions. Note the use of the command-pattern like Execute method on the Action interface
 	iterLoop:
 		for _, action := range *actions {
-			if action != nil {
-				//action.(Action).Execute(resultsChannel, sessionMap)
-				if !action.Execute(resultsChannel, sessionMap, playbook) {
+			if action.Action != nil {
+				// Check for a "when" expression
+				if action.CompiledWhen != nil {
+					log.Debugf("Evaluate 'when' expression: %s", action.When)
+
+					// if evaluation is False, skip the action
+					result, err := utils.Evaluate(sessionMap, action.CompiledWhen, action.When)
+					skip := false
+					if err == nil {
+						switch result.(type) {
+						case float64:
+							skip = result.(float64) == 0
+						case string:
+							skip = result.(string) == ""
+						case bool:
+							skip = !result.(bool)
+						default:
+							log.Errorf("Error when evaluating expression: unknown type %v", result)
+						}
+					}
+					if skip {
+						log.Infof("Action skipped due to its 'when' condition")
+						continue
+					}
+				}
+				if !action.Action.Execute(resultsChannel, sessionMap, playbook) {
 					// An error occurred : continue, stop the vu or stop the test ?
 					switch playbook.OnError {
 					case config.ERR_CONTINUE:

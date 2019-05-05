@@ -1,0 +1,14 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+timeout: 3
+actions:
+  - setvar:
+      variable: my_var
+      expression: "3 + 4"
+    when: "3 + 4 > 0"
+  - log:
+      message: "ok"
+    when: "my_var > 0"
+
