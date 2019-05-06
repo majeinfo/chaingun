@@ -3,7 +3,8 @@ An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 
 ## Table of Contents
 1.[What it does](##what-it-does)
-2.[Building](##building)
+
+2.[Building](#building)
 3.[Architecture](##architecture)
 4.[How to run it](##how-to-run-it)
 5.[Playbook Syntax](##playbook-yaml-syntax)
