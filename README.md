@@ -2,15 +2,21 @@
 An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 
 ## Table of Contents
-1.[What it does](##what-it-does)
+1.[What it does](#what-it-does)
 
 2.[Building](#building)
-3.[Architecture](##architecture)
-4.[How to run it](##how-to-run-it)
-5.[Playbook Syntax](##playbook-yaml-syntax)
-6.[How to test](##how-to-test)
-7.[TODO](##todo)
-8.[License](##license)
+
+3.[Architecture](#architecture)
+
+4.[How to run it](#how-to-run-it)
+
+5.[Playbook Syntax](#playbook-yaml-syntax)
+
+6.[How to test](#how-to-test)
+
+7.[TODO](#todo)
+
+8.[License](#license)
 
 # What it does
 - Provides high-throughput load testing of HTTP/TCP/UDP/WS/MQTT services
@@ -35,7 +41,7 @@ An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 	$ go install github.com/majeinfo/chaingun/player
 	$ player/bin/player -h
 
-## Architecture
+# Architecture
 
 Chaingun is made of a single binary (named "player") that can serve multi purpose.
 
@@ -54,9 +60,9 @@ Note for the daemon mode:
 	- Data for feeder can be sent to the Players after sending them the Playbook script.
 	- Other files such as Template of files to be uploaded must be sent to the Players before the Playbook script.
 
-## How to run it
+# How to run it
 
-#### Run from the command line
+### Run from the command line
 
 a) run a Player in standalone mode :
 
@@ -93,7 +99,7 @@ c) run the Manager (when Players are started as Daemons) :
 
 	Then open your browser and manage your Players !
 
-#### Run from container image
+### Run from container image
 
 a) run a Player in standalone mode :
 
@@ -124,7 +130,7 @@ The verbose mode can be specified using the VERBOSE environment variable :
 
 	-e VERBOSE=1
 
-## Playbook YAML Syntax
+# Playbook YAML Syntax
 
 This is a sample script. 
 Mandatory parameters are marked with a "# MAND" pseudo-comment at the end of the line.
@@ -301,7 +307,7 @@ actions:
 
 The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
 
-## How to test
+# How to test
 
 ```
 $ cd tests
@@ -309,12 +315,12 @@ $ docker container run -d -p 8000:80 -v `pwd`/server:/var/www/html php:5.6-apach
 $ ./test_standalone_player.sh
 ```
 
-## TODO
+# TODO
 - add a web interface to create/import/export Playbooks
 - implements the "connect-to" option to reverse the roles and cross through the firewalls
 - add options to handle SSL certificates ?
 
-## License
+# License
 Licensed under the MIT license.
 
 The golang player (or injector) is originally based on Gotling project available here: 
