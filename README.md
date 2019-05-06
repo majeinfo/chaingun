@@ -1,20 +1,20 @@
 # chaingun
 golang & Python-based load test application using YAML documents as specification.
 
-The golang player (or injector) is based on Gotling project available here: 
-http://callistaenterprise.se/blogg/teknik/2015/11/22/gotling/
-(Thanks to Erik Lupander)
+## Table of Contents
+[Playbook/Script syntax](#yaml-syntax)
 
 ## What it does
 - Provides high-throughput load testing of HTTP/TCP/UDP/WS/MQTT services
 - Supports standalone or distributed modes
 - Supports GET, HEAD, POST, PUT and DELETE HTTP methods
-- Requests and bodies can contain parameters (like ${paramName})
+- Requests and bodies can contain parameters 
 - Parameter values can be extracted from HTTP response bodies and bound to a User context. User defined variables are also supported
 - Captures Set-Cookie HTTP response headers
 - POST data can be inlined or read from template files
 - Variables can be fed from an external CSV file
-- The distributed mode can be used to play different tests in the same time
+- The distributed mode can be used to play different tests in the same time or to inject stress load from remote injectors
+- Use a YAML syntax to describe the stress scenarii
 
 ## Building
 
@@ -114,6 +114,7 @@ The verbose mode can be specified using the VERBOSE environment variable :
 
 	-e VERBOSE=1
 
+#YAML Syntax
 ## YAML Script (Playbook)
 
 This is a sample script. 
@@ -306,5 +307,9 @@ $ ./test_standalone_player.sh
 
 ## License
 Licensed under the MIT license.
+
+The golang player (or injector) is originally based on Gotling project available here: 
+http://callistaenterprise.se/blogg/teknik/2015/11/22/gotling/
+(Thanks to Erik Lupander)
 
 See LICENSE
