@@ -1,8 +1,8 @@
 # chaingun
-golang & Python-based load test application using YAML documents as specification.
+An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 
 ## Table of Contents
-[Playbook/Script syntax](#yaml-syntax)
+[Playbook Syntax](##playbook-yaml-syntax)
 
 ## What it does
 - Provides high-throughput load testing of HTTP/TCP/UDP/WS/MQTT services
@@ -114,8 +114,7 @@ The verbose mode can be specified using the VERBOSE environment variable :
 
 	-e VERBOSE=1
 
-#YAML Syntax
-## YAML Script (Playbook)
+##Playbook YAML Syntax
 
 This is a sample script. 
 Mandatory parameters are marked with a "# MAND" pseudo-comment at the end of the line.
