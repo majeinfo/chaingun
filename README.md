@@ -2,16 +2,16 @@
 An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 
 ## Table of Contents
-[What it does](##what-it-does)
-[Building](##building)
-[Architecture](##architecture)
-[How to run it](##how-to-run-it)
-[Playbook Syntax](##playbook-yaml-syntax)
-[How to test](##how-to-test)
-[TODO](##todo)
-[License](##license)
+1.[What it does](##what-it-does)
+2.[Building](##building)
+3.[Architecture](##architecture)
+4.[How to run it](##how-to-run-it)
+5.[Playbook Syntax](##playbook-yaml-syntax)
+6.[How to test](##how-to-test)
+7.[TODO](##todo)
+8.[License](##license)
 
-## What it does
+# What it does
 - Provides high-throughput load testing of HTTP/TCP/UDP/WS/MQTT services
 - Supports standalone or distributed modes
 - Supports GET, HEAD, POST, PUT and DELETE HTTP methods
@@ -23,7 +23,7 @@ An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 - The distributed mode can be used to play different tests in the same time or to inject stress load from remote injectors
 - Use a YAML syntax to describe the stress scenarii
 
-## Building
+# Building
 
 	$ git clone https://github.com/majeinfo/chaingun
 	$ cd chaingun
