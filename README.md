@@ -2,7 +2,14 @@
 An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 
 ## Table of Contents
+[What it does](##what-it-does)
+[Building](##building)
+[Architecture](##architecture)
+[How to run it](##how-to-run-it)
 [Playbook Syntax](##playbook-yaml-syntax)
+[How to test](##how-to-test)
+[TODO](##todo)
+[License](##license)
 
 ## What it does
 - Provides high-throughput load testing of HTTP/TCP/UDP/WS/MQTT services
@@ -45,6 +52,8 @@ The results will be aggregated by the Web interface.
 Note for the daemon mode:
 	- Data for feeder can be sent to the Players after sending them the Playbook script.
 	- Other files such as Template of files to be uploaded must be sent to the Players before the Playbook script.
+
+## How to run it
 
 #### Run from the command line
 
@@ -114,7 +123,7 @@ The verbose mode can be specified using the VERBOSE environment variable :
 
 	-e VERBOSE=1
 
-##Playbook YAML Syntax
+## Playbook YAML Syntax
 
 This is a sample script. 
 Mandatory parameters are marked with a "# MAND" pseudo-comment at the end of the line.
