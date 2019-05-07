@@ -8,11 +8,11 @@ to inject, etc...). Then you can define some default value for common parameters
 variables. At last, you define the list of actions to be performed by `chaingun`.
 
 ## Table of Contents
-1.[Global Paramaters](#global-parameters)
+1.[Global Parameters](#global-parameters)
 
 2.[Variables](#variables)
 
-3.[Default values for Actons](#default-values-for-actions)
+3.[Default values for Actions](#default-value-for-actions)
 
 4.[Actions](#actions)
 
