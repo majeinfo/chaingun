@@ -3,11 +3,11 @@
 The test script are described using the following YAML syntax.
 (please note, that wrong parameter names ARE NOT detected by the YAML parser)
 
-First of all, you define some global parameters as the count of iterations, the number of virtual users (VU)
-to inject, etc... Then you can define some default value for common parameters et you can add your own
-variables. At last, you define a list of actions to be performed by `chaingun`.
+First of all, you define some global parameters (the count of iterations, the number of virtual users (VU)
+to inject, etc...). Then you can define some default value for common parameters, you can also add your own
+variables. At last, you define the list of actions to be performed by `chaingun`.
 
-## The Global Parameters
+## Global Parameters
 
 | Name | Value | Description |
 | :--- | :---: | :---        | 
@@ -16,28 +16,65 @@ variables. At last, you define a list of actions to be performed by `chaingun`.
 | `rampup`     | integer | (mandatory) gives the time in seconds that is use to launch the VU. New VUs are equally launched during this period. |
 | `users`      | integer | (mandatory) number of VUs to launch during the `rampup` period. For example, if `users` value equals 100 and `rampup` equals 20, 5 new VUs will be launched every new seconds (because 20*5 = 100) |
 | `timeout`    | integer | (default=10) number of seconds before a network timeout occurs |
-| `on_error`   | string  | (default=continue|stop_iteration|stop_vu|stop_test) define the behaviour for error handling: just display the error and continue (default), or abort the current iteration, or stop the current VU, or abort the whole test |
+| `on_error`   | string  | (default=continue,stop_iteration,stop_vu,stop_test) define the behaviour for error handling: just display the error and continue (default), or abort the current iteration, or stop the current VU, or abort the whole test |
 | `http_error_code` | list | (no default value) define the list of what is considered an HTTP error code. For example, `http_error_code: 404,403,500`. This is only used by HTTP Actions |
 
 
 ## Variables
 
+Actions can define expressions that may contain variables. Some variables are created by `chaingun` but you can define and use your own variables.
+You define your custom variables like this:
+
+```
+variables:
+  variable_name: value
+  ...
+```
 
 ## Default value for Actions
 
+Default values for some parameters of further Actions can be defined like this:
+
+```
+default:
+  parameter_name: value
+  ...
+```
+
+The supported parameter_name(s) are:
+
+| Name | Description | Example values |
+| :--- | :---:       | :--- |
+| `server`   | name of remoter server - may also specify a port | www.google.com:80 or www.bing.com |
+| `protocol` | protocol to be used | http or https |
+| `method`   [ HTTP method to use | GET or POST |
 
 
-## Define Actions
+
+## Actions
 
 
 ## Advanced Topics
 
+### Variables usage
+
+### Expressions
+
 ### How to import data from outside
 
 
+## Full sample
 
 ```
 ---
+iterations: 2		# MAND
+duration: 100		# MAND if iterations == -1. Time is in seconds
+rampup: 4		# MAND - time is in seconds
+users: 2		# MAND - number of VU to launch during the rampup period
+timeout: 10		# default value (in seconds)
+on_error: continue	# (default) or stop_iteration | stop_vu | stop_test
+http_error_codes: 404,403,500	# if set, these HTTP response codes generates errors
+
 default:
   server: www.google.com:80     # port number is optional
   protocol: http                # could be https
