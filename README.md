@@ -10,7 +10,7 @@ An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 
 4.[How to run it](#how-to-run-it)
 
-5.[Playbook Syntax](#playbook-yaml-syntax)
+5.[Playbook Syntax](SYNTAX.md)
 
 6.[How to test](#how-to-test)
 
@@ -302,7 +302,7 @@ actions:
   # Each action can be conditioned by a "when" clause that must be true to trigger the action
   - log:
       message: "something..."
-      when: "var1 > 0"
+    when: "var1 > 0"
 ```
 
 The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
