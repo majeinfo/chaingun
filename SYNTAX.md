@@ -17,13 +17,23 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 | `users`      | integer | (mandatory) number of VUs to launch during the `rampup` period. For example, if `users` value equals 100 and `rampup` equals 20, 5 new VUs will be launched every new seconds (because 20*5 = 100) |
 | `timeout`    | integer | (default=10) number of seconds before a network timeout occurs |
 | `on_error`   | string  | (default=continue,stop_iteration,stop_vu,stop_test) define the behaviour for error handling: just display the error and continue (default), or abort the current iteration, or stop the current VU, or abort the whole test |
-| `http_error_code` | list | (no default value) define the list of what is considered an HTTP error code. For example, `http_error_code: 404,403,500`. This is only used by HTTP Actions |
+| `http_error_code` | list | (no default value) define the list of what is considered a HTTP error code. For example, `http_error_code: 404,403,500`. This is only used by HTTP Actions |
 
 
 ## Variables
 
 Actions can define expressions that may contain variables. Some variables are created by `chaingun` but you can define and use your own variables.
 You define your custom variables like this:
+
+### Predefined Variables
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `HTTP_Response` | contains the HTTP returned code |
+
+### User defined Variables
+
+They are defined in the `variables` section:
 
 ```
 variables:
@@ -47,21 +57,258 @@ The supported parameter_name(s) are:
 | :--- | :---:       | :--- |
 | `server`   | name of remoter server - may also specify a port | www.google.com:80 or www.bing.com |
 | `protocol` | protocol to be used | http or https |
-| `method`   [ HTTP method to use | GET or POST |
-
+| `method`   | HTTP method to use | GET or POST |
 
 
 ## Actions
 
+Actions are defined as a list under the `actions` key :
+
+```
+actions:
+ - action1 ...
+ - action2 ...
+```
+
+Here is the list and the description of the implemented Actions :
+
+### http : HTTP/S Request
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `title` | mandatory string that qualifies the request - used for the result output and logging |
+| `method` | GET, PUT, POST, HEAD, DELETE. If absent use the value given by the `method` key in the default section |
+| `url` | mandatory. If the string does not contain a server specification, use the value given by the `server` key in the default section |
+| `storeCookie` | if set, indicates which cookies must be stored in the VU session. The predefined value __all__ implies the capture of all possible cookies |
+| `body` | value of HTTP body if POST method is used (one of `body` or `template` is mandatory) |
+| `template` | a filename which contents will be interpolated and will be used as the request body (one of `body` or `template` is mandatory) |
+| `upload_file` | when used with the POST or PUT methods, indicates a file which contents will be sent to the server as-is |
+| `headers` | additional HTTP headers to transmit. Each header has the form `header_name: value`. In case of a POST method, the body is sent with the HTTP Header `content-type: application/x-www-form-urlencoded` | |
+| `responses` | data can be extracted from server responses. The extraction can use the body or a HTTP Header. regex, jsonpath or xmlpath can be used to collect the substrings |
+
+
+Example:
+```
+  - http:
+      title: Page 1			# MAND for http action
+      method: GET			# MAND for http action (GET/POST/PUT/HEAD/DELETE)
+      url: http://server/page1.php	# MAND for http action
+      # name of Cookie to store. __all__ catches all cookies !
+      storeCookie: __all__
+
+  # POST with application/x-www-form-urlencoded by default
+  # Extracts value from response using regexp
+  - http:
+      title: Page 4
+      method: POST
+      url: http://server/page4.php              # variables are interpolated in URL
+      body: name=${name}&age=${age}	# MAND for POST http action
+      headers:
+        accept: "text/html,application/json"    # variables are interpolated in Headers
+        content-type: text/html
+      responses:			# OPT
+        - regex: "is: (.*)<br>"		# MAND must be one of regex/jsonpath/xmlpath
+          index: first			# OPT must be one of first (default)/last/random
+          variable: address		# MAND
+          default_value: bob		# used when the regex failed
+        - from_header: Via		# OPT HTTP Header name to extract the value from
+          regex: "(.*)"			# MAND 
+          index: first			# OPT must be one of first (default)/last/random
+          variable: proxy_via		# MAND
+          default_value: -		# used when the regex failed
+
+  # POST with variable interpolation in the request
+  # Extracts value from response using regexps
+  - http:
+      title: Page 4bis
+      method: POST
+      url: http://server/page4.php
+      body: name=${name}&age=${age}
+      responses:
+        - regex: "is: (.*), .*<br>"
+          index: first
+          variable: address
+        - regex: "(?i)is: .*, (.*)<br>"
+          index: first
+          variable: city
+
+  # POST with extraction from response using JSON    
+  - http:
+      title: Page 6
+      method: POST
+      url: http://server/page4.php
+      body: name=${name}&age=${age}
+      responses:
+        - jsonpath: $.name+
+          index: first
+          variable: name
+          default_value: bob
+
+  # POST with content specified using a template file       
+  - http:
+      title: Page 7
+      method: POST
+      url: /demo/form.php
+      template: tpl/mytemplate.tpl	# POST needs body or template
+					# template refers to a file which contents
+					# will be used as the request body. Variables
+					# are interpolated in the file contents.
+
+  # File upload
+  - http:
+      title: Page 8
+      method: POST
+      url: http://server/page4.php
+      body: name=${name}&age=${age}     # Optional
+      upload_file: /path/to/file        # no variable interpolation
+```
+
+### mqtt : MQTT Request
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `title` | mandatory string that qualifies the request - used for the result output and logging |
+| `url` | mandatory |
+| `certificatepath` | optional path to the certificate to offer to the server |
+| `privatekeypath` | optional path to the private key to be used with the certificate to offer to the server |
+| `clientid` | client name (chaingun-by-JD by default) |
+| `topic` | MQTT topic |
+| `payload` | MQTT paylod, the format depends on the application |
+| `qos` | MQTT wanted QoS (default=1) |
+
+Variable interpolation applies to url, payload and topic.
+
+Example:
+```
+  - mqtt:
+      title: Temperature		# MAND
+      url: tcps://endpoint.iot.eu-west-1.amazonaws.com:8883/mqtt	# MAND
+      certificatepath: path/to/cert	# OPT needed if auth by certificate
+      privatekeypath: path/to/privkey	# OPT needed if auth by certificate
+      clientid: basicPubSub		# OPT "chaingun-by-JD" by default
+      topic: "sensors/room1"		# MAND
+      payload: "{ \"Temp\": \"20°C\" }"	# MAND format depends on your app
+      qos: 1				# OPT values can be 0, 1 (default) or 2
+					# Variable interpolation is applied on
+					# url, payload and topic
+```
+
+### setvar : creates and set variable values
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `name` | mandatory variable name |
+| `expression` | mandatory string that defines an expression to be evaluated |
+
+Example :
+
+```
+  - setvar:
+      name: my_var
+      expression: "2 * age"
+```
+
+### sleep : wait Action
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `duration` | mandatory integer that gives the sleep time in milliseconds |
+
+### log : log output Action
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `message` | mandatory string that will be displayed on the output or gathered in the logs if the Player is launched in daemon mode. The message can reference variables. |
+
+### assert : creates assertion
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `expression` | mandatory string that defines an expression to be evaluated |
+
+Example:
+```
+  - assert:
+      expression: "name == \"bob\""
+```
 
 ## Advanced Topics
 
 ### Variables usage
 
+Variables can be used in the following contexts :
+
+in the following Action parameters, `http.url`, `http.body`, `mqtt.url`, `log.message`, `mqtt.url`, `mqtt.topic`, `mqtt.payload` 
+In these cases, the variable names must be enclosed between `${....}`.
+
+For example:
+
+```
+  - http:
+      title: Page 3
+      method: GET
+      url: http://server/page3.php?name=${name}
+
+  - log:
+      message: Address value is ${address} (customer=${customer})
+
+  # The HTTP_Response variable is always set after a HTTP action
+  - log:
+      message: HTTP return code=${HTTP_Response}
+```
+
 ### Expressions
 
-### How to import data from outside
+Expressions are strings that can contain scalar values (int, float, string, bool), standard operators and variables.
+Variables are not surrounded by a `${...}`, they are named as is.
 
+The evaluation of the expression must return an int, a string or a bool (floats are converted to ints)
+
+The supported operators are described here:
+   https://github.com/Knetic/govaluate/blob/master/MANUAL.md
+
+The supported functions are:
+ - strlen(string)
+ - substr(string, start, end)
+
+Examples:
+```
+  expression: "var1 + 3 > 4 * var2"
+  expression: "strlen(var3) > 0"
+```
+
+### The `when` clause to trigger Actions...or not
+
+Each Action can be triggered by a `when` clause which defines an expression that must be evaluated to True to trigger the Action.
+
+Example:
+```
+  - setvar:
+      name: xyz
+      expression: "10 * delay"
+    when: "delay > 2"
+```
+
+### How to import data from the outside
+
+The `feeder` global section can be used to define an single source of external data. The following keys are mandatory :
+
+| Key Name | Description |
+| :--- | :--- |
+| `type` | mandatory file type (only "csv" is supported) |
+| `filename` | mandatory string that gives the filename |
+| `separator` | mandatory string that gives the column separator |
+
+The first line of the file must contain the column names. These names will be used to name the feeded variables !
+
+Example :
+
+```
+feeder:
+  type: csv
+  filename: /path/to/data1.csv
+  separator: ","
+```
 
 ## Full sample
 
@@ -231,29 +478,5 @@ actions:
   # Each action can be conditioned by a "when" clause that must be true to trigger the action
   - log:
       message: "something..."
-      when: "var1 > 0"
+    when: "var1 > 0"
 ```
-
-The syntax for jsonpath is available at https://github.com/JumboInteractiveLimited/jsonpath.
-
-# How to test
-
-```
-$ cd tests
-$ docker container run -d -p 8000:80 -v `pwd`/server:/var/www/html php:5.6-apache
-$ ./test_standalone_player.sh
-```
-
-# TODO
-- add a web interface to create/import/export Playbooks
-- implements the "connect-to" option to reverse the roles and cross through the firewalls
-- add options to handle SSL certificates ?
-
-# License
-Licensed under the MIT license.
-
-The golang player (or injector) is originally based on Gotling project available here: 
-http://callistaenterprise.se/blogg/teknik/2015/11/22/gotling/
-(Thanks to Erik Lupander)
-
-See LICENSE
