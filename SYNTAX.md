@@ -7,7 +7,20 @@ First of all, you define some global parameters (the count of iterations, the nu
 to inject, etc...). Then you can define some default value for common parameters, you can also add your own
 variables. At last, you define the list of actions to be performed by `chaingun`.
 
-## Global Parameters
+## Table of Contents
+1.[Global Paramaters](#global-parameters)
+
+2.[Variables](#variables)
+
+3.[Default values for Actons](#default-values-for-actions)
+
+4.[Actions](#actions)
+
+5.[Advanced Topics](#advanced-topics)
+
+6.[Full Sample](#full-sample)
+
+# Global Parameters
 
 | Name | Value | Description |
 | :--- | :---: | :---        | 
@@ -20,18 +33,18 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 | `http_error_code` | list | (no default value) define the list of what is considered a HTTP error code. For example, `http_error_code: 404,403,500`. This is only used by HTTP Actions |
 
 
-## Variables
+# Variables
 
 Actions can define expressions that may contain variables. Some variables are created by `chaingun` but you can define and use your own variables.
 You define your custom variables like this:
 
-### Predefined Variables
+## Predefined Variables
 
 | Parameter Name | Description |
 | :--- | :--- |
 | `HTTP_Response` | contains the HTTP returned code |
 
-### User defined Variables
+## User defined Variables
 
 They are defined in the `variables` section:
 
@@ -41,7 +54,7 @@ variables:
   ...
 ```
 
-## Default value for Actions
+# Default value for Actions
 
 Default values for some parameters of further Actions can be defined like this:
 
@@ -60,7 +73,7 @@ The supported parameter_name(s) are:
 | `method`   | HTTP method to use | GET or POST |
 
 
-## Actions
+# Actions
 
 Actions are defined as a list under the `actions` key :
 
@@ -72,7 +85,7 @@ actions:
 
 Here is the list and the description of the implemented Actions :
 
-### http : HTTP/S Request
+## http : HTTP/S Request
 
 | Parameter Name | Description |
 | :--- | :--- |
@@ -87,7 +100,7 @@ Here is the list and the description of the implemented Actions :
 | `responses` | data can be extracted from server responses. The extraction can use the body or a HTTP Header. regex, jsonpath or xmlpath can be used to collect the substrings |
 
 
-Example:
+Examples:
 ```
   - http:
       title: Page 1			# MAND for http action
@@ -163,7 +176,7 @@ Example:
       upload_file: /path/to/file        # no variable interpolation
 ```
 
-### mqtt : MQTT Request
+## mqtt : MQTT Request
 
 | Parameter Name | Description |
 | :--- | :--- |
@@ -193,7 +206,7 @@ Example:
 					# url, payload and topic
 ```
 
-### setvar : creates and set variable values
+## setvar : creates and set variable values
 
 | Parameter Name | Description |
 | :--- | :--- |
@@ -208,19 +221,19 @@ Example :
       expression: "2 * age"
 ```
 
-### sleep : wait Action
+## sleep : wait Action
 
 | Parameter Name | Description |
 | :--- | :--- |
 | `duration` | mandatory integer that gives the sleep time in milliseconds |
 
-### log : log output Action
+## log : log output Action
 
 | Parameter Name | Description |
 | :--- | :--- |
 | `message` | mandatory string that will be displayed on the output or gathered in the logs if the Player is launched in daemon mode. The message can reference variables. |
 
-### assert : creates assertion
+## assert : creates assertion
 
 | Parameter Name | Description |
 | :--- | :--- |
@@ -232,9 +245,9 @@ Example:
       expression: "name == \"bob\""
 ```
 
-## Advanced Topics
+# Advanced Topics
 
-### Variables usage
+## Variables usage
 
 Variables can be used in the following contexts :
 
@@ -257,7 +270,7 @@ For example:
       message: HTTP return code=${HTTP_Response}
 ```
 
-### Expressions
+## Expressions
 
 Expressions are strings that can contain scalar values (int, float, string, bool), standard operators and variables.
 Variables are not surrounded by a `${...}`, they are named as is.
@@ -277,7 +290,7 @@ Examples:
   expression: "strlen(var3) > 0"
 ```
 
-### The `when` clause to trigger Actions...or not
+## The `when` clause to trigger Actions
 
 Each Action can be triggered by a `when` clause which defines an expression that must be evaluated to True to trigger the Action.
 
@@ -289,7 +302,7 @@ Example:
     when: "delay > 2"
 ```
 
-### How to import data from the outside
+## How to import data from the outside
 
 The `feeder` global section can be used to define an single source of external data. The following keys are mandatory :
 
@@ -310,7 +323,7 @@ feeder:
   separator: ","
 ```
 
-## Full sample
+# Full sample
 
 ```
 ---
