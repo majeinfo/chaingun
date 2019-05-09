@@ -176,6 +176,26 @@ Examples:
       upload_file: /path/to/file        # no variable interpolation
 ```
 
+## ws: WebSocket Request
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `title` | mandatory string that qualifies the request - used for the result output and logging |
+| `url` | mandatory. If the string does not contain a server specification, use the value given by the `server` key in the default section |
+| `storeCookie` | if set, indicates which cookies must be stored in the VU session. The predefined value __all__ implies the capture of all possible cookies |
+| `body` | value of body to send |
+| `responses` | data can be extracted from server responses. The extraction can use the body or a HTTP Header. regex, jsonpath or xmlpath can be used to collect the substrings |
+
+Examples:
+```
+- ws:
+      title: Page 1
+      url: wss://echo.websocket.org/echo
+      body: hello
+      responses:
+        - regex: hello
+```
+
 ## mqtt : MQTT Request
 
 | Parameter Name | Description |
@@ -184,10 +204,12 @@ Examples:
 | `url` | mandatory |
 | `certificatepath` | optional path to the certificate to offer to the server |
 | `privatekeypath` | optional path to the private key to be used with the certificate to offer to the server |
+| `username` | optional username |
+| `password` | optional password |
 | `clientid` | client name (chaingun-by-JD by default) |
-| `topic` | MQTT topic |
-| `payload` | MQTT paylod, the format depends on the application |
-| `qos` | MQTT wanted QoS (default=1) |
+| `topic` | mandatory MQTT topic |
+| `payload` | mandatory MQTT paylaod, the format depends on the application |
+| `qos` | MQTT wanted QoS (default=0, 1 or 2) |
 
 Variable interpolation applies to url, payload and topic.
 
@@ -204,6 +226,23 @@ Example:
       qos: 1				# OPT values can be 0, 1 (default) or 2
 					# Variable interpolation is applied on
 					# url, payload and topic
+```
+
+## tcp or udp: simple TCP or UDP Request
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `title` | mandatory string that qualifies the request - used for the result output and logging |
+| `address` | mandatory string that indicates the server address and the port to connect to |
+| `payload` | mandatory string to send as the payload |
+
+Variable interpolation applies to url and payload.
+
+Example:
+```
+  - tcp:
+      address: 127.0.0.1:8081
+      payload: ACT|LOGIN|${person}|${name}\n
 ```
 
 ## setvar : creates and set variable values
