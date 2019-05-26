@@ -53,6 +53,7 @@ type Client struct {
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
 func (c *Client) readPump() {
+	log.Debug("readPump called")
 	defer func() {
 		log.Debug("readPump defers unregister")
 		c.hub.unregister <- c
@@ -81,6 +82,7 @@ func (c *Client) readPump() {
 		//msg := string(message[:])
 		cmdHandler(c, message)
 	}
+	log.Debug("exit readPump")
 }
 
 // writePump pumps messages from the hub to the websocket connection.
@@ -89,6 +91,7 @@ func (c *Client) readPump() {
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
 func (c *Client) writePump() {
+	log.Debug("writePump called")
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -97,6 +100,7 @@ func (c *Client) writePump() {
 	for {
 		select {
 		case message, ok := <-c.send:
+			log.Debug("writePump rcvd msg")
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
@@ -130,10 +134,12 @@ func (c *Client) writePump() {
 			}
 		}
 	}
+	log.Debug("exit writePump")
 }
 
 // serveWs handles websocket requests from the peer.
 func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+	log.Debug("serveWs called")
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Errorln(err)

@@ -1,6 +1,10 @@
 package main
 
-import log "github.com/sirupsen/logrus"
+import (
+	"runtime"
+
+	log "github.com/sirupsen/logrus"
+)
 
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
@@ -19,6 +23,7 @@ type Hub struct {
 }
 
 func newHub() *Hub {
+	log.Debug("newHub")
 	return &Hub{
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
@@ -30,8 +35,10 @@ func newHub() *Hub {
 func (h *Hub) run() {
 	for {
 		log.Debugln("Loop Hub run()")
+		log.Debugf("Count of goroutines=%d", runtime.NumGoroutine())
 		select {
 		case client := <-h.register:
+			log.Debugf("Client %v registers", client)
 			h.clients[client] = true
 		case client := <-h.unregister:
 			log.Debug("Client unregisters")
@@ -40,7 +47,9 @@ func (h *Hub) run() {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
+			log.Debug("broadcast received")
 			for client := range h.clients {
+				log.Debugf("Broadcast to client %v", client)
 				select {
 				case client.send <- message:
 				default:

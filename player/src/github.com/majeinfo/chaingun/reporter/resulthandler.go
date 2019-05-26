@@ -17,7 +17,7 @@ var (
  * Starts the per second aggregator and then forwards any HttpRequestResult messages to it through the channel.
  */
 func AcceptResults(resChannel chan SampleReqResult, vuCount *int, bcast *chan []byte) {
-	log.Debug("AcceptResults")
+	log.Debug("AcceptResults called")
 	pvuCount = vuCount
 	broadcast = bcast
 	perSecondAggregatorChannel := make(chan *SampleReqResult, 500)
@@ -25,6 +25,9 @@ func AcceptResults(resChannel chan SampleReqResult, vuCount *int, bcast *chan []
 	go aggregatePerSecondHandler(perSecondAggregatorChannel)
 
 	for {
+		if stopNow {
+			break
+		}
 		select {
 		case msg := <-resChannel:
 			perSecondAggregatorChannel <- &msg
@@ -38,6 +41,7 @@ func AcceptResults(resChannel chan SampleReqResult, vuCount *int, bcast *chan []
 			//			time.Sleep(100 * time.Microsecond)
 		}
 	}
+	log.Debug("exit AcceptResults")
 }
 
 // Stop the WS Server and the aggregator
@@ -51,7 +55,7 @@ func StopResults() {
  * results to the WebSocket handler, then the aggregates are reset and restarted.
  */
 func aggregatePerSecondHandler(perSecondChannel chan *SampleReqResult) {
-
+	log.Debug("aggregatePerSecondHandler called")
 	for {
 		var totalReq int
 		var totalLatency int
@@ -73,6 +77,7 @@ func aggregatePerSecondHandler(perSecondChannel chan *SampleReqResult) {
 			break
 		}
 	}
+	log.Debug("exit aggregatePerSecondHandler")
 }
 
 // Total count of Requests cumulated by all VUs

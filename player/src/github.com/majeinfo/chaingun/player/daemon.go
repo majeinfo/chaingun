@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	_ "net"
 	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -83,6 +84,7 @@ func startWsServer(listen_addr string) {
 // TODO: manager and worker should exchange their versions
 func cmdHandler(c *Client, msg []byte) {
 	log.Debugf("Received Message: %s", msg)
+	log.Debugf("Count of goroutines=%d", runtime.NumGoroutine())
 
 	// Decode JSON message
 	var cmd PlayerCommand

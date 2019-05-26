@@ -7,6 +7,7 @@ import (
 	_ "net"
 	"os"
 	"path"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -148,6 +149,7 @@ func main() {
 		spawnUsers(&gp_playbook, &gp_actions)
 
 		log.Infof("Done in %v", time.Since(reporter.SimulationStart))
+		log.Infof("Count of remaining goroutines=%d", runtime.NumGoroutine())
 		log.Infof("Building reports, please wait...")
 		reporter.CloseResultsFile()
 
