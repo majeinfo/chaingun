@@ -42,6 +42,7 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPActi
 
     if a["url"] == "" || a["url"] == nil {
         log.Error("HttpAction must define a URL.")
+        a["url"] = ""
         valid = false
     } else {
         valid = setDefaultURL(a, dflt)
@@ -50,6 +51,7 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPActi
     if a["method"] == nil || a["method"] == "" {
         if dflt.Method == "" {
             log.Error("Action has no Method and no default Method specified")
+            a["method"] = ""
             valid = false
         } else {
             a["method"] = dflt.Method
