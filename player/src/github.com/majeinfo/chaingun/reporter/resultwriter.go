@@ -6,19 +6,25 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 )
 
 var (
-	w   *bufio.Writer
-	f   *os.File
-	err error
+	w    *bufio.Writer
+	f    *os.File
+	err  error
+	lock sync.Mutex
 )
 
 var opened bool = false
 
 func OpenResultsFile(fileName string) {
+	log.Debug("OpenResultFile")
+	lock.Lock()
+	defer lock.Unlock()
+
 	if !opened {
 		opened = true
 	} else {
@@ -45,6 +51,7 @@ func OpenTempResultsFile(tmpfile *os.File) {
 }
 
 func initResultsFile() {
+	log.Debug("initResultFile()")
 	w = bufio.NewWriter(f)
 	if outputType == jsonOutput {
 		_, err = w.WriteString(string("var logdata = '"))
