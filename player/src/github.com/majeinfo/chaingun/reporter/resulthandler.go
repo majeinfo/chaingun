@@ -47,6 +47,7 @@ func AcceptResults(resChannel chan SampleReqResult, vuCount *int, bcast *chan []
 // Stop the WS Server and the aggregator
 func StopResults() {
 	log.Debug("StopResults")
+	time.Sleep(2 * time.Second) // Give a chance to write down the last results before leaving
 	stopNow = true
 }
 
