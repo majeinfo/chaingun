@@ -362,6 +362,25 @@ feeder:
   separator: ","
 ```
 
+## Submit form using "multipart/form-data" syntax
+
+You can use the `formdata` key to submit form fields encoded with `multipart/form-data`. This is necessary if
+your form embeds a field of type `file`.
+
+```
+  - http:
+      title: Page upload
+      method: POST		# only for POST methods
+      url: http://yourserver/a_page.php
+      formdata:
+        - name: name
+          value: ${a_variable} Doe
+        - name: fileToUpload
+          value: a_filename.txt
+          type: file		# mandatory for files
+        - name: submit
+```
+
 # Full sample
 
 ```
