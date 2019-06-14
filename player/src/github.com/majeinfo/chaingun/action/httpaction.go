@@ -25,7 +25,7 @@ type HTTPAction struct {
 // FormData describes the data that will be sent with the HTTP Request
 type FormData struct {
     Name    string `yaml:"name"`
-    Value   string `yaml:"name"`
+    Value   string `yaml:"value"`
     Type    string `yaml:"type"`
     Content []byte
 }
