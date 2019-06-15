@@ -261,18 +261,27 @@ func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]stri
 		} else {
 			r = responseHandler.Defaultvalue
 		}
+		log.Debugf("Test matching against Header:")
 	} else {
 		r = string(responseBody[:])
+		log.Debugf("Test matching agains Body:")
 	}
+	log.Debug(r)
 
 	res := responseHandler.Regex.FindAllStringSubmatch(r, -1)
 	log.Debugf("Regex applied: %v", res)
-	if res != nil && len(res) > 1 {
+	if res != nil && len(res) > 0 {
 		log.Debugf("Regexp matches at least: %v, count of matching substring=%d", res[0], len(res))
 		resultsArray := make([]string, len(res))
 		for i := 0; i < len(res); i++ {
 			//resultsArray = append(resultsArray, res[i][1])
-			resultsArray[i] = res[i][1]
+			// If the rgexp did not capture anything (or lack parenthesis): nothing to store
+			if len(res[i]) > 1 {
+				resultsArray[i] = res[i][1]
+			} else {
+				resultsArray[i] = ""
+				log.Info("The regex matched but nothing captured !")
+			}
 		}
 		passResultIntoSessionMap(resultsArray, responseHandler, sessionMap)
 	} else {
