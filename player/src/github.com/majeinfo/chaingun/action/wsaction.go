@@ -17,8 +17,8 @@ type WSAction struct {
 }
 
 // Execute a WebSocket Action
-func (h WSAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
-    return DoWSRequest(h, resultsChannel, sessionMap, playbook)
+func (h WSAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+    return DoWSRequest(h, resultsChannel, sessionMap, vulog, playbook)
 }
 
 // NewWSAction builds a new WebSocket Action

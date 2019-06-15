@@ -15,8 +15,8 @@ type AssertAction struct {
 }
 
 // Execute an assert Action
-func (s AssertAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
-	result, err := utils.Evaluate(sessionMap, s.CompiledExpr, s.Expression)
+func (s AssertAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+	result, err := utils.Evaluate(sessionMap, vulog, s.CompiledExpr, s.Expression)
 	success := false
 
 	if err == nil {
@@ -29,16 +29,16 @@ func (s AssertAction) Execute(resultsChannel chan reporter.SampleReqResult, sess
 		case bool:
 			success = result.(bool)
 		default:
-			log.Errorf("Error when evaluating expression: unknown type %v", result)
+			vulog.Errorf("Error when evaluating expression: unknown type %v", result)
 		}
 	}
 
 	if !success {
-		log.Errorf("Assertion failed: %s", s.Expression)
+		vulog.Errorf("Assertion failed: %s", s.Expression)
 		return false
 	}
 
-	log.Debugf("Assertion succeeded: %s", s.Expression)
+	vulog.Debugf("Assertion succeeded: %s", s.Expression)
 
 	return true
 }

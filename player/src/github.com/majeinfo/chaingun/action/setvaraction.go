@@ -18,33 +18,33 @@ type SetVarAction struct {
 }
 
 // Execute a setvar Action
-func (s SetVarAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
+func (s SetVarAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
 	// Create the variable if needed
 	if _, err := sessionMap[s.Variable]; !err {
-		log.Debugf("Variable ${%s} not set: creates it !", s.Variable)
+		vulog.Debugf("Variable ${%s} not set: creates it !", s.Variable)
 		sessionMap[s.Variable] = ""
 	}
 
-	result, err := utils.Evaluate(sessionMap, s.CompiledExpr, s.Expression)
+	result, err := utils.Evaluate(sessionMap, vulog, s.CompiledExpr, s.Expression)
 
 	if err == nil {
 		// Check the result type and convert it into strings (float are converted into integer)
 		switch result.(type) {
 		case float64:
 			sessionMap[s.Variable] = strconv.Itoa((int)(result.(float64)))
-			log.Debugf("setvar sets variable %s with value %s", s.Variable, sessionMap[s.Variable])
+			vulog.Debugf("setvar sets variable %s with value %s", s.Variable, sessionMap[s.Variable])
 		case string:
 			sessionMap[s.Variable] = result.(string)
-			log.Debugf("setvar sets variable %s with value %s", s.Variable, sessionMap[s.Variable])
+			vulog.Debugf("setvar sets variable %s with value %s", s.Variable, sessionMap[s.Variable])
 		case bool:
 			if result.(bool) {
 				sessionMap[s.Variable] = "1"
 			} else {
 				sessionMap[s.Variable] = "0"
 			}
-			log.Debugf("setvar sets variable %s with value %s", s.Variable, sessionMap[s.Variable])
+			vulog.Debugf("setvar sets variable %s with value %s", s.Variable, sessionMap[s.Variable])
 		default:
-			log.Errorf("Error when evaluating expression: unknown type %v", result)
+			vulog.Errorf("Error when evaluating expression: unknown type %v", result)
 		}
 	}
 

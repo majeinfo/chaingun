@@ -10,25 +10,25 @@ import (
 
 // DoWSRequest handles requests made using WebSocket Protocol
 // TODO: manage cookies !
-func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
+func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
 	//req := buildWSRequest(wsAction, sessionMap)
-	log.Debugf("New Request: URL: %s", wsAction.URL)
+	vulog.Debugf("New Request: URL: %s", wsAction.URL)
 
 	start := time.Now()
 
 	// TODO: should be done once per VU and per script or this could be configurable (for HTTP/S too)
 	c, _, err := websocket.DefaultDialer.Dial(wsAction.URL, nil)
 	if err != nil {
-		log.Errorf("WS Connection failed: %s", err)
+		vulog.Errorf("WS Connection failed: %s", err)
 		return false
 	}
 	defer c.Close()
 
-	log.Debugf("wsAction.Body=%s", wsAction.Body)
+	vulog.Debugf("wsAction.Body=%s", wsAction.Body)
 	if wsAction.Body != "" {
 		err = c.WriteMessage(websocket.TextMessage, []byte(wsAction.Body))
 		if err != nil {
-			log.Errorf("WS WriteMessage failed: %s", err)
+			vulog.Errorf("WS WriteMessage failed: %s", err)
 			return false
 		}
 	}
@@ -38,7 +38,7 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 	ok := true
 	//if wsAction.ResponseHandler.Regex != nil || wsAction.ResponseHandler.Jsonpaths != nil || wsAction.ResponseHandler.Xmlpath != nil {
 	if len(wsAction.ResponseHandlers) > 0 {
-		log.Debugf("Starts a new timeout for %d seconds before reading the message", playbook.Timeout)
+		vulog.Debugf("Starts a new timeout for %d seconds before reading the message", playbook.Timeout)
 		ticker := time.NewTicker(time.Duration(playbook.Timeout) * time.Second)
 		defer ticker.Stop()
 
@@ -49,13 +49,13 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 
 			_, responseBody, err := c.ReadMessage()
 			if err != nil {
-				log.Errorf("WS ReadMessage error: %s", err)
+				vulog.Errorf("WS ReadMessage error: %s", err)
 				ok = false
 			}
-			log.Debugf("WS ReadMessage recv: %s", responseBody)
+			vulog.Debugf("WS ReadMessage recv: %s", responseBody)
 
 			// if action specifies response action, parse using regexp/jsonpath
-			if !processResult(wsAction.ResponseHandlers, sessionMap, responseBody, nil) {
+			if !processResult(wsAction.ResponseHandlers, sessionMap, vulog, responseBody, nil) {
 				ok = false
 			} else {
 				bodyLen = len(responseBody)
@@ -67,14 +67,14 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 		case <-done:
 			break
 		case t := <-ticker.C:
-			log.Errorf("WS ReadMessage timeout %v", t)
+			vulog.Errorf("WS ReadMessage timeout %v", t)
 			ok = false
 			break
 		}
 	}
 
 	elapsed := time.Since(start)
-	log.Debugf("elapsed time=%d", elapsed)
+	vulog.Debugf("elapsed time=%d", elapsed)
 
 	sampleReqResult := buildSampleResult("WS", sessionMap["UID"], bodyLen, respCode, elapsed.Nanoseconds(), wsAction.Title, wsAction.URL)
 	resultsChannel <- sampleReqResult

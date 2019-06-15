@@ -140,11 +140,11 @@ func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) 
 /**
  *  Extract data from response according to the desired processor
  */
-func processResult(responseHandlers []ResponseHandler, sessionMap map[string]string, responseBody []byte, respHeader http.Header) bool {
+func processResult(responseHandlers []ResponseHandler, sessionMap map[string]string, vulog *log.Entry, responseBody []byte, respHeader http.Header) bool {
 	log.Debugf("processResult")
 	for _, res := range responseHandlers {
 		log.Debugf("responseHandlers")
-		if !_processResult(res, sessionMap, responseBody, respHeader) {
+		if !_processResult(res, sessionMap, vulog, responseBody, respHeader) {
 			return false
 		}
 	}
@@ -152,29 +152,29 @@ func processResult(responseHandlers []ResponseHandler, sessionMap map[string]str
 	return true
 }
 
-func _processResult(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte, respHeader http.Header) bool {
+func _processResult(responseHandler ResponseHandler, sessionMap map[string]string, vulog *log.Entry, responseBody []byte, respHeader http.Header) bool {
 	if responseHandler.Jsonpaths != nil {
-		return JSONProcessor(responseHandler, sessionMap, responseBody)
+		return JSONProcessor(responseHandler, sessionMap, vulog, responseBody)
 	}
 
 	if responseHandler.Xmlpath != nil {
-		return XMLPathProcessor(responseHandler, sessionMap, responseBody)
+		return XMLPathProcessor(responseHandler, sessionMap, vulog, responseBody)
 	}
 
 	if responseHandler.Regex != nil {
-		return RegexpProcessor(responseHandler, sessionMap, responseBody, respHeader)
+		return RegexpProcessor(responseHandler, sessionMap, vulog, responseBody, respHeader)
 	}
 
 	return true
 }
 
 // JSONProcessor applies JSON expression to extract data from responses and fill variables
-func JSONProcessor(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {
-	log.Debugf("Response processed by Json")
+func JSONProcessor(responseHandler ResponseHandler, sessionMap map[string]string, vulog *log.Entry, responseBody []byte) bool {
+	vulog.Debugf("Response processed by Json")
 
 	eval, err := jsonpath.EvalPathsInBytes(responseBody, responseHandler.Jsonpaths)
 	if err != nil {
-		log.Errorf("Jsonpath failed to be applied: %v", err)
+		vulog.Errorf("Jsonpath failed to be applied: %v", err)
 		return false
 	}
 
@@ -185,10 +185,10 @@ func JSONProcessor(responseHandler ResponseHandler, sessionMap map[string]string
 	for {
 		if result, ok := eval.Next(); ok {
 			value := strings.TrimSpace(result.Pretty(false))
-			log.Debugf("JSON extracted value: %s", value)
+			vulog.Debugf("JSON extracted value: %s", value)
 			idx++
 			if idx > max_values {
-				log.Errorf("Too many JSON values to extract (%d maximum), value %s ignored", max_values, value)
+				vulog.Errorf("Too many JSON values to extract (%d maximum), value %s ignored", max_values, value)
 			} else {
 				resultsArray = append(resultsArray, trimChar(value, '"'))
 			}
@@ -198,34 +198,34 @@ func JSONProcessor(responseHandler ResponseHandler, sessionMap map[string]string
 	}
 
 	if eval.Error != nil {
-		log.Errorf("Error while evaluating jsonpath: %s", eval.Error)
+		vulog.Errorf("Error while evaluating jsonpath: %s", eval.Error)
 		return false
 	}
 
 	if len(resultsArray) == 0 {
 		if responseHandler.Defaultvalue != "" {
-			log.Warning("Jsonpath failed to apply, uses default value")
+			vulog.Warning("Jsonpath failed to apply, uses default value")
 			resultsArray = append(resultsArray, responseHandler.Defaultvalue)
 		} else {
-			log.Errorf("Jsonpath %v failed to apply - no default value given", responseHandler.Jsonpaths)
+			vulog.Errorf("Jsonpath %v failed to apply - no default value given", responseHandler.Jsonpaths)
 			return false
 		}
 	}
 
-	passResultIntoSessionMap(resultsArray, responseHandler, sessionMap)
+	passResultIntoSessionMap(resultsArray, responseHandler, sessionMap, vulog)
 
 	return true
 }
 
 // XMLPathProcessor extracts XML data from responses to fill variables
-func XMLPathProcessor(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte) bool {
-	log.Debugf("Response processed by XmlPath")
+func XMLPathProcessor(responseHandler ResponseHandler, sessionMap map[string]string, vulog *log.Entry, responseBody []byte) bool {
+	vulog.Debugf("Response processed by XmlPath")
 
 	r := bytes.NewReader(responseBody)
 	root, err := xmlpath.Parse(r)
 	if err != nil {
 		//log.Errorf("Could not parse reponse of page %s, as XML data: %s", httpAction.Title, err)
-		log.Errorf("Could not parse reponse of page as XML data: %s", err)
+		vulog.Errorf("Could not parse reponse of page as XML data: %s", err)
 		return false
 	}
 
@@ -242,17 +242,17 @@ func XMLPathProcessor(responseHandler ResponseHandler, sessionMap map[string]str
 				break
 			}
 		}
-		passResultIntoSessionMap(resultsArray, responseHandler, sessionMap)
+		passResultIntoSessionMap(resultsArray, responseHandler, sessionMap, vulog)
 	}
 
 	return true
 }
 
 // RegexpProcessor applies the Regexp from responses to fill variables
-func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]string, responseBody []byte, respHeader http.Header) bool {
+func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]string, vulog *log.Entry, responseBody []byte, respHeader http.Header) bool {
 	var r string
 
-	log.Debugf("Response processed by Regexp")
+	vulog.Debugf("Response processed by Regexp")
 
 	// Two cases: extract value from Body or HTTP Header ?
 	if responseHandler.FromHeader != "" {
@@ -261,17 +261,17 @@ func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]stri
 		} else {
 			r = responseHandler.Defaultvalue
 		}
-		log.Debugf("Test matching against Header:")
+		vulog.Debugf("Test matching against Header:")
 	} else {
 		r = string(responseBody[:])
-		log.Debugf("Test matching agains Body:")
+		vulog.Debugf("Test matching agains Body:")
 	}
 	log.Debug(r)
 
 	res := responseHandler.Regex.FindAllStringSubmatch(r, -1)
-	log.Debugf("Regex applied: %v", res)
+	vulog.Debugf("Regex applied: %v", res)
 	if res != nil && len(res) > 0 {
-		log.Debugf("Regexp matches at least: %v, count of matching substring=%d", res[0], len(res))
+		vulog.Debugf("Regexp matches at least: %v, count of matching substring=%d", res[0], len(res))
 		resultsArray := make([]string, len(res))
 		for i := 0; i < len(res); i++ {
 			//resultsArray = append(resultsArray, res[i][1])
@@ -280,18 +280,18 @@ func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]stri
 				resultsArray[i] = res[i][1]
 			} else {
 				resultsArray[i] = ""
-				log.Info("The regex matched but nothing captured !")
+				vulog.Debug("The regex matched but nothing captured !")
 			}
 		}
-		passResultIntoSessionMap(resultsArray, responseHandler, sessionMap)
+		passResultIntoSessionMap(resultsArray, responseHandler, sessionMap, vulog)
 	} else {
 		if responseHandler.Defaultvalue != "" {
-			log.Warning("Regexp failed to apply, uses default value")
+			vulog.Warning("Regexp failed to apply, uses default value")
 			resultsArray := make([]string, 1)
 			resultsArray = append(resultsArray, responseHandler.Defaultvalue)
-			passResultIntoSessionMap(resultsArray, responseHandler, sessionMap)
+			passResultIntoSessionMap(resultsArray, responseHandler, sessionMap, vulog)
 		} else {
-			log.Errorf("Regexp '%s' failed to apply - no default value given", responseHandler.Regex)
+			vulog.Errorf("Regexp '%s' failed to apply - no default value given", responseHandler.Regex)
 			return false
 		}
 	}
@@ -299,17 +299,17 @@ func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]stri
 	return true
 }
 
-func passResultIntoSessionMap(resultsArray []string, responseHandler ResponseHandler, sessionMap map[string]string) {
-	log.Debugf("resultsArray=%v", resultsArray)
+func passResultIntoSessionMap(resultsArray []string, responseHandler ResponseHandler, sessionMap map[string]string, vulog *log.Entry) {
+	vulog.Debugf("resultsArray=%v", resultsArray)
 
 	if resultCount := len(resultsArray); resultCount > 0 {
 		switch responseHandler.Index {
 		case config.RE_FIRST:
-			log.Debugf("First matching value: %s", resultsArray[0])
+			vulog.Debugf("First matching value: %s", resultsArray[0])
 			sessionMap[responseHandler.Variable] = resultsArray[0]
 			break
 		case config.RE_LAST:
-			log.Debugf("Last matching value: %s", resultsArray[resultCount-1])
+			vulog.Debugf("Last matching value: %s", resultsArray[resultCount-1])
 			sessionMap[responseHandler.Variable] = resultsArray[resultCount-1]
 			break
 		case config.RE_RANDOM:
@@ -318,15 +318,15 @@ func passResultIntoSessionMap(resultsArray []string, responseHandler ResponseHan
 			} else {
 				sessionMap[responseHandler.Variable] = resultsArray[0]
 			}
-			log.Debugf("Random matching value: %s", sessionMap[responseHandler.Variable])
+			vulog.Debugf("Random matching value: %s", sessionMap[responseHandler.Variable])
 			break
 		default:
-			log.Errorf("Internal error")
+			vulog.Errorf("Internal error")
 		}
 
 	} else {
 		// TODO how to handle requested, but missing result?
-		log.Errorf("No value found in Response")
+		vulog.Errorf("No value found in Response")
 	}
 }
 

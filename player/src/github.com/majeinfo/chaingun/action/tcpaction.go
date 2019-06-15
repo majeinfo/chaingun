@@ -3,6 +3,7 @@ package action
 import (
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
+	log "github.com/sirupsen/logrus"
 )
 
 // TCPAction describes a TCP Action
@@ -13,8 +14,8 @@ type TCPAction struct {
 }
 
 // Execute a TCP Action
-func (t TCPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
-	DoTCPRequest(t, resultsChannel, sessionMap)
+func (t TCPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+	DoTCPRequest(t, resultsChannel, sessionMap, vulog)
 	return true
 }
 

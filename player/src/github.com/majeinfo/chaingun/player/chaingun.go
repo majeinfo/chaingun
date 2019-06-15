@@ -245,8 +245,11 @@ func launchActions(playbook *config.TestDef, resultsChannel chan reporter.Sample
 	var sessionMap = make(map[string]string)
 
 	i := 0
+	vulog := log.WithFields(log.Fields{"vuid": UID, "iter": i, "action": ""})
+
 actionLoop:
 	for (playbook.Iterations == -1) || (i < playbook.Iterations) {
+		vulog.Data["nu_iter"] = i
 
 		// Make sure the sessionMap is cleared before each iteration - except for the UID which stays
 		cleanSessionMapAndResetUID(UID, sessionMap, playbook)
@@ -260,10 +263,10 @@ actionLoop:
 			if action.Action != nil {
 				// Check for a "when" expression
 				if action.CompiledWhen != nil {
-					log.Debugf("Evaluate 'when' expression: %s", action.When)
+					vulog.Debugf("Evaluate 'when' expression: %s", action.When)
 
 					// if evaluation is False, skip the action
-					result, err := utils.Evaluate(sessionMap, action.CompiledWhen, action.When)
+					result, err := utils.Evaluate(sessionMap, vulog, action.CompiledWhen, action.When)
 					skip := false
 					if err == nil {
 						switch result.(type) {
@@ -274,29 +277,29 @@ actionLoop:
 						case bool:
 							skip = !result.(bool)
 						default:
-							log.Errorf("Error when evaluating expression: unknown type %v", result)
+							vulog.Errorf("Error when evaluating expression: unknown type %v", result)
 						}
 					}
 					if skip {
-						log.Infof("Action skipped due to its 'when' condition")
+						vulog.Infof("Action skipped due to its 'when' condition")
 						continue
 					}
 				}
-				if !action.Action.Execute(resultsChannel, sessionMap, playbook) {
+				if !action.Action.Execute(resultsChannel, sessionMap, vulog, playbook) {
 					// An error occurred : continue, stop the vu or stop the test ?
 					switch playbook.OnError {
 					case config.ERR_CONTINUE:
-						log.Info("Continue on error")
+						vulog.Info("Continue on error")
 						break
 					case config.ERR_STOP_ITERATION:
-						log.Info("Stop this iteration")
+						vulog.Info("Stop this iteration")
 						break iterLoop
 					case config.ERR_STOP_TEST:
-						log.Info("Stop test on error")
+						vulog.Info("Stop test on error")
 						gp_daemon_status = STOPPING_NOW
 						break actionLoop
 					case config.ERR_STOP_VU:
-						log.Info("Stop VU on error")
+						vulog.Info("Stop VU on error")
 						break actionLoop
 					}
 				}

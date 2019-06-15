@@ -16,14 +16,14 @@ func (MQTTLogger) Printf(format string, v ...interface{}) { fmt.Print(format, v)
 */
 
 // DoMQTTRequest accepts a MqttAction and a one-way channel to write the results to.
-func DoMQTTRequest(mqttAction MQTTAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
+func DoMQTTRequest(mqttAction MQTTAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
 	//MQTT.DEBUG = MQTTLogger{}
 
 	// Assume variables substitution on URL, Topic and Payload
 	// Hack: the Path has been concatened with EscapedPath() (from net/url.go)
 	// We must re-convert strings like $%7Bxyz%7D into ${xyz} to make variable substitution work !
 	unescapedURL := RedecodeEscapedPath(mqttAction.URL)
-	realURL := SubstParams(sessionMap, unescapedURL)
+	realURL := SubstParams(sessionMap, unescapedURL, vulog)
 
 	connOpts := &MQTT.ClientOptions{
 		ClientID:             mqttAction.ClientID,
@@ -37,7 +37,7 @@ func DoMQTTRequest(mqttAction MQTTAction, resultsChannel chan reporter.SampleReq
 	}
 
 	connOpts.AddBroker(realURL)
-	log.Debugf("connOpts: %v", connOpts)
+	vulog.Debugf("connOpts: %v", connOpts)
 
 	mqttClient := MQTT.NewClient(connOpts)
 	start := time.Now()
@@ -45,18 +45,18 @@ func DoMQTTRequest(mqttAction MQTTAction, resultsChannel chan reporter.SampleReq
 	token.Wait()
 	//if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
 	if err := token.Error(); err != nil {
-		log.Error(err) // should report error in results
+		vulog.Error(err) // should report error in results
 		return false
 	}
-	log.Debug("[MQTT] Connected")
+	vulog.Debug("[MQTT] Connected")
 
 	token = mqttClient.Publish(
-		SubstParams(sessionMap, mqttAction.Topic),
+		SubstParams(sessionMap, mqttAction.Topic, vulog),
 		mqttAction.Qos,
 		false,
-		SubstParams(sessionMap, mqttAction.Payload))
+		SubstParams(sessionMap, mqttAction.Payload, vulog))
 	token.Wait()
-	log.Debugf("[MQTT] Publish of: %s", mqttAction.Payload)
+	vulog.Debugf("[MQTT] Publish of: %s", mqttAction.Payload)
 	mqttClient.Disconnect(0)
 	elapsed := time.Since(start)
 

@@ -11,10 +11,10 @@ import (
 var udpconn *net.UDPConn
 
 // DoUDPRequest accepts a UdpAction and a one-way channel to write the results to.
-func DoUDPRequest(udpAction UDPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string) {
+func DoUDPRequest(udpAction UDPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry) {
 
-    address := SubstParams(sessionMap, udpAction.Address)
-    payload := SubstParams(sessionMap, udpAction.Payload)
+    address := SubstParams(sessionMap, udpAction.Address, vulog)
+    payload := SubstParams(sessionMap, udpAction.Payload, vulog)
 
     if udpconn == nil {
         ServerAddr, err := net.ResolveUDPAddr("udp", address) //"127.0.0.1:10001")

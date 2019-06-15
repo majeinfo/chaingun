@@ -3,6 +3,7 @@ package action
 import (
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
+	log "github.com/sirupsen/logrus"
 )
 
 // UDPAction describes a UDP Action
@@ -13,8 +14,8 @@ type UDPAction struct {
 }
 
 // Execute an UDP Request
-func (t UDPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
-	DoUDPRequest(t, resultsChannel, sessionMap)
+func (t UDPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+	DoUDPRequest(t, resultsChannel, sessionMap, vulog)
 	return true
 }
 

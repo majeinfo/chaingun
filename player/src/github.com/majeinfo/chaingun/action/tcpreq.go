@@ -11,10 +11,10 @@ import (
 var conn net.Conn
 
 // DoTCPRequest accepts a TcpAction and a one-way channel to write the results to.
-func DoTCPRequest(tcpAction TCPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string) {
+func DoTCPRequest(tcpAction TCPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry) {
 
-    address := SubstParams(sessionMap, tcpAction.Address)
-    payload := SubstParams(sessionMap, tcpAction.Payload)
+    address := SubstParams(sessionMap, tcpAction.Address, vulog)
+    payload := SubstParams(sessionMap, tcpAction.Payload, vulog)
 
     if conn == nil {
 

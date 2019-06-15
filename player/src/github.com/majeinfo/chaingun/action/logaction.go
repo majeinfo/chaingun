@@ -17,12 +17,12 @@ var (
 )
 
 // Execute a log Action
-func (s LogAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, playbook *config.TestDef) bool {
+func (s LogAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
 	if disableLog {
 		return true
 	}
-	unesc, _ := url.QueryUnescape(SubstParams(sessionMap, s.Message))
-	log.Infof("[LOG] %s", unesc)
+	unesc, _ := url.QueryUnescape(SubstParams(sessionMap, s.Message, vulog))
+	vulog.Infof("[LOG] %s", unesc)
 	return true
 }
 

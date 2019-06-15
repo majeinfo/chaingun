@@ -8,7 +8,7 @@ import (
 )
 
 // Evaluate a precompiled expression
-func Evaluate(sessionMap map[string]string, compiledExpr *govaluate.EvaluableExpression, expression string) (interface{}, error) {
+func Evaluate(sessionMap map[string]string, vulog *log.Entry, compiledExpr *govaluate.EvaluableExpression, expression string) (interface{}, error) {
 	// Convert sessionMap into parameters for evaluation
 	parameters := make(map[string]interface{}, len(sessionMap))
 	for k, v := range sessionMap {
@@ -21,12 +21,12 @@ func Evaluate(sessionMap map[string]string, compiledExpr *govaluate.EvaluableExp
 
 	result, err := compiledExpr.Evaluate(parameters)
 	if err != nil {
-		log.Errorf("Expression evaluation failed: %s", expression)
-		log.Errorf("%v", err)
+		vulog.Errorf("Expression evaluation failed: %s", expression)
+		vulog.Errorf("%v", err)
 		return nil, err
 	}
 
-	log.Debugf("Expression evaluation succeeded: %s -> %s", expression, result)
+	vulog.Debugf("Expression evaluation succeeded: %s -> %s", expression, result)
 
 	return result, nil
 }
