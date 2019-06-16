@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/majeinfo/chaingun/action"
@@ -91,6 +92,7 @@ func command_line() {
 		if *gp_scriptfile == "" {
 			log.Fatal("When started in standalone mode, needs a 'script' file")
 		}
+		checkNofileLimit()
 	} else if gp_mode == graphOnlyMode {
 		// Use default parameters for outputdir and results
 		if *gp_scriptfile == "" {
@@ -109,6 +111,18 @@ func command_line() {
 		if *gp_scriptfile != "" {
 			log.Warning("When started as a daemon, the --script option is ignored !")
 		}
+		checkNofileLimit()
+	}
+}
+
+func checkNofileLimit() {
+	var rlim syscall.Rlimit
+	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rlim); err != nil {
+		log.Fatalf("syscall.Getrlimit() failed: %s", err)
+	}
+	log.Infof("Maximum number of open file descriptors: %d", rlim.Cur)
+	if rlim.Cur < 4096 {
+		log.Warning("You should increase this value to a higher value")
 	}
 }
 
