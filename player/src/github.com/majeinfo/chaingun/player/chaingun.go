@@ -319,9 +319,9 @@ actionLoop:
 				}
 			}
 		}
-		if playbook.Iterations != -1 {
-			i++
-		} else {
+
+		i++
+		if playbook.Iterations == -1 {
 			ti := time.Now()
 			if ti.Sub(VU_start) > time.Duration(playbook.Duration)*time.Second {
 				//log.Info("finished", time.Duration(t.Duration) * time.Second, ti.Sub(VU_start))

@@ -108,6 +108,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	// Compute stats per time
 	total_elapsed_time := colTimestamp[idx-1] - colTimestamp[0] + 1
 	total_requests := len(colTimestamp)
+	total_netErrors := 0
 	log.Debugf("Elapsed seconds=%d", total_elapsed_time)
 
 	vus := make([]int, total_elapsed_time)
@@ -117,10 +118,18 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	meanTimePerReq := make(map[string][]int, total_elapsed_time)
 	reqCountPerTime := make(map[string][]int, total_elapsed_time)
 	errors := make([]int, total_elapsed_time)
+	netErrors := make([]int, total_elapsed_time)
 	rcvBytes := make([]int, total_elapsed_time)
 
 	for idx = 0; idx < len(colTimestamp); idx++ {
 		nuSec := colTimestamp[idx] - colTimestamp[0]
+		if colStatus[idx] < 0 {
+			netErrors[nuSec] += 1
+			total_netErrors += 1
+			total_requests -= 1
+			continue
+		}
+
 		nbReq[nuSec] += 1
 		if colStatus[idx] >= 400 {
 			errors[nuSec] += 1
@@ -193,6 +202,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 
 	fmt.Fprintf(output, "var elapsed_time = %d;\n", total_elapsed_time)
 	fmt.Fprintf(output, "var total_requests = %d;\n", total_requests)
+	fmt.Fprintf(output, "var total_netErrors = %d;\n", total_netErrors)
 	fmt.Fprintf(output, "var playbook_name = \"%s\";\n\n", scriptname)
 
 	fmt.Fprintf(output, "$(function () {\n")
@@ -208,6 +218,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 			"#Req":            nbReq,
 			"Latency (in ms)": meanTime,
 			"#HTTP Errors":    errors,
+			"#Net Errors":     netErrors,
 			"#Rcv Bytes":      rcvBytes,
 		})
 

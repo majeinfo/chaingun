@@ -15,6 +15,7 @@
 			<strong>Playbook:</strong> <span id="playbook_name" class="text-large">?</span>&nbsp;|
 			<strong>Elasped Time:</strong> <span id="elapsed_time" class="text-large">?</span>&nbsp;|
 			<strong>Total Requests:</strong> <span id="total_requests" class="text-large">?</span>
+			<strong>Total Network Errors:</strong> <span id="total_netErrors" class="text-large">?</span>
 		</div>
 		<div id="overall_stats" style="width:100%; height:400px;"></div>
 		<div id="stats_per_req" style="width:100%; height:400px;"></div>
@@ -39,7 +40,7 @@
 			} else if ('textContent' in span) {
 				span.textContent = playbook_name;
 			}
-			var span = document.getElementById("elapsed_time");
+			span = document.getElementById("elapsed_time");
 			if ('innerText' in span) {
 				span.innerText = elapsed_time + "s";
 			} else if ('textContent' in span) {
@@ -50,6 +51,12 @@
 				span.innerText = total_requests;
 			} else if ('textContent' in span) {
 				span.textContent = total_requests;
+			}
+			span = document.getElementById("total_netErrors");
+			if ('innerText' in span) {
+				span.innerText = total_netErrors;
+			} else if ('textContent' in span) {
+				span.textContent = total_netErrors;
 			}
 		</script>
 	</body>

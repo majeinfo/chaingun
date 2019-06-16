@@ -1,5 +1,9 @@
 package reporter
 
+const (
+	NETWORK_ERROR = -1
+)
+
 // SampleReqResult describes the structure of sampling result
 type SampleReqResult struct {
 	Vid         string

@@ -269,7 +269,7 @@ function ConnectToWS(id) {
         case "getdata":
             var filename = data.msg;
             DisableButton("#startbut" + id);
-            EnableButton("#label_dfbut" + id);
+            //EnableButton("#label_dfbut" + id);
             EnableButton("#dfbut" + id);
             EnableButton("#fibut" + id);
             DisplayError("Data feed needed: " + filename);
@@ -308,9 +308,9 @@ function _close_conn(id) {
     but.text('Connect');
     info.text("Disconnected");
     DisableButton("#statusbut" + id);
-    DisableButton("#label_scriptbut" + id);
+    //DisableButton("#label_scriptbut" + id);
     DisableButton("#scriptbut" + id);
-    DisableButton("#label_dfbut" + id);
+    //DisableButton("#label_dfbut" + id);
     DisableButton("#dfbut" + id);
     DisableButton("#fibut" + id);
     DisableButton("#startbut" + id);

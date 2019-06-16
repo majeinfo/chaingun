@@ -44,6 +44,8 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 
 	if err != nil {
 		vulog.Errorf("HTTP request failed: %s", err)
+		sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, httpAction.Title, err.Error())
+		resultsChannel <- sampleReqResult
 		return false
 	}
 	sessionMap[config.HTTP_RESPONSE] = strconv.Itoa(resp.StatusCode)
