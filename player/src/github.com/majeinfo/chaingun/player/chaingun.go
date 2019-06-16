@@ -249,7 +249,7 @@ func launchActions(playbook *config.TestDef, resultsChannel chan reporter.Sample
 
 actionLoop:
 	for (playbook.Iterations == -1) || (i < playbook.Iterations) {
-		vulog.Data["nu_iter"] = i
+		vulog.Data["iter"] = i
 
 		// Make sure the sessionMap is cleared before each iteration - except for the UID which stays
 		cleanSessionMapAndResetUID(UID, sessionMap, playbook)
