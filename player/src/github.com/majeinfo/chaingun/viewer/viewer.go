@@ -207,7 +207,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 			"#VU":             vus,
 			"#Req":            nbReq,
 			"Latency (in ms)": meanTime,
-			"#Errors":         errors,
+			"#HTTP Errors":    errors,
 			"#Rcv Bytes":      rcvBytes,
 		})
 
@@ -279,6 +279,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 
 func graph(w *os.File, totalTime int, name, title, xtitle, ytitle string, series map[string][]int) {
 	fmt.Fprintf(w, "var %s = Highcharts.chart('%s', {\n", name, name)
+	fmt.Fprintf(w, "chart: { zoomType: 'x', panning: true, panKey: 'shift' },\n")
 	fmt.Fprintf(w, "title: { text: '%s'	},\n", title)
 	fmt.Fprintf(w, "legend: { layout: 'horizontal',	align: 'center', verticalAlign: 'bottom', borderWidth: 0 },\n")
 	fmt.Fprintf(w, "xAxis: { categories: [")
