@@ -73,6 +73,7 @@ a) run a Player in standalone mode :
 	--script sets the name of the script file and is mandatory
 	--verbose is optional 
 	--no-log disables the 'log actions' (see below for the actions)
+        --trace generates a trace file named traced.out that can be used by 'go tool trace' command
 
 b) run a Player in daemon mode :
 
