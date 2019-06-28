@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -37,21 +38,33 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 
 	start := time.Now()
 	var DefaultTransport http.RoundTripper = &http.Transport{
-		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		Dial: (&net.Dialer{
+			Timeout:   time.Duration(playbook.Timeout) * time.Second,
+			KeepAlive: time.Duration(playbook.Timeout) * time.Second,
+		}).Dial,
 		ResponseHeaderTimeout: time.Duration(playbook.Timeout) * time.Second,
+		DisableKeepAlives:     true,
 	}
 	resp, err := DefaultTransport.RoundTrip(req)
+	log.Debugf("%v", resp)
 
 	if err != nil {
 		vulog.Errorf("HTTP request failed: %s", err)
 		sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, httpAction.Title, err.Error())
+		if resp != nil {
+			ioutil.ReadAll(resp.Body)
+			defer resp.Body.Close()
+		}
 		resultsChannel <- sampleReqResult
 		return false
 	}
-	sessionMap[config.HTTP_RESPONSE] = strconv.Itoa(resp.StatusCode)
 
+	defer resp.Body.Close()
+	sessionMap[config.HTTP_RESPONSE] = strconv.Itoa(resp.StatusCode)
 	elapsed := time.Since(start)
 	responseBody, err := ioutil.ReadAll(resp.Body)
+
 	if err != nil {
 		vulog.Printf("Reading HTTP response failed: %s", err)
 		sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], 0, resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title, req.URL.String())
@@ -60,7 +73,6 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	}
 
 	vulog.Debugf("[HTTP Response=%d] Received data: %s", resp.StatusCode, responseBody)
-	defer resp.Body.Close()
 
 	if httpAction.StoreCookie != "" {
 		for _, cookie := range resp.Cookies() {

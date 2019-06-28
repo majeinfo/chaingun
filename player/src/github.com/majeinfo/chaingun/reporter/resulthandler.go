@@ -2,32 +2,44 @@ package reporter
 
 import (
 	"encoding/json"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
 var (
-	stopNow   bool
-	pvuCount  *int
-	broadcast *chan []byte
+	stopNow        bool
+	lock_stopNow   sync.Mutex
+	pvuCount       *int
+	plock_vu_count *sync.Mutex
+	broadcast      *chan []byte
 )
 
 /*
  * Starts the per second aggregator and then forwards any HttpRequestResult messages to it through the channel.
  */
-func AcceptResults(resChannel chan SampleReqResult, vuCount *int, bcast *chan []byte) {
+func AcceptResults(resChannel chan SampleReqResult, vuCount *int, lock_vu_count *sync.Mutex, bcast *chan []byte, must_bcast bool) {
 	log.Debug("AcceptResults called")
 	pvuCount = vuCount
-	broadcast = bcast
+	plock_vu_count = lock_vu_count
+	if must_bcast {
+		broadcast = bcast
+	}
 	perSecondAggregatorChannel := make(chan *SampleReqResult, 500)
 	stopNow = false
 	go aggregatePerSecondHandler(perSecondAggregatorChannel)
 
 	for {
+		// +build !trace
+		lock_stopNow.Lock()
 		if stopNow {
+			lock_stopNow.Unlock()
 			break
 		}
+		lock_stopNow.Unlock()
+		// +build trace
+
 		select {
 		case msg := <-resChannel:
 			perSecondAggregatorChannel <- &msg
@@ -48,7 +60,11 @@ func AcceptResults(resChannel chan SampleReqResult, vuCount *int, bcast *chan []
 func StopResults() {
 	log.Debug("StopResults")
 	time.Sleep(2 * time.Second) // Give a chance to write down the last results before leaving
+	// +build !trace
+	lock_stopNow.Lock()
 	stopNow = true
+	lock_stopNow.Unlock()
+	// +build trace
 }
 
 /**
@@ -74,20 +90,27 @@ func aggregatePerSecondHandler(perSecondChannel chan *SampleReqResult) {
 		// concurrently assemble the result and send it off to the websocket.
 		go assembleAndSendResult(totalReq, totalLatency)
 
+		lock_stopNow.Lock()
 		if stopNow {
+			lock_stopNow.Unlock()
 			break
 		}
+		lock_stopNow.Unlock()
 	}
 	log.Debug("exit aggregatePerSecondHandler")
 }
 
 // Total count of Requests cumulated by all VUs
 var SuperTotalReq int
+var lock2 sync.Mutex
 
 func assembleAndSendResult(totalReq int, totalLatency int) {
+	log.Debug("assembleAndSendResult called")
 	avgLatency := 0
 	if totalReq > 0 {
+		lock2.Lock() // Added to avoid race condition on SuperTotalReq
 		SuperTotalReq += totalReq
+		lock2.Unlock()
 		avgLatency = totalLatency / totalReq
 	}
 	statFrame := StatFrame{
@@ -97,10 +120,19 @@ func assembleAndSendResult(totalReq int, totalLatency int) {
 		Reqs:    totalReq,
 	}
 
+	// +build !trace
+	plock_vu_count.Lock()
+	lock2.Lock()
 	log.Infof("Time: %d TotalReq: %d, VUCount: %d, Avg latency: %d μs (%d ms) req/s: %d", statFrame.Time, SuperTotalReq, *pvuCount, statFrame.Latency, statFrame.Latency/1000, statFrame.Reqs)
+	lock2.Unlock()
+	plock_vu_count.Unlock()
+	// +build trace
 
-	serializedFrame, _ := json.Marshal(statFrame)
-	*broadcast <- serializedFrame
+	if broadcast != nil {
+		serializedFrame, _ := json.Marshal(statFrame)
+		*broadcast <- serializedFrame
+	}
+	log.Debug("exit assembleAndSendResult")
 }
 
 // EOF

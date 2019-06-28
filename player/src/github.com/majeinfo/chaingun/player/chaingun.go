@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"runtime/trace"
 	"strconv"
 	"sync"
 	"syscall"
@@ -42,6 +43,7 @@ var (
 var (
 	VU_start          time.Time
 	VU_count          int
+	lock_vu_count     sync.Mutex
 	gp_mode           int
 	gp_valid_playbook bool = false
 	gp_listen_addr    *string
@@ -52,6 +54,7 @@ var (
 	gp_outputdir      *string
 	gp_outputtype     *string
 	gp_no_log         *bool
+	gp_trace          *bool
 
 	gp_playbook config.TestDef
 	gp_actions  []action.FullAction
@@ -69,6 +72,7 @@ func command_line() {
 	gp_outputdir = flag.String("output-dir", "", "Set the output directory")
 	gp_outputtype = flag.String("output-type", "csv", "Set the output type in file (csv/default, json)")
 	gp_no_log = flag.Bool("no-log", false, "Disable the 'log' actions from the Script")
+	gp_trace = flag.Bool("trace", false, "Generate a trace.out file useable by 'go tool trace' command (in standalone mode only)")
 
 	flag.Parse()
 
@@ -132,6 +136,20 @@ func main() {
 	command_line()
 
 	if gp_mode == standaloneMode {
+		if *gp_trace {
+			f, err := os.Create("trace.out")
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer f.Close()
+
+			err = trace.Start(f)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer trace.Stop()
+		}
+
 		// Always creates a Hub for Accept Result in SpawnUsers
 		log.Debugf("*gp_listen_addr=%s", *gp_listen_addr)
 		hub = newHub()
@@ -163,16 +181,22 @@ func main() {
 		spawnUsers(&gp_playbook, &gp_actions)
 
 		log.Infof("Done in %v", time.Since(reporter.SimulationStart))
-		log.Infof("Count of remaining goroutines=%d", runtime.NumGoroutine())
 		log.Infof("Building reports, please wait...")
 		reporter.CloseResultsFile()
+		log.Infof("Count of remaining goroutines=%d", runtime.NumGoroutine())
+
+		/*
+			buf := make([]byte, 1<<16)
+			runtime.Stack(buf, true)
+			log.Debugf("%s", buf)
+		*/
 
 		err = reporter.CloseReport(outputfile, dir, *gp_scriptfile)
 		if err != nil {
 			log.Error(err.Error())
 		}
 	} else if gp_mode == graphOnlyMode {
-		// Just the graph production
+		// Just the graph production (TODO: does not work for merged data)
 		outputfile, dir := computeOutputFilename()
 		if err := reporter.InitReport(*gp_outputtype); err != nil {
 			log.Fatal(err)
@@ -231,12 +255,14 @@ func createPlaybook(data []byte, playbook *config.TestDef, actions *[]action.Ful
 // Launch VUs
 func spawnUsers(playbook *config.TestDef, actions *[]action.FullAction) {
 	resultsChannel := make(chan reporter.SampleReqResult, 10000)
-	go reporter.AcceptResults(resultsChannel, &VU_count, &hub.broadcast)
+	go reporter.AcceptResults(resultsChannel, &VU_count, &lock_vu_count, &hub.broadcast, gp_mode == daemonMode)
 	VU_start = time.Now()
 	wg := sync.WaitGroup{}
 	for i := 0; i < playbook.Users; i++ {
 		wg.Add(1)
+		lock_vu_count.Lock()
 		VU_count++
+		lock_vu_count.Unlock()
 		//UID := strconv.Itoa(rand.Intn(playbook.Users+1) + 10000)
 		UID := strconv.Itoa(os.Getpid()*100000 + i)
 		go launchActions(playbook, resultsChannel, &wg, actions, UID)
@@ -256,6 +282,7 @@ func spawnUsers(playbook *config.TestDef, actions *[]action.FullAction) {
 
 // Called once per each VU
 func launchActions(playbook *config.TestDef, resultsChannel chan reporter.SampleReqResult, wg *sync.WaitGroup, actions *[]action.FullAction, UID string) {
+	log.Debugf("launchActions called (%s)", UID)
 	var sessionMap = make(map[string]string)
 
 	i := 0
@@ -330,7 +357,10 @@ actionLoop:
 		}
 	}
 	wg.Done()
+	lock_vu_count.Lock()
 	VU_count--
+	lock_vu_count.Unlock()
+	log.Debugf("exit launchActions (%s)", UID)
 }
 
 func cleanSessionMapAndResetUID(UID string, sessionMap map[string]string, playbook *config.TestDef) {

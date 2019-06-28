@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -45,6 +46,9 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+
+	// Mutex for write sync and read race
+	lock sync.Mutex
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -101,15 +105,21 @@ func (c *Client) writePump() {
 		select {
 		case message, ok := <-c.send:
 			log.Debug("writePump rcvd msg")
+			c.lock.Lock()
+			lock_status.Lock()
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				c.lock.Unlock()
+				lock_status.Unlock()
 				return
 			}
 
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
+				c.lock.Unlock()
+				lock_status.Unlock()
 				return
 			}
 			w.Write(message)
@@ -123,15 +133,26 @@ func (c *Client) writePump() {
 			}
 
 			if err := w.Close(); err != nil {
+				c.lock.Unlock()
+				lock_status.Unlock()
 				return
 			}
+			c.lock.Unlock()
+			lock_status.Unlock()
+
 		case <-ticker.C:
 			log.Debug("Send a Ping to the Client")
+			c.lock.Lock()
+			lock_status.Lock()
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				log.Errorf("Could not send Ping Message: %v", err)
+				c.lock.Unlock()
+				lock_status.Unlock()
 				return
 			}
+			c.lock.Unlock()
+			lock_status.Unlock()
 		}
 	}
 	log.Debug("exit writePump")

@@ -8,6 +8,7 @@ import (
 	_ "net"
 	"net/http"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -63,6 +64,7 @@ var (
 	hub                 *Hub
 	gp_outputfile       string
 	g_results_available bool
+	lock_status         sync.Mutex
 )
 
 // Start the WS Server
@@ -112,6 +114,7 @@ func cmdHandler(c *Client, msg []byte) {
 	default:
 		sendStatusError(c, fmt.Sprintf("Message not supported: %s", msg))
 	}
+	log.Debug("Message handled")
 }
 
 func startCommand(c *Client) {
@@ -257,7 +260,6 @@ func getResultsCommand(c *Client, cmd *PlayerCommand) {
 		sendStatusError(c, "Error while readin File Results")
 		return
 	}
-	fmt.Print(string(data))
 
 	msg := string(data)
 	var resp = &PlayerResults{
@@ -269,6 +271,8 @@ func getResultsCommand(c *Client, cmd *PlayerCommand) {
 		ScriptFile: *gp_scriptfile,
 	}
 	j, _ := json.Marshal(resp)
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	c.conn.WriteMessage(websocket.TextMessage, j)
 
 	sendStatusOKMsg(c, "Results sent successfully")
@@ -292,6 +296,7 @@ func sendStatusError(c *Client, msg string) {
 
 // Send a Status back to the manager
 func sendStatus(c *Client, level string, msg string) {
+	log.Debugf("sendStatus: %s", msg)
 	var resp = &PlayerStatus{
 		Type:   "status",
 		Status: statusString[gp_daemon_status],
@@ -299,7 +304,12 @@ func sendStatus(c *Client, level string, msg string) {
 		Msg:    msg,
 	}
 	j, _ := json.Marshal(resp)
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	lock_status.Lock()
+	defer lock_status.Unlock()
 	c.conn.WriteMessage(websocket.TextMessage, j)
+	log.Debug("exit sendStatus")
 }
 
 // Send a request to get data file content
@@ -311,6 +321,10 @@ func sendGetDataFile(c *Client, filename string) {
 		Msg:    filename,
 	}
 	j, _ := json.Marshal(resp)
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	lock_status.Lock()
+	defer lock_status.Unlock()
 	c.conn.WriteMessage(websocket.TextMessage, j)
 }
 

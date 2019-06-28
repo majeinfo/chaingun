@@ -264,7 +264,7 @@ func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]stri
 		vulog.Debugf("Test matching against Header:")
 	} else {
 		r = string(responseBody[:])
-		vulog.Debugf("Test matching agains Body:")
+		vulog.Debugf("Test matching against Body:")
 	}
 	log.Debug(r)
 
