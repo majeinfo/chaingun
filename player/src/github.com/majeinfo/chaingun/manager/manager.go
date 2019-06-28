@@ -14,6 +14,10 @@ import (
 	_ "statik"
 )
 
+const (
+	fname_suffix = ".data"
+)
+
 var (
 	repositoryDir string
 
@@ -80,7 +84,7 @@ func storeResults(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write the results
-	fname := targetDir + "/" + parts[2] // <resultname>
+	fname := targetDir + "/" + parts[2] + fname_suffix // <resultname>
 	log.Debugf("Write results in file %s", fname)
 	file, err := os.Create(fname)
 	defer file.Close()
@@ -105,6 +109,7 @@ func storeResults(w http.ResponseWriter, r *http.Request) {
 	sendJSONResponse(w, "OK", "", "")
 }
 
+// TODO: during the merging phase, the lines of different files should be reordered according to the timestamp
 func mergeResults(w http.ResponseWriter, r *http.Request) {
 	log.Debugf("mergeResults called, urlpath=%s", r.URL.Path)
 
@@ -123,9 +128,10 @@ func mergeResults(w http.ResponseWriter, r *http.Request) {
 
 	log.Debugf("Creates merged file '%s'", fname)
 	mergedFile, err := os.Create(fname)
-	defer mergedFile.Close()
+	//defer mergedFile.Close() // No, because the BuildGrpahs function will use it before the end of the function !
 	if err != nil {
 		sendJSONErrorResponse(w, "Error", err.Error())
+		mergedFile.Close()
 		return
 	}
 
@@ -133,13 +139,15 @@ func mergeResults(w http.ResponseWriter, r *http.Request) {
 	files, err := ioutil.ReadDir(repo_dir)
 	if err != nil {
 		sendJSONErrorResponse(w, "Error", err.Error())
+		mergedFile.Close()
 		return
 	}
 
 	first_file := true
 	for _, file := range files {
 		log.Debugf("Found file %s", file.Name())
-		if file.Name() == "merged.csv" || file.Name() == "." || file.Name() == ".." {
+		//if file.Name() == "merged.csv" || file.Name() == "." || file.Name() == ".." {
+		if strings.LastIndex(file.Name(), fname_suffix) == -1 {
 			continue
 		}
 		first_line := true
@@ -148,9 +156,10 @@ func mergeResults(w http.ResponseWriter, r *http.Request) {
 		file, err := os.Open(repo_dir + "/" + file.Name())
 		if err != nil {
 			sendJSONErrorResponse(w, "Error", err.Error())
+			mergedFile.Close()
 			return
 		}
-		defer file.Close()
+		//defer file.Close()	// No: too late
 
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
@@ -161,16 +170,21 @@ func mergeResults(w http.ResponseWriter, r *http.Request) {
 
 			if _, err := mergedFile.WriteString(scanner.Text() + "\n"); err != nil {
 				sendJSONErrorResponse(w, "Error", err.Error())
+				file.Close()
+				mergedFile.Close()
 				return
 			}
 		}
 		first_file = false
+		file.Close()
 
 		if err := scanner.Err(); err != nil {
 			sendJSONErrorResponse(w, "Error", err.Error())
+			mergedFile.Close()
 			return
 		}
 	}
+	mergedFile.Close()
 
 	// Build graphs...
 	err = viewer.BuildGraphs(fname, parts[1], repo_dir)

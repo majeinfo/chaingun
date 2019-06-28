@@ -123,6 +123,14 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 
 	for idx = 0; idx < len(colTimestamp); idx++ {
 		nuSec := colTimestamp[idx] - colTimestamp[0]
+
+		// With merged file, we should order the lines to compute the real elapsed time, so we must make
+		// a consistency check :
+		if nuSec >= total_elapsed_time {
+			log.Warningf("Result line %d ignored: out of bounds", idx)
+			continue
+		}
+
 		if colStatus[idx] < 0 {
 			netErrors[nuSec] += 1
 			total_netErrors += 1
@@ -162,6 +170,12 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	for idx := 0; idx < len(colTitle); idx++ {
 		nuSec := colTimestamp[idx] - colTimestamp[0]
 		log.Debugf("idx=%d, colTitle[idx]=%s, nuSec=%d", idx, colTitle[idx], nuSec)
+		// With merged file, we should order the lines to compute the real elapsed time, so we must make
+		// a consistency check :
+		if nuSec >= total_elapsed_time {
+			continue
+		}
+
 		meanTimePerReq[colTitle[idx]][nuSec] += colLatency[idx]
 		reqCountPerTime[colTitle[idx]][nuSec]++
 	}
@@ -180,6 +194,12 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	}
 	for idx := 0; idx < len(colStatus); idx++ {
 		nuSec := colTimestamp[idx] - colTimestamp[0]
+		// With merged file, we should order the lines to compute the real elapsed time, so we must make
+		// a consistency check :
+		if nuSec >= total_elapsed_time {
+			continue
+		}
+
 		errorsPerSeconds[colStatus[idx]][nuSec]++
 	}
 
