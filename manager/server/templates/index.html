@@ -334,7 +334,7 @@ function GetStatus(id) {
 
     console.log('ask for status');
     if (!ws_conns[host]) {
-        DisplayError("Please connect the Injector, first !");
+        DisplayError("Please connect the Injector " + host + ", first !");
         return;
     }
     ws_conns[host].send('{ "cmd": "status" }');
@@ -382,7 +382,7 @@ function _sendScript(id, filename, text) {
 
     console.log('send script');
     if (!ws_conns[host]) {
-        DisplayError("Please connect the Injector, first !");
+        DisplayError("Please connect the Injector " + host + ", first !");
         return;
     }    
     ws_conns[host].send('{ "cmd": "script", "moreinfo": "' + filename + '", "value": "' + btoa(text) + '" }');
@@ -431,7 +431,7 @@ function _sendDataFeed(id, filename, text) {
     
     console.log('send data');
     if (!ws_conns[host]) {
-        DisplayError("Please connect the Injector, first !");
+        DisplayError("Please connect the Injector " + host + ", first !");
         return;
     }    
     ws_conns[host].send('{ "cmd": "datafeed", "moreinfo": "' + filename + '", "value": "' + btoa(text) + '" }');
@@ -479,7 +479,7 @@ function _sendDataFile(id, filename, text) {
     
     console.log('send file');
     if (!ws_conns[host]) {
-        DisplayError("Please connect the Injector, first !");
+        DisplayError("Please connect the Injector " + host + ", first !");
         return;
     }    
     ws_conns[host].send('{ "cmd": "datafile", "moreinfo": "' + filename + '", "value": "' + btoa(text) + '" }');
@@ -500,9 +500,11 @@ function Start(id) {
 
     console.log('send start');
     if (!ws_conns[host]) {
-        DisplayError("Please connect the Injector, first !");
+        DisplayError("Please connect the Injector " + host + ", first !");
         return;
     }    
+    series[id].setData(_init_data());
+
     ws_conns[host].send('{ "cmd": "start" }');
     DisableButton("#startbut" + id);
     DisableButton("#getresbut" + id);
@@ -524,7 +526,7 @@ function Stop(id) {
 
     console.log('send stop');
     if (!ws_conns[host]) {
-        DisplayError("Please connect the Injector, first !");
+        DisplayError("Please connect the Injector " + host + ", first !");
         return;
     }        
     ws_conns[host].send('{ "cmd": "stop" }');   
@@ -562,7 +564,7 @@ function GetOneResults(id) {
 
     console.log('get results');
     if (!ws_conns[host]) {
-        DisplayError("Please connect the Injector, first !");
+        DisplayError("Please connect the Injector " + host + ", first !");
         return;
     }    
     ws_conns[host].send('{ "cmd": "get_results", "value": "' + host + '" }');
@@ -863,19 +865,21 @@ function _add_chart(id) {
         series: [{
                 //name: 'Requests per second',
                 name: '',
-                data: (function () {
-                    // generate an array of random data
-                    var data = [],
-                        time = (new Date()).getTime(),
-                        i;
-                    for (i = -59; i <= 0; i += 1) {
-                        data.push({x: time + i * 1000, y: 0});
-                    }
-                    return data;
-                }())
+                data: _init_data()
         }]
     };                
     $('#rtview' + id).highcharts(Highcharts.merge(chart, theme));   
+}
+
+function _init_data() {
+	// generate an array of random data
+        var data = [],
+            time = (new Date()).getTime(),
+            i;
+        for (i = -59; i <= 0; i += 1) {
+            data.push({x: time + i * 1000, y: 0});
+        }
+        return data;
 }
 
 function _update_chart(id, data) {
