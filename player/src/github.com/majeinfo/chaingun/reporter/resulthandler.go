@@ -27,7 +27,9 @@ func AcceptResults(resChannel chan SampleReqResult, vuCount *int, lock_vu_count 
 		broadcast = bcast
 	}
 	perSecondAggregatorChannel := make(chan *SampleReqResult, 500)
+	lock_stopNow.Lock()
 	stopNow = false
+	lock_stopNow.Unlock()
 	go aggregatePerSecondHandler(perSecondAggregatorChannel)
 
 	for {
