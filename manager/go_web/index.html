@@ -302,7 +302,7 @@ function _close_conn(id) {
     var info = $("#worker" + id);         
 
     if (ws_conns[host]) {
-        ws_conns[host].close();
+        ws_conns[host].websocket.close();
     }
     ws_conns[host] = undefined;
     but.text('Connect');
