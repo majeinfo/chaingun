@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	stopNow        bool
+	ch_must_stop   chan bool
+	ch_stop_agg    chan bool
 	lock_stopNow   sync.Mutex
 	pvuCount       *int
 	plock_vu_count *sync.Mutex
@@ -21,31 +22,32 @@ var (
  */
 func AcceptResults(resChannel chan SampleReqResult, vuCount *int, lock_vu_count *sync.Mutex, bcast *chan []byte, must_bcast bool) {
 	log.Debug("AcceptResults called")
+	ch_must_stop = make(chan bool, 1)
+	ch_stop_agg = make(chan bool, 1)
+	stopNow := false
+
 	pvuCount = vuCount
 	plock_vu_count = lock_vu_count
 	if must_bcast {
 		broadcast = bcast
 	}
 	perSecondAggregatorChannel := make(chan *SampleReqResult, 500)
-	lock_stopNow.Lock()
-	stopNow = false
-	lock_stopNow.Unlock()
 	go aggregatePerSecondHandler(perSecondAggregatorChannel)
 
 	for {
-		// +build !trace
-		lock_stopNow.Lock()
 		if stopNow {
-			lock_stopNow.Unlock()
+
 			break
 		}
-		lock_stopNow.Unlock()
-		// +build trace
 
 		select {
 		case msg := <-resChannel:
 			perSecondAggregatorChannel <- &msg
 			WriteResult(&msg) // sync write result to file for later processing.
+			break
+		case <-ch_must_stop:
+			log.Debugf("ch_must_stop rcvd")
+			stopNow = true
 			break
 		case <-time.After(100 * time.Microsecond):
 			break
@@ -62,11 +64,9 @@ func AcceptResults(resChannel chan SampleReqResult, vuCount *int, lock_vu_count 
 func StopResults() {
 	log.Debug("StopResults")
 	time.Sleep(2 * time.Second) // Give a chance to write down the last results before leaving
-	// +build !trace
-	lock_stopNow.Lock()
-	stopNow = true
-	lock_stopNow.Unlock()
-	// +build trace
+	close(ch_must_stop)
+	close(ch_stop_agg)
+	log.Debug("exit StopResults")
 }
 
 /**
@@ -75,6 +75,8 @@ func StopResults() {
  */
 func aggregatePerSecondHandler(perSecondChannel chan *SampleReqResult) {
 	log.Debug("aggregatePerSecondHandler called")
+	exit_loop := false
+
 	for {
 		var totalReq int
 		var totalLatency int
@@ -84,6 +86,9 @@ func aggregatePerSecondHandler(perSecondChannel chan *SampleReqResult) {
 			case msg := <-perSecondChannel:
 				totalReq++
 				totalLatency += int(msg.Latency / 1000) // measure in microseconds
+			case <-ch_stop_agg:
+				exit_loop = true
+				break
 			default:
 				// Can be trouble. Uses too much CPU if low, limits throughput if too high
 				time.Sleep(100 * time.Microsecond)
@@ -92,12 +97,9 @@ func aggregatePerSecondHandler(perSecondChannel chan *SampleReqResult) {
 		// concurrently assemble the result and send it off to the websocket.
 		go assembleAndSendResult(totalReq, totalLatency)
 
-		lock_stopNow.Lock()
-		if stopNow {
-			lock_stopNow.Unlock()
+		if exit_loop {
 			break
 		}
-		lock_stopNow.Unlock()
 	}
 	log.Debug("exit aggregatePerSecondHandler")
 }
