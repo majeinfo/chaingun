@@ -70,7 +70,7 @@ func CloseResultsFile() {
 		if outputType == jsonOutput {
 			_, err = w.WriteString(string("';"))
 		}
-		w.Flush()
+		//w.Flush()
 		f.Close()
 	}
 	// Do nothing if not opened
