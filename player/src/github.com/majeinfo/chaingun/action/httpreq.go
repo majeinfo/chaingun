@@ -47,7 +47,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 		DisableKeepAlives:     true,
 	}
 	resp, err := DefaultTransport.RoundTrip(req)
-	log.Debugf("%v", resp)
+	vulog.Debugf("%v", resp)
 
 	if err != nil {
 		vulog.Errorf("HTTP request failed: %s", err)
@@ -72,7 +72,9 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 		return false
 	}
 
-	vulog.Debugf("[HTTP Response=%d] Received data: %s", resp.StatusCode, responseBody)
+	if must_display_srv_resp {
+		vulog.Debugf("[HTTP Response=%d] Received data: %s", resp.StatusCode, responseBody)
+	}
 
 	if httpAction.StoreCookie != "" {
 		for _, cookie := range resp.Cookies() {

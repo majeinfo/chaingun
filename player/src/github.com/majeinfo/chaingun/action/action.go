@@ -19,3 +19,11 @@ type FullAction struct {
 	CompiledWhen *govaluate.EvaluableExpression
 	Action       Action
 }
+
+var (
+	must_display_srv_resp bool
+)
+
+func SetContext(displaySrvResp bool) {
+	must_display_srv_resp = displaySrvResp
+}

@@ -41,20 +41,21 @@ var (
 )
 
 var (
-	VU_start          time.Time
-	VU_count          int
-	lock_vu_count     sync.Mutex
-	gp_mode           int
-	gp_valid_playbook bool = false
-	gp_listen_addr    *string
-	gp_manager_addr   *string
-	gp_repositorydir  *string
-	gp_connect_to     *string
-	gp_scriptfile     *string
-	gp_outputdir      *string
-	gp_outputtype     *string
-	gp_no_log         *bool
-	gp_trace          *bool
+	VU_start            time.Time
+	VU_count            int
+	lock_vu_count       sync.Mutex
+	gp_mode             int
+	gp_valid_playbook   bool = false
+	gp_listen_addr      *string
+	gp_manager_addr     *string
+	gp_repositorydir    *string
+	gp_connect_to       *string
+	gp_scriptfile       *string
+	gp_outputdir        *string
+	gp_outputtype       *string
+	gp_no_log           *bool
+	gp_display_srv_resp *bool
+	gp_trace            *bool
 
 	gp_playbook config.TestDef
 	gp_actions  []action.FullAction
@@ -72,6 +73,7 @@ func command_line() {
 	gp_outputdir = flag.String("output-dir", "", "Set the output directory")
 	gp_outputtype = flag.String("output-type", "csv", "Set the output type in file (csv/default, json)")
 	gp_no_log = flag.Bool("no-log", false, "Disable the 'log' actions from the Script")
+	gp_display_srv_resp = flag.Bool("display-response", false, "Used with verbose mode to display the Server Responses")
 	gp_trace = flag.Bool("trace", false, "Generate a trace.out file useable by 'go tool trace' command (in standalone mode only)")
 
 	flag.Parse()
@@ -82,6 +84,7 @@ func command_line() {
 	}
 	log.SetLevel(log_level)
 	action.DisableAction(*gp_no_log)
+	action.SetContext(*gp_display_srv_resp)
 
 	// Check the mode
 	var ok bool
