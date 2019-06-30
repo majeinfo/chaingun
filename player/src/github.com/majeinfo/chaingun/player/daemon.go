@@ -8,10 +8,10 @@ import (
 	_ "net"
 	"net/http"
 	"runtime"
-	"sync"
+	_ "sync"
 	"time"
 
-	"github.com/gorilla/websocket"
+	_ "github.com/gorilla/websocket"
 	"github.com/majeinfo/chaingun/feeder"
 	"github.com/majeinfo/chaingun/reporter"
 	log "github.com/sirupsen/logrus"
@@ -64,7 +64,6 @@ var (
 	hub                 *Hub
 	gp_outputfile       string
 	g_results_available bool
-	lock_status         sync.Mutex
 )
 
 // Start the WS Server
@@ -271,9 +270,7 @@ func getResultsCommand(c *Client, cmd *PlayerCommand) {
 		ScriptFile: *gp_scriptfile,
 	}
 	j, _ := json.Marshal(resp)
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	c.conn.WriteMessage(websocket.TextMessage, j)
+	c.send <- j
 
 	sendStatusOKMsg(c, "Results sent successfully")
 }
@@ -304,11 +301,7 @@ func sendStatus(c *Client, level string, msg string) {
 		Msg:    msg,
 	}
 	j, _ := json.Marshal(resp)
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	lock_status.Lock()
-	defer lock_status.Unlock()
-	c.conn.WriteMessage(websocket.TextMessage, j)
+	c.send <- j
 	log.Debug("exit sendStatus")
 }
 
@@ -321,11 +314,7 @@ func sendGetDataFile(c *Client, filename string) {
 		Msg:    filename,
 	}
 	j, _ := json.Marshal(resp)
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	lock_status.Lock()
-	defer lock_status.Unlock()
-	c.conn.WriteMessage(websocket.TextMessage, j)
+	c.send <- j
 }
 
 // EOF
