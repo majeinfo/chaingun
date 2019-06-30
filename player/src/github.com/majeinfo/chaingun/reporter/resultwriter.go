@@ -6,24 +6,20 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"sync"
 
 	log "github.com/sirupsen/logrus"
 )
 
 var (
-	w    *bufio.Writer
-	f    *os.File
-	err  error
-	lock sync.Mutex
+	w   *bufio.Writer
+	f   *os.File
+	err error
 )
 
 var opened bool = false
 
 func OpenResultsFile(fileName string) {
 	log.Debug("OpenResultFile")
-	lock.Lock()
-	defer lock.Unlock()
 
 	if !opened {
 		opened = true
@@ -46,6 +42,11 @@ func OpenResultsFile(fileName string) {
 }
 
 func OpenTempResultsFile(tmpfile *os.File) {
+	// Remove the previous temp file if it exists
+	if f != nil {
+		os.Remove(f.Name())
+	}
+
 	f = tmpfile
 	initResultsFile()
 }
