@@ -14,8 +14,17 @@ import (
 )
 
 const (
-	DFLT_CAP = 1000
+	DFLT_CAP = 3000
 )
+
+type measure struct {
+	timestamp int
+	vid       int64
+	title     string
+	status    int
+	recvBytes int
+	latency   int
+}
 
 func BuildGraphs(datafile, scriptname, outputdir string) error {
 	// Creates the outputdir if needed
@@ -50,14 +59,9 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		83251860,1249300000,HTTP,Page 2,200,11,41740141,http://www.delamarche.com/page2.php
 		249059934,1249300000,HTTP,Page SSL,200,8083,163870870,https://www.delamarche.com:443/
 	*/
-	colTimestamp := make([]int, 0, DFLT_CAP)
-	colVid := make([]int64, 0, DFLT_CAP)
-	colTitle := make([]string, 0, DFLT_CAP)
 	colUniqTitle := make(map[string]bool)
-	colStatus := make([]int, 0, DFLT_CAP)
 	colUniqStatus := make(map[int]bool)
-	colRecvBytes := make([]int, 0, DFLT_CAP)
-	colLatency := make([]int, 0, DFLT_CAP)
+	measures := make([]measure, 0, DFLT_CAP)
 
 	idx := 0
 	firstRow := true
@@ -80,23 +84,26 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 			firstRow = false
 			continue
 		}
-		curTime, _ := strconv.ParseFloat(record[0], 64)
-		colTimestamp = append(colTimestamp, int(curTime))
-		curVid, _ := strconv.ParseInt(record[1], 10, 64)
-		colVid = append(colVid, curVid)
-		colTitle = append(colTitle, record[3])
-		colUniqTitle[record[3]] = true
-		curStatus, _ := strconv.ParseInt(record[4], 10, 64)
-		colStatus = append(colStatus, int(curStatus))
-		colUniqStatus[int(curStatus)] = true
-		curRecvBytes, _ := strconv.ParseInt(record[5], 10, 64)
-		colRecvBytes = append(colRecvBytes, int(curRecvBytes))
-		curLatency, _ := strconv.ParseFloat(record[6], 64)
-		colLatency = append(colLatency, int(curLatency))
 
-		// Normalize data
-		colTimestamp[idx] = colTimestamp[idx] / 1000000000
-		colLatency[idx] = colLatency[idx] / 1000000
+		curTime, _ := strconv.ParseFloat(record[0], 64)
+		curVid, _ := strconv.ParseInt(record[1], 10, 64)
+		curStatus, _ := strconv.ParseInt(record[4], 10, 64)
+		curRecvBytes, _ := strconv.ParseInt(record[5], 10, 64)
+		curLatency, _ := strconv.ParseFloat(record[6], 64)
+
+		m := measure{
+			timestamp: int(curTime) / 1000000000,
+			vid:       curVid,
+			title:     record[3],
+			status:    int(curStatus),
+			recvBytes: int(curRecvBytes),
+			latency:   int(curLatency) / 1000000,
+		}
+		measures = append(measures, m)
+
+		colUniqTitle[record[3]] = true
+		colUniqStatus[int(curStatus)] = true
+
 		idx++
 	}
 
@@ -105,9 +112,14 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		return fmt.Errorf("Datafile %s does not contain any data !", datafile)
 	}
 
+	// Sort the measures
+	sort.Slice(measures, func(i, j int) bool {
+		return measures[i].timestamp < measures[j].timestamp
+	})
+
 	// Compute stats per time
-	total_elapsed_time := colTimestamp[idx-1] - colTimestamp[0] + 1
-	total_requests := len(colTimestamp)
+	total_elapsed_time := measures[idx-1].timestamp - measures[0].timestamp + 1
+	total_requests := len(measures)
 	total_netErrors := 0
 	log.Debugf("Elapsed seconds=%d", total_elapsed_time)
 
@@ -121,8 +133,8 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	netErrors := make([]int, total_elapsed_time)
 	rcvBytes := make([]int, total_elapsed_time)
 
-	for idx = 0; idx < len(colTimestamp); idx++ {
-		nuSec := colTimestamp[idx] - colTimestamp[0]
+	for idx = 0; idx < total_requests; idx++ {
+		nuSec := measures[idx].timestamp - measures[0].timestamp
 
 		// With merged file, we should order the lines to compute the real elapsed time, so we must make
 		// a consistency check :
@@ -131,7 +143,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 			continue
 		}
 
-		if colStatus[idx] < 0 {
+		if measures[idx].status < 0 {
 			netErrors[nuSec] += 1
 			total_netErrors += 1
 			total_requests -= 1
@@ -139,15 +151,15 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		}
 
 		nbReq[nuSec] += 1
-		if colStatus[idx] >= 400 {
+		if measures[idx].status >= 400 {
 			errors[nuSec] += 1
 		}
-		rcvBytes[nuSec] += colRecvBytes[idx]
-		meanTime[nuSec] += colLatency[idx]
+		rcvBytes[nuSec] += measures[idx].recvBytes
+		meanTime[nuSec] += measures[idx].latency
 		if vusSet[nuSec] == nil {
 			vusSet[nuSec] = make(map[int64]bool)
 		}
-		vusSet[nuSec][colVid[idx]] = true
+		vusSet[nuSec][measures[idx].vid] = true
 	}
 
 	// Compute latency average
@@ -167,17 +179,17 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		meanTimePerReq[title] = make([]int, total_elapsed_time)
 		reqCountPerTime[title] = make([]int, total_elapsed_time)
 	}
-	for idx := 0; idx < len(colTitle); idx++ {
-		nuSec := colTimestamp[idx] - colTimestamp[0]
-		log.Debugf("idx=%d, colTitle[idx]=%s, nuSec=%d", idx, colTitle[idx], nuSec)
+	for idx := 0; idx < total_requests; idx++ {
+		nuSec := measures[idx].timestamp - measures[0].timestamp
+		log.Debugf("idx=%d, colTitle[idx]=%s, nuSec=%d", idx, measures[idx].title, nuSec)
 		// With merged file, we should order the lines to compute the real elapsed time, so we must make
 		// a consistency check :
 		if nuSec >= total_elapsed_time {
 			continue
 		}
 
-		meanTimePerReq[colTitle[idx]][nuSec] += colLatency[idx]
-		reqCountPerTime[colTitle[idx]][nuSec]++
+		meanTimePerReq[measures[idx].title][nuSec] += measures[idx].latency
+		reqCountPerTime[measures[idx].title][nuSec]++
 	}
 	for title, _ := range colUniqTitle {
 		for idx := 0; idx < total_elapsed_time; idx++ {
@@ -192,15 +204,15 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	for errCode, _ := range colUniqStatus {
 		errorsPerSeconds[errCode] = make([]int, total_elapsed_time)
 	}
-	for idx := 0; idx < len(colStatus); idx++ {
-		nuSec := colTimestamp[idx] - colTimestamp[0]
+	for idx := 0; idx < total_requests; idx++ {
+		nuSec := measures[idx].timestamp - measures[0].timestamp
 		// With merged file, we should order the lines to compute the real elapsed time, so we must make
 		// a consistency check :
 		if nuSec >= total_elapsed_time {
 			continue
 		}
 
-		errorsPerSeconds[colStatus[idx]][nuSec]++
+		errorsPerSeconds[measures[idx].status][nuSec]++
 	}
 
 	// Compute errors per request/page
@@ -208,8 +220,8 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	for title, _ := range colUniqTitle {
 		errorsByPage[title] = make(map[int]int, len(colUniqStatus))
 	}
-	for idx := 0; idx < len(colStatus); idx++ {
-		errorsByPage[colTitle[idx]][colStatus[idx]]++
+	for idx := 0; idx < total_requests; idx++ {
+		errorsByPage[measures[idx].title][measures[idx].status]++
 	}
 
 	// Create the result file (data.js)
