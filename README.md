@@ -75,6 +75,7 @@ a) run a Player in standalone mode :
 	--no-log disables the 'log actions' (see below for the actions)
         --trace generates a trace file named traced.out that can be used by 'go tool trace' command
         --display-response displays the full response sent by the remote stressed server
+	--syntax-check-only is used to only check the syntax of the script
 
 b) run a Player in daemon mode :
 

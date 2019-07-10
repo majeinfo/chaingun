@@ -41,21 +41,22 @@ var (
 )
 
 var (
-	VU_start            time.Time
-	VU_count            int
-	lock_vu_count       sync.Mutex
-	gp_mode             int
-	gp_valid_playbook   bool = false
-	gp_listen_addr      *string
-	gp_manager_addr     *string
-	gp_repositorydir    *string
-	gp_connect_to       *string
-	gp_scriptfile       *string
-	gp_outputdir        *string
-	gp_outputtype       *string
-	gp_no_log           *bool
-	gp_display_srv_resp *bool
-	gp_trace            *bool
+	VU_start             time.Time
+	VU_count             int
+	lock_vu_count        sync.Mutex
+	gp_mode              int
+	gp_valid_playbook    bool = false
+	gp_listen_addr       *string
+	gp_manager_addr      *string
+	gp_repositorydir     *string
+	gp_connect_to        *string
+	gp_scriptfile        *string
+	gp_outputdir         *string
+	gp_outputtype        *string
+	gp_no_log            *bool
+	gp_display_srv_resp  *bool
+	gp_trace             *bool
+	gp_syntax_check_only *bool
 
 	gp_playbook config.TestDef
 	gp_actions  []action.FullAction
@@ -75,6 +76,7 @@ func command_line() {
 	gp_no_log = flag.Bool("no-log", false, "Disable the 'log' actions from the Script")
 	gp_display_srv_resp = flag.Bool("display-response", false, "Used with verbose mode to display the Server Responses")
 	gp_trace = flag.Bool("trace", false, "Generate a trace.out file useable by 'go tool trace' command (in standalone mode only)")
+	gp_syntax_check_only = flag.Bool("syntax-check-only", false, "Only validate the syntax of the Script")
 
 	flag.Parse()
 
@@ -166,6 +168,10 @@ func main() {
 		if !createPlaybook([]byte(data), &gp_playbook, &gp_actions) {
 			log.Fatalf("Error while processing the Script File")
 		}
+		if *gp_syntax_check_only {
+			log.Info("Syntax check done. Leaving...")
+			return
+		}
 
 		if gp_playbook.DataFeeder.Type == "csv" {
 			feeder.Csv(gp_playbook.DataFeeder, path.Dir(*gp_scriptfile))
@@ -187,12 +193,6 @@ func main() {
 		log.Infof("Building reports, please wait...")
 		reporter.CloseResultsFile()
 		log.Infof("Count of remaining goroutines=%d", runtime.NumGoroutine())
-
-		/*
-			buf := make([]byte, 1<<16)
-			runtime.Stack(buf, true)
-			log.Debugf("%s", buf)
-		*/
 
 		err = reporter.CloseReport(outputfile, dir, *gp_scriptfile)
 		if err != nil {
