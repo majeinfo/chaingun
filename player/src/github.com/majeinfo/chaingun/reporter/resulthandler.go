@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	ch_must_stop   chan bool
-	ch_stop_agg    chan bool
+	ch_must_stop   chan bool = make(chan bool, 1)
+	ch_stop_agg    chan bool = make(chan bool, 1)
 	lock_stopNow   sync.Mutex
 	pvuCount       *int
 	plock_vu_count *sync.Mutex
@@ -22,8 +22,6 @@ var (
  */
 func AcceptResults(resChannel chan SampleReqResult, vuCount *int, lock_vu_count *sync.Mutex, bcast *chan []byte, must_bcast bool) {
 	log.Debug("AcceptResults called")
-	ch_must_stop = make(chan bool, 1)
-	ch_stop_agg = make(chan bool, 1)
 	stopNow := false
 
 	pvuCount = vuCount
@@ -56,13 +54,16 @@ func AcceptResults(resChannel chan SampleReqResult, vuCount *int, lock_vu_count 
 			//			time.Sleep(100 * time.Microsecond)
 		}
 	}
+
 	log.Debug("exit AcceptResults")
 }
 
 // Stop the WS Server and the aggregator
 func StopResults() {
 	log.Debug("StopResults")
+	ch_must_stop <- true
 	close(ch_must_stop)
+	ch_stop_agg <- true
 	close(ch_stop_agg)
 	time.Sleep(2 * time.Second) // Give a chance to write down the last results before leaving
 	log.Debug("exit StopResults")
