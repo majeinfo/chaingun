@@ -10,16 +10,44 @@
 			}
 		</style>
 	</head>
-	<body>
+	<body id="graph_root">
 		<div class="alert alert-success">
 			<strong>Playbook:</strong> <span id="playbook_name" class="text-large">?</span>&nbsp;|
 			<strong>Elasped Time:</strong> <span id="elapsed_time" class="text-large">?</span>&nbsp;|
 			<strong>Total Requests:</strong> <span id="total_requests" class="text-large">?</span>
 			<strong>Total Network Errors:</strong> <span id="total_netErrors" class="text-large">?</span>
 		</div>
-		<div id="overall_stats" style="width:100%; height:400px;"></div>
-		<div id="stats_per_req" style="width:100%; height:400px;"></div>
-		<div id="errors_by_code" style="width:100%; height:400px;"></div>
+                <div id="master_overall_stats" class="container-fluid">
+                        <div class="row">
+                                <div class="col-md-11">
+                                        <div id="overall_stats" style="width:100%; height:400px;"></div>
+                                </div>
+                                <div class="col-md-1">
+                                        <button type="button" class="btn btn-primary" onclick="duplicate('overall_stats', overall_stats_options)"><span class="glyphicon glyphicon-plus aria-hidden=true"></span></button>
+                                </div>
+                        </div>
+                </div>
+                <div id="master_stats_per_req" class="container-fluid">
+                        <div class="row">
+                                <div class="col-md-11">
+                                        <div id="stats_per_req" style="width:100%; height:400px;"></div>
+                                </div>
+                                <div class="col-md-1">
+                                        <button type="button" class="btn btn-primary" onclick="duplicate('stats_per_req', stats_per_req_options)"><span class="glyphicon glyphicon-plus aria-hidden=true"></span></button>
+                                </div>
+                        </div>
+                </div>
+                <div id="master_errors_by_code" class="container-fluid">
+                        <div class="row">
+                                <div class="col-md-11">
+                                        <div id="errors_by_code" style="width:100%; height:400px;"></div>
+                                </div>
+                                <div class="col-md-1">
+                                        <button type="button" class="btn btn-primary" onclick="duplicate('errors_by_code', errors_by_code_options)"><span class="glyphicon glyphicon-plus aria-hidden=true"></span></button>
+                                </div> 
+                        </div>
+                </div>
+
 		<!-- <div id="vu_per_second" style="width:100%; height:400px;"></div> -->
 		
 		<div class="alert alert-success">
@@ -34,30 +62,76 @@
 
 		<script src="data.js"></script>
 		<script>
-			var span = document.getElementById("playbook_name");
-			if ('innerText' in span) {
-				span.innerText = playbook_name;
-			} else if ('textContent' in span) {
-				span.textContent = playbook_name;
-			}
-			span = document.getElementById("elapsed_time");
-			if ('innerText' in span) {
-				span.innerText = elapsed_time + "s";
-			} else if ('textContent' in span) {
-				span.textContent = elapsed_time + "s";
-			}
-			span = document.getElementById("total_requests");
-			if ('innerText' in span) {
-				span.innerText = total_requests;
-			} else if ('textContent' in span) {
-				span.textContent = total_requests;
-			}
-			span = document.getElementById("total_netErrors");
-			if ('innerText' in span) {
-				span.innerText = total_netErrors;
-			} else if ('textContent' in span) {
-				span.textContent = total_netErrors;
-			}
+
+var span = document.getElementById("playbook_name");
+if ('innerText' in span) {
+	span.innerText = playbook_name;
+} else if ('textContent' in span) {
+	span.textContent = playbook_name;
+}
+span = document.getElementById("elapsed_time");
+if ('innerText' in span) {
+	span.innerText = elapsed_time + "s";
+} else if ('textContent' in span) {
+	span.textContent = elapsed_time + "s";
+}
+span = document.getElementById("total_requests");
+if ('innerText' in span) {
+	span.innerText = total_requests;
+} else if ('textContent' in span) {
+	span.textContent = total_requests;
+}
+span = document.getElementById("total_netErrors");
+if ('innerText' in span) {
+	span.innerText = total_netErrors;
+} else if ('textContent' in span) {
+	span.textContent = total_netErrors;
+}
+
+var overall_stats_nu = 0;
+
+function duplicate(graph_name, chart_options) {
+        var main_div = document.getElementById("master_" + graph_name);
+        var new_div = document.createElement("div");
+        new_div.setAttribute("class", "container-fluid");
+        var new_row = document.createElement("div");
+        new_row.setAttribute("class", "row");
+        new_div.appendChild(new_row);
+        var new_div2 = document.createElement("div");
+        new_div2.setAttribute("class", "col-md-11");
+        new_row.appendChild(new_div2);
+
+        overall_stats_nu++;
+        var new_div_gr = document.createElement("div");
+        var new_id = graph_name + overall_stats_nu.toString();
+        new_div.setAttribute("id", "clone_" + new_id);
+        new_div_gr.setAttribute("id", new_id);
+        new_div_gr.setAttribute("style", "width:100%; height:400px;");
+        chart_options.chart.renderTo = new_id;
+        new_div2.appendChild(new_div_gr);
+
+        var new_div_but = document.createElement("div");
+        new_div_but.setAttribute("class", "col-md-1");
+        var new_but = document.createElement("button");
+        new_but.setAttribute("type", "button");
+        new_but.setAttribute("class", "btn btn-primary");
+        new_but.setAttribute("onclick", "remove('clone_" + new_id + "')");
+        var new_span = document.createElement("span");
+        new_span.setAttribute("class", "glyphicon glyphicon-minus aria-hidden=true");
+        new_but.appendChild(new_span);
+        new_div_but.appendChild(new_but);
+        new_row.appendChild(new_div_but);
+
+        main_div.after(new_div);
+        var newgr = new Highcharts.chart(chart_options);
+}
+
+function remove(graph_name) {
+        var body = document.getElementById("graph_root");
+        var graph_node = document.getElementById(graph_name);
+        body.removeChild(graph_node);
+}
+
 		</script>
 	</body>
 </html>

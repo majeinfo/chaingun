@@ -321,8 +321,8 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 }
 
 func graph(w *os.File, totalTime int, name, title, xtitle, ytitle string, series map[string][]int) {
-	fmt.Fprintf(w, "var %s = Highcharts.chart('%s', {\n", name, name)
-	fmt.Fprintf(w, "chart: { zoomType: 'x', panning: true, panKey: 'shift' },\n")
+	fmt.Fprintf(w, "%s_options = {\n", name)
+	fmt.Fprintf(w, "chart: { zoomType: 'x', panning: true, panKey: 'shift', renderTo: '%s' },\n", name)
 	fmt.Fprintf(w, "title: { text: '%s'	},\n", title)
 	fmt.Fprintf(w, "legend: { layout: 'horizontal',	align: 'center', verticalAlign: 'bottom', borderWidth: 0 },\n")
 	fmt.Fprintf(w, "xAxis: { categories: [")
@@ -340,7 +340,8 @@ func graph(w *os.File, totalTime int, name, title, xtitle, ytitle string, series
 		fmt.Fprintf(w, "]},\n")
 	}
 	fmt.Fprintf(w, "]\n")
-	fmt.Fprintf(w, "});\n")
+	fmt.Fprintf(w, "};\n")
+	fmt.Fprintf(w, "var %s = new Highcharts.chart(%s_options);\n", name, name)
 }
 
 // Copy templates and js in output directory
