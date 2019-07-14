@@ -39,7 +39,8 @@ An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 	$ cd player/src
 	$ ../bin/statik -f -src=../../manager/go_web
 	$ go install github.com/majeinfo/chaingun/player
-	$ player/bin/player -h
+	$ cd ..
+	$ bin/player -h
 
 # Architecture
 
