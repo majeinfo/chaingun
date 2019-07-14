@@ -226,7 +226,7 @@ func main() {
 			log.Fatal("connect-to mode is not yet implemented")
 		}
 	} else if gp_mode == managerMode {
-		log.Debugf("Start manager mode on this address: %s", *gp_manager_addr)
+		log.Infof("Start manager mode on this address: %s", *gp_manager_addr)
 		manager.Start(gp_manager_addr, gp_repositorydir)
 	}
 }

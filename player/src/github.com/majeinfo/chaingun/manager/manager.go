@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/majeinfo/chaingun/viewer"
 	"github.com/rakyll/statik/fs"
 	log "github.com/sirupsen/logrus"
@@ -38,7 +39,7 @@ func Start(mgrAddr *string, reposdir *string) error {
 	mux.HandleFunc("/clean_results", cleanResults)
 	mux.HandleFunc("/store_results/", storeResults)
 	mux.HandleFunc("/merge_results/", mergeResults)
-	//mux.HandleFunc("/results/", showResults)
+	mux.HandleFunc("/show_results/", showResults)
 	mux.Handle("/results/", http.FileServer(http.Dir(".")))
 	mux.Handle("/", http.FileServer(statikFS))
 	//mux.Handle("/index.html", http.FileServer(statikFS))
@@ -198,10 +199,154 @@ func mergeResults(w http.ResponseWriter, r *http.Request) {
 
 func showResults(w http.ResponseWriter, r *http.Request) {
 	log.Debugf("showResults called: %s", r.URL.Path)
+	doc1 := heredoc.Doc(`
+	<!DOCTYPE html>
+	<html>
+	<head>
+	
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	
+	<title>Chaingun Management Interface</title>
+	
+	<link href="/static/css/bootstrap.css" rel="stylesheet" type="text/css">
+	<link href="/static/vendor/metisMenu/metisMenu.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/sb-admin-2.css" rel="stylesheet" type="text/css">
+	<link href="/static/vendor/morrisjs/morris.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/jquery.dataTables.min.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/dataTables.checkboxes.css" rel="stylesheet" type="text/css">
+	<link href="/static/vendor/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css">
+	
+	</head>
+	<body>
+	
+	<div id="wrapper">
+		<div id="page-wrapper" style="margin-left: 0px;">
+			<div class="row">
+				<div class="col-lg-12">
+				</div>
+			</div>
+	
+			<!-- /.row -->
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<div class="xcontainer">
+								<div class="row">
+									<div class="col-lg-4">
+										<span class="lead text-left">Results Management</span>
+									</div>
+									<div class="col-lg-8 text-right">
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- /.panel-heading -->
+						<div class="panel-body">
+                        <table width="100%" class="table table-striped table-bordered table-hover" id="results-table">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Directory Name</th>
+                                    <th class="center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>	
+	`)
 
-	// The Request Path looks like :
-	// /results/<repository>/<file>....
+	doc2 := heredoc.Doc(`
+                            </tbody>
+                        </table>
+                        <!-- /.table-responsive -->
+                    </div>
+                    <!-- /.panel-body -->
+                </div>
+                <!-- /.panel -->
+            </div>
+            <!-- /.col-lg-12 -->
+        </div>
+    </div>
+    <!-- /#page-wrapper -->
+</div>  <!-- wrapper -->
 
+<!-- Modal -->
+<div id="modalMsg" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header alert-info">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Message</h4>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/highcharts.js"></script>
+<script src="/static/js/exporting.js"></script>
+<script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/dataTables.checkboxes.min.js"></script>
+<script src="/static/js/popper.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/vendor/metisMenu/metisMenu.js"></script>
+<script src="/static/vendor/raphael/raphael.js"></script>
+<script src="/static/vendor/morrisjs/morris.js"></script>
+<script src="/static/dist/js/sb-admin-2.js"></script>
+
+<script>
+function viewResults(result_name) {
+	window.open('/results/' + result_name, '_blank');
+}
+
+function rebuildGraphs(result_name) {
+	/* call merge_result if merged.csv or many .data files
+	   then buildgraph */
+	alert('not yet implemented');
+}
+</script>
+
+</body>
+</html>
+	`)
+
+	w.Write([]byte(doc1))
+
+	// Loop on content of /results directory
+	targetDir := repositoryDir + "/results/"
+	files, err := ioutil.ReadDir(targetDir)
+	if err != nil {
+		w.Write([]byte("Error"))
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	for _, file := range files {
+		stat, err := os.Stat(targetDir + "/" + file.Name())
+		if err != nil || !stat.IsDir() {
+			continue
+		}
+		line := heredoc.Docf(`
+								<tr class="even gradeA">
+                                    <td>%s</td>
+                                    <td class="center">
+                                        <button type="button" class="btn btn-primary" onclick="viewResults('%s')">View</button>
+                                        <button type="button" class="btn btn-primary" onclick="rebuildGraphs('%s')">Rebuild Graphs</button>
+                                    </td>
+								</tr>
+								`, file.Name(), file.Name(), file.Name())
+		w.Write([]byte(line))
+	}
+
+	w.Write([]byte(doc2))
 }
 
 func sendJSONErrorResponse(w http.ResponseWriter, status string, msg string) {

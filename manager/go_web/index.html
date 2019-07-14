@@ -76,6 +76,7 @@
                                     <button type="button" class="add-row btn btn-primary" onclick="StartAll()">Start</button>
                                     <button type="button" class="add-row btn btn-primary" onclick="StopAll()">Stop</button>
                                     <button type="button" class="add-row btn btn-primary" onclick="GetAllResults()">Get Results</button>
+                                    <button type="button" class="add-row btn btn-primary" onclick="ShowAllResults()">All Results</button>
                                     <!-- <button type="button" class="delete-row">Delete Row</button> -->
                                 </div>
                             </div>
@@ -326,6 +327,10 @@ function GetAllStatus() {
         console.log(index + 1);
         GetStatus(index + 1);
     });
+}
+
+function ShowAllResults() {
+    window.open("/show_results/", "_blank");
 }
 
 function GetStatus(id) {
