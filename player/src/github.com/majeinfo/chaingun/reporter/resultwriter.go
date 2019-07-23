@@ -19,7 +19,7 @@ var (
 var opened bool = false
 
 func OpenResultsFile(fileName string) {
-	log.Debug("OpenResultFile")
+	log.Debugf("OpenResultFile: %s", fileName)
 
 	if !opened {
 		opened = true

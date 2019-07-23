@@ -201,6 +201,11 @@ func main() {
 		if err != nil {
 			log.Error(err.Error())
 		}
+		scriptnames := []string{*gp_scriptfile}
+		err = reporter.WriteMetadata(reporter.SimulationStart, time.Now(), dir, scriptnames)
+		if err != nil {
+			log.Error(err.Error())
+		}
 	} else if gp_mode == graphOnlyMode {
 		// Just the graph production (TODO: does not work for merged data)
 		outputfile, dir := computeOutputFilename()

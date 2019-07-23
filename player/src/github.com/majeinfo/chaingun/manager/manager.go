@@ -6,9 +6,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/majeinfo/chaingun/reporter"
 	"github.com/majeinfo/chaingun/viewer"
 	"github.com/rakyll/statik/fs"
 	log "github.com/sirupsen/logrus"
@@ -40,6 +43,7 @@ func Start(mgrAddr *string, reposdir *string) error {
 	mux.HandleFunc("/store_results/", storeResults)
 	mux.HandleFunc("/merge_results/", mergeResults)
 	mux.HandleFunc("/show_results/", showResults)
+	mux.HandleFunc("/rebuild_graphs/", rebuildGraphs)
 	mux.Handle("/results/", http.FileServer(http.Dir(".")))
 	mux.Handle("/", http.FileServer(statikFS))
 	//mux.Handle("/index.html", http.FileServer(statikFS))
@@ -110,7 +114,6 @@ func storeResults(w http.ResponseWriter, r *http.Request) {
 	sendJSONResponse(w, "OK", "", "")
 }
 
-// TODO: during the merging phase, the lines of different files should be reordered according to the timestamp
 func mergeResults(w http.ResponseWriter, r *http.Request) {
 	log.Debugf("mergeResults called, urlpath=%s", r.URL.Path)
 
@@ -129,7 +132,7 @@ func mergeResults(w http.ResponseWriter, r *http.Request) {
 
 	log.Debugf("Creates merged file '%s'", fname)
 	mergedFile, err := os.Create(fname)
-	//defer mergedFile.Close() // No, because the BuildGrpahs function will use it before the end of the function !
+	//defer mergedFile.Close() // No, because the BuildGraphs function will use it before the end of the function !
 	if err != nil {
 		sendJSONErrorResponse(w, "Error", err.Error())
 		mergedFile.Close()
@@ -187,6 +190,13 @@ func mergeResults(w http.ResponseWriter, r *http.Request) {
 	}
 	mergedFile.Close()
 
+	// Create metadata files
+	scriptnames := []string{scriptName}
+	err = reporter.WriteMetadata(time.Now(), time.Now(), repo_dir, scriptnames)
+	if err != nil {
+		log.Error(err.Error())
+	}
+
 	// Build graphs...
 	err = viewer.BuildGraphs(fname, parts[1], repo_dir)
 	if err != nil {
@@ -194,6 +204,29 @@ func mergeResults(w http.ResponseWriter, r *http.Request) {
 		sendJSONErrorResponse(w, "Error", err.Error())
 	} else {
 		sendJSONResponse(w, "OK", "", repo_dir+"/index.html") // TODO: link_url missing
+	}
+}
+
+func rebuildGraphs(w http.ResponseWriter, r *http.Request) {
+	log.Debugf("rebuildGraphs called, urlpath=%s", r.URL.Path)
+
+	// The Request Path looks like :
+	// /rebuild_graphs/<repository>
+	parts := strings.Split(r.URL.Path[1:], "/")
+	if len(parts) != 2 {
+		sendJSONErrorResponse(w, "Error", "Malformed URL Path")
+		return
+	}
+
+	// many .data files or single data file ?
+	pathfile := repositoryDir + "/results/" + parts[1] + "/*.data"
+	matches, _ := filepath.Glob(pathfile)
+	if matches == nil {
+		log.Debugf("Single build in %s", pathfile)
+		//err := viewer.BuildGraphs(outputFile, scriptName, outputDir)
+	} else {
+		log.Debugf("Multiple build in %s", pathfile)
+		mergeResults(w, r)
 	}
 }
 
@@ -310,7 +343,11 @@ function viewResults(result_name) {
 function rebuildGraphs(result_name) {
 	/* call merge_result if merged.csv or many .data files
 	   then buildgraph */
-	alert('not yet implemented');
+	$.getJSON('/rebuild_graphs/' + result_name, function( data ) {
+		var mbody = $("#modal-body");
+		mbody.html("The Graphs have been rebuilt !");
+		$("#modalMsg").modal();	
+	});
 }
 </script>
 
