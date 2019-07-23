@@ -1,10 +1,11 @@
 package action
 
 import (
+	"net/url"
+
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
 	log "github.com/sirupsen/logrus"
-	"net/url"
 )
 
 // LogAction describes a log Action
@@ -38,6 +39,6 @@ func NewLogAction(a map[interface{}]interface{}) (LogAction, bool) {
 }
 
 // DisableAction is called upon --no-log arg on command line
-func DisableAction(noLog bool) {
+func DisableLogAction(noLog bool) {
 	disableLog = noLog
 }

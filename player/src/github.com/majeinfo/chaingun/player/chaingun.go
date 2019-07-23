@@ -85,7 +85,7 @@ func command_line() {
 		log_level = log.DebugLevel
 	}
 	log.SetLevel(log_level)
-	action.DisableAction(*gp_no_log)
+	action.DisableLogAction(*gp_no_log)
 	action.SetContext(*gp_display_srv_resp)
 
 	// Check the mode
