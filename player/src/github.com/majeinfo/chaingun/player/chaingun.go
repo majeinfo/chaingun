@@ -57,6 +57,7 @@ var (
 	gp_display_srv_resp  *bool
 	gp_trace             *bool
 	gp_syntax_check_only *bool
+	gp_disable_dns_cache *bool
 
 	gp_playbook config.TestDef
 	gp_actions  []action.FullAction
@@ -77,6 +78,7 @@ func command_line() {
 	gp_display_srv_resp = flag.Bool("display-response", false, "Used with verbose mode to display the Server Responses")
 	gp_trace = flag.Bool("trace", false, "Generate a trace.out file useable by 'go tool trace' command (in standalone mode only)")
 	gp_syntax_check_only = flag.Bool("syntax-check-only", false, "Only validate the syntax of the Script")
+	gp_disable_dns_cache = flag.Bool("disable-dns-cache", false, "Disable the embedded DNS cache which reduces the number of DNS requests")
 
 	flag.Parse()
 
@@ -86,6 +88,7 @@ func command_line() {
 	}
 	log.SetLevel(log_level)
 	action.DisableLogAction(*gp_no_log)
+	action.DisableDNSCache(*gp_disable_dns_cache)
 	action.SetContext(*gp_display_srv_resp)
 
 	// Check the mode

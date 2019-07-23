@@ -22,8 +22,13 @@ type FullAction struct {
 
 var (
 	must_display_srv_resp bool
+	disable_dns_cache     bool
 )
 
 func SetContext(displaySrvResp bool) {
 	must_display_srv_resp = displaySrvResp
+}
+
+func DisableDNSCache(discache bool) {
+	disable_dns_cache = discache
 }

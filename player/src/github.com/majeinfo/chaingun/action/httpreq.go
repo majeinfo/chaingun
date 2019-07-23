@@ -13,8 +13,10 @@ import (
 	"time"
 
 	"crypto/tls"
+
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
+	"github.com/majeinfo/chaingun/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -34,6 +36,13 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 		vulog.Debugf("New Request: Method: %s, URL: %s", req.Method, req.URL)
 	} else {
 		vulog.Debugf("New Request: Method: %s, URL: %s, Body: %v", req.Method, req.URL, req.Body)
+	}
+
+	// Try to substitute the server name by an IP address
+	if !disable_dns_cache {
+		if addr, status := utils.GetServerAddress(req.Host); status == true {
+			req.URL.Host = addr
+		}
 	}
 
 	start := time.Now()
