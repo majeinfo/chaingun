@@ -24,10 +24,9 @@ func NextFromFeeder() {
 	if data != nil && len(data) > 0 {
 		// Push data into the FeedChannel
 		// log.Debugf("Current index: %d of total size: %d", index, len(data))
+		lock.Lock()
 		FeedChannel <- data[index]
 
-		// Cycle, does this need to be synchronized?
-		lock.Lock()
 		if index < len(data)-1 {
 			index += 1
 		} else {
