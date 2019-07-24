@@ -234,7 +234,7 @@ Example:
 | :--- | :--- |
 | `title` | mandatory string that qualifies the request - used for the result output and logging |
 | `address` | mandatory string that indicates the server address and the port to connect to |
-| `payload` | mandatory string to send as the payload |
+| `payload` | mandatory string to send as the payload. If you want to specify special characters (like \n), do not forget to enclose the string in double-quotes |
 
 Variable interpolation applies to url and payload.
 
@@ -242,7 +242,7 @@ Example:
 ```
   - tcp:
       address: 127.0.0.1:8081
-      payload: ACT|LOGIN|${person}|${name}\n
+      payload: "ACT|LOGIN|${person}|${name}\n"
 ```
 
 ## setvar : creates and set variable values
