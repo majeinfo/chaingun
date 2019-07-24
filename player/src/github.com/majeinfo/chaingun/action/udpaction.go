@@ -21,10 +21,29 @@ func (t UDPAction) Execute(resultsChannel chan reporter.SampleReqResult, session
 
 // NewUDPAction creates a new UDP Action
 func NewUDPAction(a map[interface{}]interface{}) (UDPAction, bool) {
-	// TODO validation
-	return UDPAction{
+	valid := true
+
+	if a["title"] == "" || a["title"] == nil {
+		log.Error("UDPAction must define a title.")
+		a["title"] = ""
+		valid = false
+	}
+	if a["address"] == "" || a["address"] == nil {
+		log.Error("UDPAction must define a target address.")
+		a["address"] = ""
+		valid = false
+	}
+	if a["payload"] == nil {
+		a["payload"] = ""
+	}
+
+	udpAction := UDPAction{
 		Address: a["address"].(string),
 		Payload: a["payload"].(string),
 		Title:   a["title"].(string),
-	}, true
+	}
+
+	log.Debugf("UDPAction: %v", udpAction)
+
+	return udpAction, valid
 }

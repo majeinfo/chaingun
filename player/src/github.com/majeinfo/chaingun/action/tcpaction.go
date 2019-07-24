@@ -21,10 +21,29 @@ func (t TCPAction) Execute(resultsChannel chan reporter.SampleReqResult, session
 
 // NewTCPAction createsa new TCP Action
 func NewTCPAction(a map[interface{}]interface{}) (TCPAction, bool) {
-	// TODO validation
-	return TCPAction{
+	valid := true
+
+	if a["title"] == "" || a["title"] == nil {
+		log.Error("TCPAction must define a title.")
+		a["title"] = ""
+		valid = false
+	}
+	if a["address"] == "" || a["address"] == nil {
+		log.Error("TCPAction must define a target address.")
+		a["address"] = ""
+		valid = false
+	}
+	if a["payload"] == nil {
+		a["payload"] = ""
+	}
+
+	tcpAction := TCPAction{
 		Address: a["address"].(string),
 		Payload: a["payload"].(string),
 		Title:   a["title"].(string),
-	}, true
+	}
+
+	log.Debugf("TCPAction: %v", tcpAction)
+
+	return tcpAction, valid
 }
