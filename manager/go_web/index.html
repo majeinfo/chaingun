@@ -200,6 +200,22 @@ $(function () {
                 }  
             });
         });
+
+        // Get the list of pre-configured injectors
+        $.get("/get_injectors", function(data) {
+            console.log(data);
+            for (var idx = 1 ; idx <= data.length ; idx++ ) {
+                if (idx > 1) {
+                    AddInjector();
+                }
+                var hostfield = $("#ws_host" + idx);
+                hostfield.val(data[idx-1]);
+                ConnectToWS(idx);
+            }
+        })
+        .fail(function(msg) {
+            DisplayError("An Error occurred: " + msg + "\nInjectors must be added manually !");
+        });   
     });
 });
 

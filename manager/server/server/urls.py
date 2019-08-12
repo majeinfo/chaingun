@@ -20,6 +20,7 @@ from . import views
 urlpatterns = [
     #path('admin/', admin.site.urls),
     path('', views.index, name='home'),
+    path('get_injectors', views.get_injectors, name='get_injectors'),
     path('clean_results', views.clean_results, name='clean_results'),
     path('store_results/<str:repository>/<str:resultname>/<str:scriptname>', views.store_results, name='store_results'),
     path('merge_results/<str:repository>', views.merge_results, name='merge_results'),

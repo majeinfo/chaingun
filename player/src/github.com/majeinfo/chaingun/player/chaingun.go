@@ -53,6 +53,7 @@ var (
 	gp_scriptfile        *string
 	gp_outputdir         *string
 	gp_outputtype        *string
+	gp_injectors         *string
 	gp_no_log            *bool
 	gp_display_srv_resp  *bool
 	gp_trace             *bool
@@ -79,6 +80,7 @@ func command_line() {
 	gp_trace = flag.Bool("trace", false, "Generate a trace.out file useable by 'go tool trace' command (in standalone mode only)")
 	gp_syntax_check_only = flag.Bool("syntax-check-only", false, "Only validate the syntax of the Script")
 	gp_disable_dns_cache = flag.Bool("disable-dns-cache", false, "Disable the embedded DNS cache which reduces the number of DNS requests")
+	gp_injectors = flag.String("injectors", "", "Comma-separated list on already started injectors (ex: inject1:12345,inject2,inject3:1234)")
 
 	flag.Parse()
 
@@ -235,7 +237,7 @@ func main() {
 		}
 	} else if gp_mode == managerMode {
 		log.Infof("Start manager mode on this address: %s", *gp_manager_addr)
-		manager.Start(gp_manager_addr, gp_repositorydir)
+		manager.Start(gp_manager_addr, gp_repositorydir, gp_injectors)
 	}
 }
 

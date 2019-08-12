@@ -28,10 +28,16 @@ var (
 	// Script names played by the Players
 	scriptNames = make(map[string]string)
 	scriptName  string
+	injectors   []string
 )
 
 // Start creates the HTTP server and creates the Web Interface
-func Start(mgrAddr *string, reposdir *string) error {
+func Start(mgrAddr *string, reposdir *string, prelaunched_injectors *string) error {
+	if len(*prelaunched_injectors) > 0 {
+		injectors = strings.Split(*prelaunched_injectors, ",")
+	} else {
+		injectors = make([]string, 0)
+	}
 	repositoryDir = *reposdir
 	statikFS, err := fs.New()
 	if err != nil {
@@ -39,6 +45,7 @@ func Start(mgrAddr *string, reposdir *string) error {
 	}
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/get_injectors", getInjectors)
 	mux.HandleFunc("/clean_results", cleanResults)
 	mux.HandleFunc("/store_results/", storeResults)
 	mux.HandleFunc("/merge_results/", mergeResults)
@@ -51,6 +58,18 @@ func Start(mgrAddr *string, reposdir *string) error {
 
 	log.Fatal(http.ListenAndServe(*mgrAddr, mux))
 	return nil
+}
+
+func getInjectors(w http.ResponseWriter, r *http.Request) {
+	log.Debugf("getInjectors called")
+
+	jData, err := json.Marshal(injectors)
+	if err != nil {
+		log.Fatalf("Json Marshaling failed with %v (%s)", injectors, err)
+	}
+	log.Debugf(string(jData))
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jData)
 }
 
 func cleanResults(w http.ResponseWriter, r *http.Request) {

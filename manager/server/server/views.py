@@ -17,6 +17,10 @@ def index(request):
 
 
 @csrf_exempt
+def get_injectors(request):
+    return HttpResponse(json.dumps([ "toto:81", "titi" ]), content_type='application/json')
+    
+@csrf_exempt
 def clean_results(request):
     script_names = {}
     script_name = ''

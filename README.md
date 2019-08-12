@@ -102,6 +102,9 @@ c) run the Manager (when Players are started as Daemons) :
 	The --repository-dir option gives the location of the results (default is ".")
 
 	--verbose is optional
+	--injectors injector1:port1,injector2:port2,... gives the list of already started injectors. In that case,
+		the Web Interface will try to automatically add these injectors and connect to them. This is handy
+		for batch mode.
 
 	Then open your browser and manage your Players !
 
