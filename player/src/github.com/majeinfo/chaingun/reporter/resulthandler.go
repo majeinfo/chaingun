@@ -30,7 +30,7 @@ func AcceptResults(resChannel chan SampleReqResult, vuCount *int, lock_vu_count 
 		broadcast = bcast
 	}
 	perSecondAggregatorChannel := make(chan *SampleReqResult, 500)
-	go aggregatePerSecondHandler(perSecondAggregatorChannel)
+	go aggregatePerSecondHandler(perSecondAggregatorChannel, resChannel)
 
 	for {
 		if stopNow {
@@ -39,7 +39,9 @@ func AcceptResults(resChannel chan SampleReqResult, vuCount *int, lock_vu_count 
 
 		select {
 		case msg := <-resChannel:
-			perSecondAggregatorChannel <- &msg
+			if msg.Type != "GLOBAL" {
+				perSecondAggregatorChannel <- &msg
+			}
 			WriteResult(&msg) // sync write result to file for later processing.
 			break
 		case <-ch_must_stop:
@@ -73,7 +75,7 @@ func StopResults() {
  * Loops indefinitely. The inner loop runs for exactly one second before submitting its
  * results to the WebSocket handler, then the aggregates are reset and restarted.
  */
-func aggregatePerSecondHandler(perSecondChannel chan *SampleReqResult) {
+func aggregatePerSecondHandler(perSecondChannel chan *SampleReqResult, resChannel chan SampleReqResult) {
 	log.Debug("aggregatePerSecondHandler called")
 	exit_loop := false
 
@@ -95,7 +97,7 @@ func aggregatePerSecondHandler(perSecondChannel chan *SampleReqResult) {
 			}
 		}
 		// concurrently assemble the result and send it off to the websocket.
-		go assembleAndSendResult(totalReq, totalLatency)
+		go assembleAndSendResult(totalReq, totalLatency, resChannel)
 
 		if exit_loop {
 			break
@@ -108,7 +110,7 @@ func aggregatePerSecondHandler(perSecondChannel chan *SampleReqResult) {
 var SuperTotalReq int
 var lock2 sync.Mutex
 
-func assembleAndSendResult(totalReq int, totalLatency int) {
+func assembleAndSendResult(totalReq int, totalLatency int, resChannel chan SampleReqResult) {
 	log.Debug("assembleAndSendResult called")
 	avgLatency := 0
 	if totalReq > 0 {
@@ -128,6 +130,12 @@ func assembleAndSendResult(totalReq int, totalLatency int) {
 	plock_vu_count.Lock()
 	lock2.Lock()
 	log.Infof("Time: %d TotalReq: %d, VUCount: %d, Avg latency: %d μs (%d ms) req/s: %d", statFrame.Time, SuperTotalReq, *pvuCount, statFrame.Latency, statFrame.Latency/1000, statFrame.Reqs)
+	globalResult := SampleReqResult{
+		Size: *pvuCount,
+		Type: "GLOBAL",
+		When: statFrame.Time * 1000000000,
+	}
+	resChannel <- globalResult
 	lock2.Unlock()
 	plock_vu_count.Unlock()
 	// +build trace

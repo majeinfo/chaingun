@@ -52,7 +52,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	// Parse the file
 	r := csv.NewReader(csvfile)
 
-	// Iterate through the records
+	// Iterate through the records. Records which Type is "GLOBAL" are not samples
 	/*
 		Timestamp,Vid,Type,Title,Status,Size,Latency,FullRequest
 		41353146,1249300000,HTTP,Page 1,200,17,40794348,http://www.delamarche.com/page1.php
@@ -62,6 +62,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	colUniqTitle := make(map[string]bool)
 	colUniqStatus := make(map[int]bool)
 	measures := make([]measure, 0, DFLT_CAP)
+	internalVus := make(map[int]int)
 
 	idx := 0
 	firstRow := true
@@ -86,25 +87,30 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		}
 
 		curTime, _ := strconv.ParseFloat(record[0], 64)
+		curType := record[2]
 		curVid, _ := strconv.ParseInt(record[1], 10, 64)
 		curStatus, _ := strconv.ParseInt(record[4], 10, 64)
 		curRecvBytes, _ := strconv.ParseInt(record[5], 10, 64)
 		curLatency, _ := strconv.ParseFloat(record[6], 64)
 
-		m := measure{
-			timestamp: int(curTime) / 1000000000,
-			vid:       curVid,
-			title:     record[3],
-			status:    int(curStatus),
-			recvBytes: int(curRecvBytes),
-			latency:   int(curLatency) / 1000000,
+		if curType != "GLOBAL" {
+			m := measure{
+				timestamp: int(curTime) / 1000000000,
+				vid:       curVid,
+				title:     record[3],
+				status:    int(curStatus),
+				recvBytes: int(curRecvBytes),
+				latency:   int(curLatency) / 1000000,
+			}
+			measures = append(measures, m)
+
+			colUniqTitle[record[3]] = true
+			colUniqStatus[int(curStatus)] = true
+			idx++
+		} else {
+			// The count of internal VU is stored in the Size field
+			internalVus[int(curTime)/1000000000] += int(curRecvBytes)
 		}
-		measures = append(measures, m)
-
-		colUniqTitle[record[3]] = true
-		colUniqStatus[int(curStatus)] = true
-
-		idx++
 	}
 
 	// Empty file ?
@@ -169,7 +175,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		}
 	}
 
-	// Compute VU count per second
+	// Compute VU count per second (not used anymore...)
 	for idx := 0; idx < len(vus); idx++ {
 		vus[idx] = len(vusSet[idx])
 	}
@@ -238,6 +244,11 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	fmt.Fprintf(output, "var playbook_name = \"%s\";\n\n", scriptname)
 
 	fmt.Fprintf(output, "$(function () {\n")
+
+	vus = make([]int, len(internalVus))
+	for k, v := range internalVus {
+		vus[k-1] = v
+	}
 
 	graph(output,
 		total_elapsed_time,
