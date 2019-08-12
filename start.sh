@@ -25,9 +25,14 @@ standalone)
 ;;
 
 manager)
-	LISTEN_ADDR=${2:-0.0.0.0:8000}
+	shift
+	if [ "$1" = "" -o "$1" = "-" ]; then
+		LISTEN_ADDR="0.0.0.0:8000"
+		shift
+	fi
+	#LISTEN_ADDR=${1:-0.0.0.0:8000}
 	cd player
-	bin/player --mode manager --manager-listen-addr ${LISTEN_ADDR} ${VERBOSE_MODE}
+	bin/player --mode manager --manager-listen-addr ${LISTEN_ADDR} ${VERBOSE_MODE} $*
 ;;
 
 *)
