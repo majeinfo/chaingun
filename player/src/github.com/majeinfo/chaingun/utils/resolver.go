@@ -3,6 +3,7 @@ package utils
 import (
 	"math/rand"
 	"net"
+	"strings"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -23,8 +24,15 @@ func GetServerAddress(serverName string) (string, bool) {
 	}
 
 	if addrs, err := net.LookupHost(serverName); err == nil {
-		addrCache[serverName] = addrs
-		return getAddr(addrs), true
+		// Remove IPv6 addresses
+		addrs4 := make([]string, 0)
+		for _, addr := range addrs {
+			if strings.Count(addr, ":") == 0 {
+				addrs4 = append(addrs4, addr)
+			}
+		}
+		addrCache[serverName] = addrs4
+		return getAddr(addrs4), true
 	}
 
 	log.Errorf("Could not resolve the Server Name: %s", serverName)
@@ -32,10 +40,12 @@ func GetServerAddress(serverName string) (string, bool) {
 }
 
 func getAddr(addrs []string) string {
+	log.Debugf("getAddr: %v", addrs)
 	if len(addrs) == 1 {
 		return addrs[0]
 	}
 
 	idx := rand.Intn(len(addrs))
+	log.Debugf("getAddr returns:", addrs[idx])
 	return addrs[idx]
 }
