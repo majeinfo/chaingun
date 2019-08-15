@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	ch_must_stop   chan bool = make(chan bool, 1)
-	ch_stop_agg    chan bool = make(chan bool, 1)
+	ch_must_stop   chan bool
+	ch_stop_agg    chan bool
 	lock_stopNow   sync.Mutex
 	pvuCount       *int
 	plock_vu_count *sync.Mutex
@@ -22,6 +22,9 @@ var (
  */
 func AcceptResults(resChannel chan SampleReqResult, vuCount *int, lock_vu_count *sync.Mutex, bcast *chan []byte, must_bcast bool) {
 	log.Debug("AcceptResults called")
+	ch_must_stop = make(chan bool, 1)
+	ch_stop_agg = make(chan bool, 1)
+
 	stopNow := false
 
 	pvuCount = vuCount
