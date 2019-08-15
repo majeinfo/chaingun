@@ -13,49 +13,22 @@ import (
 
 	_ "github.com/gorilla/websocket"
 	"github.com/majeinfo/chaingun/feeder"
+	"github.com/majeinfo/chaingun/manager"
 	"github.com/majeinfo/chaingun/reporter"
 	log "github.com/sirupsen/logrus"
 )
 
-// PlayerCommand describes the commands exchanged in JSON message
-type PlayerCommand struct {
-	Cmd      string `json:"cmd"`
-	Value    string `json:"value"`
-	MoreInfo string `json:"moreinfo"`
-}
-
-// DaemonStatus indicates the status of the Daemon
-type DaemonStatus int
-
-// PlayerStatus describes the structure of exchanged JSON message
-type PlayerStatus struct {
-	Type   string `json:"type"`
-	Status string `json:"status"`
-	Level  string `json:"level"`
-	Msg    string `json:"msg"`
-}
-
-// PlayerResults describes the structure of exchanged Results !
-type PlayerResults struct {
-	Type       string `json:"type"`
-	Status     string `json:"status"`
-	Level      string `json:"level"`
-	Msg        string `json:"msg"`
-	HostName   string `json:"hostname"`
-	ScriptFile string `json:"scriptfile"`
-}
-
 // Different states of remote daemon
 const (
-	IDLE DaemonStatus = 0 + iota
+	IDLE manager.DaemonStatus = 0 + iota
 	READY_TO_RUN
 	RUNNING
 	STOPPING_NOW
 )
 
 var (
-	gp_daemon_status DaemonStatus = IDLE
-	statusString                  = []string{
+	gp_daemon_status manager.DaemonStatus = IDLE
+	statusString                          = []string{
 		"Idle waiting for a Script",
 		"Ready to run Script",
 		"Running",
@@ -88,7 +61,7 @@ func cmdHandler(c *Client, msg []byte) {
 	log.Debugf("Count of goroutines=%d", runtime.NumGoroutine())
 
 	// Decode JSON message
-	var cmd PlayerCommand
+	var cmd manager.PlayerCommand
 	err := json.Unmarshal(msg, &cmd)
 	if err != nil {
 		sendStatusError(c, "Message could not be decoded as JSON")
@@ -174,7 +147,7 @@ func stopCommand(c *Client) {
 	sendStatusOK(c)
 }
 
-func scriptCommand(c *Client, cmd *PlayerCommand) {
+func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 	// Check no run in progress
 	if gp_daemon_status != IDLE && gp_daemon_status != READY_TO_RUN {
 		sendStatusError(c, "Script ignored because daemon is not idle")
@@ -212,7 +185,7 @@ func scriptCommand(c *Client, cmd *PlayerCommand) {
 	}
 }
 
-func handleDataFeed(c *Client, cmd *PlayerCommand) {
+func handleDataFeed(c *Client, cmd *manager.PlayerCommand) {
 	sendStatusOKMsg(c, "Data received")
 
 	data, err := base64.StdEncoding.DecodeString(cmd.Value)
@@ -227,7 +200,7 @@ func handleDataFeed(c *Client, cmd *PlayerCommand) {
 	feeder.CsvInline(gp_playbook.DataFeeder, str_data)
 }
 
-func handleDataFile(c *Client, cmd *PlayerCommand) {
+func handleDataFile(c *Client, cmd *manager.PlayerCommand) {
 	sendStatusOKMsg(c, "File received")
 
 	data, err := base64.StdEncoding.DecodeString(cmd.Value)
@@ -246,7 +219,7 @@ func handleDataFile(c *Client, cmd *PlayerCommand) {
 	}
 }
 
-func getResultsCommand(c *Client, cmd *PlayerCommand) {
+func getResultsCommand(c *Client, cmd *manager.PlayerCommand) {
 	if !g_results_available {
 		sendStatusError(c, "No Results available")
 		return
@@ -261,7 +234,7 @@ func getResultsCommand(c *Client, cmd *PlayerCommand) {
 	}
 
 	msg := string(data)
-	var resp = &PlayerResults{
+	var resp = &manager.PlayerResults{
 		Type:       "results",
 		Status:     statusString[gp_daemon_status],
 		Level:      "OK",
@@ -270,7 +243,8 @@ func getResultsCommand(c *Client, cmd *PlayerCommand) {
 		ScriptFile: *gp_scriptfile,
 	}
 	j, _ := json.Marshal(resp)
-	c.send <- j
+	//c.send <- j
+	sendToManager(c, j)
 
 	sendStatusOKMsg(c, "Results sent successfully")
 }
@@ -294,27 +268,41 @@ func sendStatusError(c *Client, msg string) {
 // Send a Status back to the manager
 func sendStatus(c *Client, level string, msg string) {
 	log.Debugf("sendStatus: %s", msg)
-	var resp = &PlayerStatus{
+	var resp = &manager.PlayerStatus{
 		Type:   "status",
 		Status: statusString[gp_daemon_status],
 		Level:  level,
 		Msg:    msg,
 	}
 	j, _ := json.Marshal(resp)
-	c.send <- j
+	//c.send <- j
+	sendToManager(c, j)
 	log.Debug("exit sendStatus")
 }
 
 // Send a request to get data file content
 func sendGetDataFile(c *Client, filename string) {
-	var resp = &PlayerStatus{
+	var resp = &manager.PlayerStatus{
 		Type:   "getdata",
 		Status: statusString[gp_daemon_status],
 		Level:  "OK",
 		Msg:    filename,
 	}
 	j, _ := json.Marshal(resp)
-	c.send <- j
+	//c.send <- j
+	sendToManager(c, j)
+}
+
+// Send data but take care on writing on closed channel !
+func sendToManager(c *Client, data []byte) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
+	c.send <- data
+	return
 }
 
 // EOF
