@@ -28,6 +28,7 @@ const (
 	standaloneMode = 0 + iota
 	daemonMode
 	managerMode
+	batchMode
 	graphOnlyMode
 )
 
@@ -36,6 +37,7 @@ var (
 		"standalone": standaloneMode,
 		"daemon":     daemonMode,
 		"manager":    managerMode,
+		"batch":      batchMode,
 		"graph-only": graphOnlyMode,
 	}
 )
@@ -66,10 +68,10 @@ var (
 
 // Analyze the command line
 func command_line() {
-	mode := flag.String("mode", "standalone", "standalone(default)|daemon|manager|graph-only")
+	mode := flag.String("mode", "standalone", "standalone(default)|daemon|manager|batch|graph-only")
 	gp_listen_addr = flag.String("listen-addr", "127.0.0.1:12345", "Address and port to listen to in daemon")
 	gp_manager_addr = flag.String("manager-listen-addr", "127.0.0.1:8000", "Address and port to listen to - for the Manager Web Interface")
-	gp_repositorydir = flag.String("repository-dir", ".", "directory where to store results - in Manager mode only")
+	gp_repositorydir = flag.String("repository-dir", ".", "directory where to store results - in Manager|Batch mode only")
 	gp_connect_to = flag.String("connect-to", "", "Address and port to connect to - in daemon mode (not supported yet)")
 	verbose := flag.Bool("verbose", false, "Set verbose mode")
 	gp_scriptfile = flag.String("script", "", "Set the Script")
@@ -80,7 +82,7 @@ func command_line() {
 	gp_trace = flag.Bool("trace", false, "Generate a trace.out file useable by 'go tool trace' command (in standalone mode only)")
 	gp_syntax_check_only = flag.Bool("syntax-check-only", false, "Only validate the syntax of the Script")
 	gp_disable_dns_cache = flag.Bool("disable-dns-cache", false, "Disable the embedded DNS cache which reduces the number of DNS requests")
-	gp_injectors = flag.String("injectors", "", "Comma-separated list on already started injectors (ex: inject1:12345,inject2,inject3:1234)")
+	gp_injectors = flag.String("injectors", "", "Comma-separated list on already started injectors (ex: inject1:12345,inject2,inject3:1234) - in Manager|Batch mode only")
 
 	flag.Parse()
 
@@ -104,13 +106,13 @@ func command_line() {
 	// Do some command line consistency tests
 	if gp_mode == standaloneMode {
 		if *gp_scriptfile == "" {
-			log.Fatal("When started in standalone mode, needs a 'script' file")
+			log.Fatal("When started in standalone mode, needs a script filename (option --script)")
 		}
 		checkNofileLimit()
 	} else if gp_mode == graphOnlyMode {
 		// Use default parameters for outputdir and results
 		if *gp_scriptfile == "" {
-			log.Fatal("When started in graph-only mode, needs a 'script' filename")
+			log.Fatal("When started in graph-only mode, needs a script filename (option --script)")
 		}
 	} else if gp_mode == daemonMode {
 		// Either listen-addr or connect-to must be specified
@@ -126,6 +128,14 @@ func command_line() {
 			log.Warning("When started as a daemon, the --script option is ignored !")
 		}
 		checkNofileLimit()
+	} else if gp_mode == batchMode {
+		// Injectors and Script name are mandatory
+		if *gp_injectors == "" {
+			log.Fatal("When started in batch mode, needs a list of injectors (option --injectors)")
+		}
+		if *gp_scriptfile == "" {
+			log.Fatal("When started in batch mode, needs a script filename (option --script)")
+		}
 	}
 }
 
@@ -238,6 +248,9 @@ func main() {
 	} else if gp_mode == managerMode {
 		log.Infof("Start manager mode on this address: %s", *gp_manager_addr)
 		manager.Start(gp_manager_addr, gp_repositorydir, gp_injectors)
+	} else if gp_mode == batchMode {
+		log.Debug("Batch mode started")
+		manager.StartBatch(gp_manager_addr, gp_repositorydir, gp_injectors, gp_scriptfile)
 	}
 }
 
