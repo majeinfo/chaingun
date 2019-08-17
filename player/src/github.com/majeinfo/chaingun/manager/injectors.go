@@ -6,6 +6,7 @@ import (
 	"github.com/majeinfo/chaingun/reporter"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 
@@ -15,6 +16,7 @@ import (
 
 var (
 	injectorClients = make(map[string]*websocket.Conn)
+	targetDir       = "/tmp/results"
 )
 
 // Start the Batch mode
@@ -26,6 +28,18 @@ func StartBatch(mgrAddr *string, reposdir *string, prelaunched_injectors *string
 	}
 	repositoryDir = *reposdir
 	nu_injectors := 0
+
+	// Creates the repository directory if needed
+	_, err := os.Stat(targetDir)
+	log.Debugf("Repository Directory is '%s'", targetDir)
+
+	if os.IsNotExist(err) {
+		log.Debugf("Must create the Repository Directory")
+		if err := os.MkdirAll(targetDir, 0755); err != nil {
+			log.Errorf("Could not create the directory to store the results")
+			return err
+		}
+	}
 
 	// Connect to each Injector - stop in case of error or if no Injector found
 	for _, injector := range injectors {
@@ -90,11 +104,38 @@ func runScript(script_file *string) {
 	log.Info("Waiting for the Injectors to complete their job...")
 	wg.Wait()
 	log.Info("Jobs completed")
+	log.Info("Merge the results")
+	err = _mergeResults(targetDir)
+	if err != nil {
+		log.Errorf("Error while merging result files: %s", err)
+	}
 }
 
 func runScriptOnInjector(injector string, conn *websocket.Conn, script_file *string, encoded_data string, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
+	err := sendScript(injector, conn, script_file, encoded_data)
+	if err != nil {
+		return err
+	}
+
+	err = startScript(injector, conn)
+	if err != nil {
+		return err
+	}
+
+	err = getResults(injector, conn)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Store the results
+	// TODO: Merge the results
+
+	return nil
+}
+
+func sendScript(injector string, conn *websocket.Conn, script_file *string, encoded_data string) error {
 	log.Infof("Send script to Injector %s", injector)
 	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"script\", \"moreinfo\": \""+*script_file+"\", \"value\": \""+encoded_data+"\" }"))
 	if err != nil {
@@ -110,13 +151,17 @@ func runScriptOnInjector(injector string, conn *websocket.Conn, script_file *str
 	log.Debugf("Injector %s answers: %s", injector, message)
 	log.Infof("Injector %s answers: %s", injector, decodeInjectorStatus(injector, message))
 
+	return nil
+}
+
+func startScript(injector string, conn *websocket.Conn) error {
 	log.Infof("Start script on Injector %s", injector)
-	err = conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"start\" }"))
+	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"start\" }"))
 	if err != nil {
 		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
 		return err
 	}
-	_, message, err = conn.ReadMessage()
+	_, message, err := conn.ReadMessage()
 	if err != nil {
 		log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
 		return err
@@ -153,14 +198,18 @@ func runScriptOnInjector(injector string, conn *websocket.Conn, script_file *str
 		}
 	}
 
+	return nil
+}
+
+func getResults(injector string, conn *websocket.Conn) error {
 	// Get the results from the Injector
 	log.Infof("Get results from Injector %s", injector)
-	err = conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"get_results\" }"))
+	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"get_results\" }"))
 	if err != nil {
 		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
 		return err
 	}
-	_, message, err = conn.ReadMessage()
+	_, message, err := conn.ReadMessage()
 	if err != nil {
 		log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
 		return err
@@ -182,8 +231,24 @@ func runScriptOnInjector(injector string, conn *websocket.Conn, script_file *str
 	}
 	log.Debugf("Injector %s answers: %s", injector, results)
 
-	// TODO: Store the results
-	// TODO: Merge the results
+	return _storeResults(injector, results.Msg)
+}
+
+func _storeResults(injector string, results string) error {
+	// Write the results
+	fname := targetDir + "/" + injector + fname_suffix
+	log.Debugf("Write results in file %s", fname)
+	file, err := os.Create(fname)
+	defer file.Close()
+	if err != nil {
+		log.Errorf("Could not create file %s: %s", fname, err)
+		return err
+	}
+
+	if _, err := file.Write([]byte(results)); err != nil {
+		log.Errorf("Could not write into file %s: %s", fname, err)
+		return err
+	}
 
 	return nil
 }

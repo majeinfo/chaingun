@@ -226,6 +226,71 @@ func mergeResults(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func _mergeResults(repo_dir string) error {
+	log.Debugf("_mergeResults called")
+
+	// Creates the merged file
+	merged_name := "merged.csv"
+	fname := repo_dir + "/" + merged_name
+
+	log.Debugf("Creates merged file '%s'", fname)
+	mergedFile, err := os.Create(fname)
+	//defer mergedFile.Close() // No, because the BuildGraphs function will use it before the end of the function !
+	if err != nil {
+		mergedFile.Close()
+		return err
+	}
+
+	// Loop on repo_dir content
+	files, err := ioutil.ReadDir(repo_dir)
+	if err != nil {
+		mergedFile.Close()
+		return err
+	}
+
+	first_file := true
+	for _, file := range files {
+		log.Debugf("Found file %s", file.Name())
+		//if file.Name() == "merged.csv" || file.Name() == "." || file.Name() == ".." {
+		if strings.LastIndex(file.Name(), fname_suffix) == -1 {
+			continue
+		}
+		first_line := true
+
+		log.Debugf("Open file '%s'", repo_dir+"/"+file.Name())
+		file, err := os.Open(repo_dir + "/" + file.Name())
+		if err != nil {
+			mergedFile.Close()
+			return err
+		}
+		//defer file.Close()	// No: too late
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			if first_line && !first_file {
+				first_line = false
+				continue
+			}
+
+			if _, err := mergedFile.WriteString(scanner.Text() + "\n"); err != nil {
+				file.Close()
+				mergedFile.Close()
+				return err
+			}
+		}
+		first_file = false
+		file.Close()
+
+		if err := scanner.Err(); err != nil {
+			mergedFile.Close()
+			return err
+		}
+	}
+	mergedFile.Close()
+
+	return nil
+}
+
 func rebuildGraphs(w http.ResponseWriter, r *http.Request) {
 	log.Debugf("rebuildGraphs called, urlpath=%s", r.URL.Path)
 
