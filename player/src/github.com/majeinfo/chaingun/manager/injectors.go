@@ -4,11 +4,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/majeinfo/chaingun/reporter"
+	"github.com/majeinfo/chaingun/viewer"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
@@ -26,7 +28,7 @@ func StartBatch(mgrAddr *string, reposdir *string, prelaunched_injectors *string
 	} else {
 		injectors = make([]string, 0)
 	}
-	repositoryDir = *reposdir
+	targetDir = *reposdir
 	nu_injectors := 0
 
 	// Creates the repository directory if needed
@@ -107,7 +109,18 @@ func runScript(script_file *string) {
 	log.Info("Merge the results")
 	err = _mergeResults(targetDir)
 	if err != nil {
-		log.Errorf("Error while merging result files: %s", err)
+		log.Fatalf("Error while merging result files: %s", err)
+	}
+
+	// Create metadata files
+	scriptnames := []string{*script_file}
+	if err := reporter.WriteMetadata(time.Now(), time.Now(), targetDir, scriptnames); err != nil {
+		log.Fatalf("Error while writing metedata file: %s", err.Error())
+	}
+
+	// Build graphs
+	if err := viewer.BuildGraphs(targetDir+"/merged.csv", *script_file, targetDir); err != nil {
+		log.Fatalf("BuildGraphs failed: %s", err)
 	}
 }
 
@@ -128,9 +141,6 @@ func runScriptOnInjector(injector string, conn *websocket.Conn, script_file *str
 	if err != nil {
 		return err
 	}
-
-	// TODO: Store the results
-	// TODO: Merge the results
 
 	return nil
 }

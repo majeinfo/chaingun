@@ -146,79 +146,22 @@ func mergeResults(w http.ResponseWriter, r *http.Request) {
 
 	// Creates the merged file
 	repo_dir := repositoryDir + "/results/" + parts[1] // <repository>
+	if err := _mergeResults(repo_dir); err != nil {
+		sendJSONErrorResponse(w, "Error", err.Error())
+		return
+	}
+
 	merged_name := "merged.csv"
 	fname := repo_dir + "/" + merged_name
 
-	log.Debugf("Creates merged file '%s'", fname)
-	mergedFile, err := os.Create(fname)
-	//defer mergedFile.Close() // No, because the BuildGraphs function will use it before the end of the function !
-	if err != nil {
-		sendJSONErrorResponse(w, "Error", err.Error())
-		mergedFile.Close()
-		return
-	}
-
-	// Loop on repo_dir content
-	files, err := ioutil.ReadDir(repo_dir)
-	if err != nil {
-		sendJSONErrorResponse(w, "Error", err.Error())
-		mergedFile.Close()
-		return
-	}
-
-	first_file := true
-	for _, file := range files {
-		log.Debugf("Found file %s", file.Name())
-		//if file.Name() == "merged.csv" || file.Name() == "." || file.Name() == ".." {
-		if strings.LastIndex(file.Name(), fname_suffix) == -1 {
-			continue
-		}
-		first_line := true
-
-		log.Debugf("Open file '%s'", repo_dir+"/"+file.Name())
-		file, err := os.Open(repo_dir + "/" + file.Name())
-		if err != nil {
-			sendJSONErrorResponse(w, "Error", err.Error())
-			mergedFile.Close()
-			return
-		}
-		//defer file.Close()	// No: too late
-
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			if first_line && !first_file {
-				first_line = false
-				continue
-			}
-
-			if _, err := mergedFile.WriteString(scanner.Text() + "\n"); err != nil {
-				sendJSONErrorResponse(w, "Error", err.Error())
-				file.Close()
-				mergedFile.Close()
-				return
-			}
-		}
-		first_file = false
-		file.Close()
-
-		if err := scanner.Err(); err != nil {
-			sendJSONErrorResponse(w, "Error", err.Error())
-			mergedFile.Close()
-			return
-		}
-	}
-	mergedFile.Close()
-
 	// Create metadata files
 	scriptnames := []string{scriptName}
-	err = reporter.WriteMetadata(time.Now(), time.Now(), repo_dir, scriptnames)
-	if err != nil {
+	if err := reporter.WriteMetadata(time.Now(), time.Now(), repo_dir, scriptnames); err != nil {
 		log.Error(err.Error())
 	}
 
 	// Build graphs...
-	err = viewer.BuildGraphs(fname, parts[1], repo_dir)
-	if err != nil {
+	if err := viewer.BuildGraphs(fname, parts[1], repo_dir); err != nil {
 		log.Errorf("BuildGraphs failed: %s", err)
 		sendJSONErrorResponse(w, "Error", err.Error())
 	} else {
