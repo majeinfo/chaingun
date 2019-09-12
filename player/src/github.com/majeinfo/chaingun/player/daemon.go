@@ -21,6 +21,7 @@ import (
 // Different states of remote daemon
 const (
 	IDLE manager.DaemonStatus = 0 + iota
+	WAITING_FOR_DATA
 	READY_TO_RUN
 	RUNNING
 	STOPPING_NOW
@@ -198,6 +199,7 @@ func handleDataFeed(c *Client, cmd *manager.PlayerCommand) {
 	str_data := string(data[:])
 	log.Debug(str_data)
 	feeder.CsvInline(gp_playbook.DataFeeder, str_data)
+	gp_daemon_status = READY_TO_RUN
 }
 
 func handleDataFile(c *Client, cmd *manager.PlayerCommand) {
@@ -282,6 +284,7 @@ func sendStatus(c *Client, level string, msg string) {
 
 // Send a request to get data file content
 func sendGetDataFile(c *Client, filename string) {
+	log.Debugf("sendGetDataFile: %s", filename)
 	var resp = &manager.PlayerStatus{
 		Type:   "getdata",
 		Status: statusString[gp_daemon_status],
@@ -291,6 +294,7 @@ func sendGetDataFile(c *Client, filename string) {
 	j, _ := json.Marshal(resp)
 	//c.send <- j
 	sendToManager(c, j)
+	log.Debug("exit sendGetDataFile")
 }
 
 // Send data but take care on writing on closed channel !

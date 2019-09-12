@@ -189,7 +189,9 @@ func main() {
 		}
 
 		if gp_playbook.DataFeeder.Type == "csv" {
-			feeder.Csv(gp_playbook.DataFeeder, path.Dir(*gp_scriptfile))
+			if !feeder.Csv(gp_playbook.DataFeeder, path.Dir(*gp_scriptfile)) {
+				return
+			}
 		} else if gp_playbook.DataFeeder.Type != "" {
 			log.Fatalf("Unsupported feeder type: %s", gp_playbook.DataFeeder.Type)
 		}

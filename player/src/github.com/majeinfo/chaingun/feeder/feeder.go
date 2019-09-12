@@ -34,7 +34,11 @@ func NextFromFeeder() {
 		}
 		lock.Unlock()
 	} else {
-		log.Fatal("NextFromFeeder called but no data to feed with")
+		log.Error("NextFromFeeder called but no data to feed with")
+		dummy := map[string]string{ // avoid a daemon crash
+			"": "",
+		}
+		FeedChannel <- dummy
 	}
 }
 
@@ -49,7 +53,7 @@ func Csv(feeder config.Feeder, dirname string) bool {
 	log.Debugf("Read CSV File %s", filename)
 	file, err := os.Open(filename)
 	if err != nil {
-		log.Fatalf("Cannot open CSV file: %s", err)
+		log.Errorf("Cannot open CSV file: %s", err)
 		return false
 	}
 

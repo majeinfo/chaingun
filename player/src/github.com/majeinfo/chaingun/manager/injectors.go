@@ -132,6 +132,10 @@ func runScriptOnInjector(injector string, conn *websocket.Conn, script_file *str
 		return err
 	}
 
+	// TODO: should send the feeder data !
+	// TODO: should send the template data file !
+	// TODO: file names are computed from script file locate or they can be given using S3 URL ?
+
 	err = startScript(injector, conn)
 	if err != nil {
 		return err
