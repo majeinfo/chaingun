@@ -26,6 +26,7 @@ func NewWSAction(a map[interface{}]interface{}, dflt config.Default) (WSAction, 
     valid := true
     if a["url"] == "" || a["url"] == nil {
         log.Error("WSAction must define a URL.")
+        a["url"] = ""
         valid = false
     } else {
         valid = setDefaultURL(a, dflt)
@@ -33,6 +34,7 @@ func NewWSAction(a map[interface{}]interface{}, dflt config.Default) (WSAction, 
 
     if a["title"] == nil || a["title"] == "" {
         log.Error("WSAction must define a title.")
+        a["title"] = ""
         valid = false
     }
 
@@ -44,7 +46,8 @@ func NewWSAction(a map[interface{}]interface{}, dflt config.Default) (WSAction, 
     responseHandlers, validResp := NewResponseHandlers(a)
 
     if !valid || !validResp {
-        log.Fatalf("Your YAML Playbook contains an invalid WSAction, see errors listed above.")
+        log.Errorf("Your YAML Playbook contains an invalid WSAction, see errors listed above.")
+        valid = false
     }
 
     WSAction := WSAction{
