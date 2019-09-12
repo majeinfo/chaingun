@@ -68,21 +68,21 @@ var (
 
 // Analyze the command line
 func command_line() {
-	mode := flag.String("mode", "standalone", "standalone(default)|daemon|manager|batch|graph-only")
-	gp_listen_addr = flag.String("listen-addr", "127.0.0.1:12345", "Address and port to listen to in daemon")
-	gp_manager_addr = flag.String("manager-listen-addr", "127.0.0.1:8000", "Address and port to listen to - for the Manager Web Interface")
-	gp_repositorydir = flag.String("repository-dir", ".", "directory where to store results - in Manager|Batch mode only")
+	mode := flag.String("mode", "standalone", "standalone|daemon|manager|batch|graph-only")
+	gp_listen_addr = flag.String("listen-addr", "127.0.0.1:12345", "Address and port to listen to (in daemon mode)")
+	gp_manager_addr = flag.String("manager-listen-addr", "127.0.0.1:8000", "Address and port to listen to (for the web interface in manager mode)")
+	gp_repositorydir = flag.String("repository-dir", ".", "directory where to store results (in manager|batch mode)")
 	gp_connect_to = flag.String("connect-to", "", "Address and port to connect to - in daemon mode (not supported yet)")
 	verbose := flag.Bool("verbose", false, "Set verbose mode")
 	gp_scriptfile = flag.String("script", "", "Set the Script")
-	gp_outputdir = flag.String("output-dir", "", "Set the output directory")
-	gp_outputtype = flag.String("output-type", "csv", "Set the output type in file (csv/default, json)")
+	gp_outputdir = flag.String("output-dir", "", "Set the output directory (standalone|graph-only mode)")
+	gp_outputtype = flag.String("output-type", "csv", "Set the output type in file (csv|json)")
 	gp_no_log = flag.Bool("no-log", false, "Disable the 'log' actions from the Script")
 	gp_display_srv_resp = flag.Bool("display-response", false, "Used with verbose mode to display the Server Responses")
-	gp_trace = flag.Bool("trace", false, "Generate a trace.out file useable by 'go tool trace' command (in standalone mode only)")
+	gp_trace = flag.Bool("trace", false, "Generate a trace.out file useable by 'go tool trace' command (in standalone mode)")
 	gp_syntax_check_only = flag.Bool("syntax-check-only", false, "Only validate the syntax of the Script")
 	gp_disable_dns_cache = flag.Bool("disable-dns-cache", false, "Disable the embedded DNS cache which reduces the number of DNS requests")
-	gp_injectors = flag.String("injectors", "", "Comma-separated list on already started injectors (ex: inject1:12345,inject2,inject3:1234) - in Manager|Batch mode only")
+	gp_injectors = flag.String("injectors", "", "Comma-separated list on already started injectors (ex: inject1:12345,inject2,inject3:1234) (manager|batch mode)")
 
 	flag.Parse()
 
