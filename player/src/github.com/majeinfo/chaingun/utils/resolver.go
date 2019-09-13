@@ -15,6 +15,9 @@ var (
 )
 
 func GetServerAddress(serverName string) (string, bool) {
+	// Discard the port if given
+	serverName = strings.Split(serverName, ":")[0]
+
 	// Check if address is already in cache, otherwise try to fill the cache
 	cacheLock.Lock()
 	defer cacheLock.Unlock()
