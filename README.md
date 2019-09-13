@@ -93,6 +93,7 @@ b) run a Player in daemon mode :
 	--verbose is optional
 	--no-log disables the 'log actions' (see below for the actions)
 	--disable-dns-cache can be used to disable the internal DNS cache that reduces the number of DNS Requests
+	--trace-requests displays all the HTTP/S requests and their return code
 
 c) run the Manager (when Players are started as Daemons) :
 
@@ -109,6 +110,21 @@ c) run the Manager (when Players are started as Daemons) :
 		for batch mode.
 
 	Then open your browser and manage your Players !
+
+d) run in Batch mode (need remote injectors) :
+
+	$ cd player/bin
+	$ ./player --mode batch --injectors server1:port1,server2:port2,.... --script /path/to/script.yml
+
+	The local player tries to connect to the remote injectors. Then it sends them the script and the related
+	files (feed data, template files) and makes the injectors run in parallel. All the filenames (script and related files)
+	must be given with relative names.
+
+	--verbose is optional
+	--injectors injector1:port1,injector2:port2,... gives the list of already started injectors. In that case,
+		the Web Interface will try to automatically add these injectors and connect to them. This is handy
+		for batch mode.
+	--repository-dir gives the location of results (default ".")
 
 ### Run from container image
 
@@ -137,7 +153,14 @@ c) run the Manager (when Players are started as Daemons) :
 
 Then connect with a Web Browser to the specified port on localhost by default.
 
-The verbose mode can be specified using the VERBOSE environment variable :
+d) run in batch mode :
+
+	$ docker container run -it -d -v /path/to/scripts:/scripts \
+				      -v /path/to/output/dir:/output \
+				      -v /path/to/data_and_graphs:/data \
+				      majetraining/chaingun batch /path/to/script.yml injector_list
+
+In all cases, the verbose mode can be specified using the VERBOSE environment variable :
 
 	-e VERBOSE=1
 

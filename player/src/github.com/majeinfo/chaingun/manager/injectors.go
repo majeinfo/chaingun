@@ -186,7 +186,7 @@ func runScriptOnInjector(injector string, conn *websocket.Conn, script_file *str
 }
 
 func sendScript(injector string, conn *websocket.Conn, script_file *string, encoded_data string) error {
-	log.Infof("Send script to Injector %s", injector)
+	log.Infof("Send script %s to Injector %s", *script_file, injector)
 	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"script\", \"moreinfo\": \""+*script_file+"\", \"value\": \""+encoded_data+"\" }"))
 	if err != nil {
 		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
@@ -226,7 +226,7 @@ func sendFeederFile(injector string, conn *websocket.Conn, fname string) error {
 */
 
 func sendDataFile(injector string, conn *websocket.Conn, fname string, encoded_data string) error {
-	log.Infof("Send data file to Injector %s", injector)
+	log.Infof("Send data file %s to Injector %s", fname, injector)
 	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"datafile\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data+"\" }"))
 	if err != nil {
 		log.Fatalf("Error when writing to Injector %s: %s", injector, err)

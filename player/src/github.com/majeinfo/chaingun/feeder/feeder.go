@@ -16,9 +16,10 @@ var index = 0
 var lock sync.Mutex
 
 // "public" synchronized channel for delivering feeder data
-var FeedChannel chan map[string]string
+// must be initialized in case of reference to a Feeder but with a wrong data file
+var FeedChannel chan map[string]string = make(chan map[string]string)
 
-//
+// Return the next data line from feeder
 func NextFromFeeder() {
 
 	if data != nil && len(data) > 0 {

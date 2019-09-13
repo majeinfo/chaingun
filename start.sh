@@ -35,11 +35,25 @@ manager)
 	bin/player --mode manager --manager-listen-addr ${LISTEN_ADDR} ${VERBOSE_MODE} $*
 ;;
 
+batch)
+	if [ "$2" = "" ]; then
+		echo "The YML Playbook is missing"
+		exit 1
+	fi
+	if [ "$3" = "" ]; then
+		echo "Injectors are mmissing"
+		exit 1
+	fi
+	cd player
+	bin/player --mode batch --script "$2" --injectors "$3"
+;;
+
 *)
 	echo "Usage:"
 	echo "$0 daemon [<IP>:<Port>] (default is 0.0.0.0:12345)"
 	echo "$0 standalone <path_to_playbook.yml> (normally something like: /scripts/myscript.yml)"
 	echo "$0 manager [<IP>:<Port>] (default is 0.0.0.0:8000)"
+	echo "$0 batch <path_to_playbook.yml> <injector_list>"
 	exit 1
 esac
 

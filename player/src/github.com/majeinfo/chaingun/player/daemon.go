@@ -176,6 +176,15 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 		gp_valid_playbook = true
 		gp_daemon_status = READY_TO_RUN
 		sendStatusOKMsg(c, "Script received")
+		log.Infof("Script received %s", cmd.MoreInfo)
+
+		if gp_playbook.DataFeeder.Type == "csv" {
+			if !feeder.Csv(gp_playbook.DataFeeder, path.Dir(".")) {
+				sendStatusError(c, fmt.Sprintf("Could not load feeder data"))
+			}
+		} else if gp_playbook.DataFeeder.Type != "" {
+			sendStatusError(c, fmt.Sprintf("Unsupported feeder type: %s", gp_playbook.DataFeeder.Type))
+		}
 
 		/*
 			// Ask for feeder data if needed
@@ -198,8 +207,6 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 }
 
 func handleDataFeed(c *Client, cmd *manager.PlayerCommand) {
-	sendStatusOKMsg(c, "Data received")
-
 	data, err := base64.StdEncoding.DecodeString(cmd.Value)
 	if err != nil {
 		gp_daemon_status = IDLE
@@ -211,11 +218,11 @@ func handleDataFeed(c *Client, cmd *manager.PlayerCommand) {
 	log.Debug(str_data)
 	feeder.CsvInline(gp_playbook.DataFeeder, str_data)
 	gp_daemon_status = READY_TO_RUN
+
+	sendStatusOKMsg(c, "Data received")
 }
 
 func handleDataFile(c *Client, cmd *manager.PlayerCommand) {
-	sendStatusOKMsg(c, "File received")
-
 	data, err := base64.StdEncoding.DecodeString(cmd.Value)
 	if err != nil {
 		gp_daemon_status = IDLE
@@ -246,6 +253,7 @@ func handleDataFile(c *Client, cmd *manager.PlayerCommand) {
 	}
 
 	sendStatusOKMsg(c, "File received")
+	log.Infof("Received file %s", cmd.MoreInfo)
 }
 
 func getResultsCommand(c *Client, cmd *manager.PlayerCommand) {
