@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	_ "net"
 	"net/http"
+	"os"
+	"path"
 	"runtime"
 	_ "sync"
 	"time"
@@ -151,8 +153,8 @@ func stopCommand(c *Client) {
 
 func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 	// Check no run in progress
-	if gp_daemon_status != IDLE && gp_daemon_status != READY_TO_RUN {
-		sendStatusError(c, "Script ignored because daemon is not idle")
+	if gp_daemon_status != IDLE && gp_daemon_status != READY_TO_RUN && gp_daemon_status != WAITING_FOR_FEEDER_DATA {
+		sendStatusError(c, "Script ignored because daemon is not idle or ready to run or wating for data")
 		return
 	}
 	log.Debugf("Original filename is %s", cmd.MoreInfo)
@@ -172,24 +174,26 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 		sendStatusError(c, "Error while processing the Script data")
 	} else {
 		gp_valid_playbook = true
-		//gp_daemon_status = READY_TO_RUN
-		//sendStatusOKMsg(c, "Script received")
+		gp_daemon_status = READY_TO_RUN
+		sendStatusOKMsg(c, "Script received")
 
-		// Ask for feeder data if needed
-		if gp_playbook.DataFeeder.Type == "csv" {
-			gp_daemon_status = WAITING_FOR_FEEDER_DATA
-			sendStatusOKMsg(c, "Script received")
-			//feeder.Csv(gp_playbook.DataFeeder, path.Dir(*gp_scriptfile))
-			log.Debugf("Ask for datafile %s", gp_playbook.DataFeeder.Filename)
-			sendStatusOKMsg(c, fmt.Sprintf("Waiting for Data Feed: %s", gp_playbook.DataFeeder.Filename))
-			sendGetDataFile(c, gp_playbook.DataFeeder.Filename)
-		} else if gp_playbook.DataFeeder.Type != "" {
-			gp_daemon_status = IDLE
-			sendStatusError(c, fmt.Sprintf("Unsupported feeder type: %s", gp_playbook.DataFeeder.Type))
-		} else {
-			gp_daemon_status = READY_TO_RUN
-			sendStatusOKMsg(c, "Script received")
-		}
+		/*
+			// Ask for feeder data if needed
+			if gp_playbook.DataFeeder.Type == "csv" {
+				gp_daemon_status = WAITING_FOR_FEEDER_DATA
+				sendStatusOKMsg(c, "Script received")
+				//feeder.Csv(gp_playbook.DataFeeder, path.Dir(*gp_scriptfile))
+				log.Debugf("Ask for datafile %s", gp_playbook.DataFeeder.Filename)
+				sendStatusOKMsg(c, fmt.Sprintf("Waiting for Data Feed: %s", gp_playbook.DataFeeder.Filename))
+				sendGetDataFile(c, gp_playbook.DataFeeder.Filename)
+			} else if gp_playbook.DataFeeder.Type != "" {
+				gp_daemon_status = IDLE
+				sendStatusError(c, fmt.Sprintf("Unsupported feeder type: %s", gp_playbook.DataFeeder.Type))
+			} else {
+				gp_daemon_status = READY_TO_RUN
+				sendStatusOKMsg(c, "Script received")
+			}
+		*/
 	}
 }
 
@@ -219,13 +223,29 @@ func handleDataFile(c *Client, cmd *manager.PlayerCommand) {
 		return
 	}
 
-	// Save the file locally
+	// Save the file locally - compute the location and creates directories
+	//outputdir := path.Dir(path.Dir(*gp_scriptfile) + "/" + cmd.MoreInfo)
+	outputdir := path.Dir("./" + cmd.MoreInfo)
+	stat, err := os.Stat(outputdir)
+	if os.IsNotExist(err) {
+		log.Debugf("Must create the Output Directory %s", outputdir)
+		if err := os.MkdirAll(outputdir, 0755); err != nil {
+			sendStatusError(c, fmt.Sprintf("Cannot create Output Directory %s: %s", outputdir, err.Error()))
+			return
+		}
+	} else if stat.Mode().IsRegular() {
+		sendStatusError(c, fmt.Sprintf("Output Directory %s already exists as a file !", outputdir))
+		return
+	}
+
 	err = ioutil.WriteFile(cmd.MoreInfo, data, 0644)
 	if err != nil {
 		gp_daemon_status = IDLE
-		sendStatusError(c, "Error while writing file "+cmd.MoreInfo)
+		sendStatusError(c, fmt.Sprintf("Error while writing file %s", cmd.MoreInfo))
 		return
 	}
+
+	sendStatusOKMsg(c, "File received")
 }
 
 func getResultsCommand(c *Client, cmd *manager.PlayerCommand) {

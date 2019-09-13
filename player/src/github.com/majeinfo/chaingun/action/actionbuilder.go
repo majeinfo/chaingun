@@ -127,7 +127,6 @@ func getTemplate(action map[interface{}]interface{}) (string, bool) {
 		var templateFile = action["template"].(string)
 		log.Debugf("getTemplate: %s", templateFile)
 
-		// TODO: should check if template file has been found - how to do in distributed mode ?
 		if templateFile[0] != '/' {
 			templateData, err := ioutil.ReadFile(gpScriptDir + "/" + templateFile)
 			if err != nil {

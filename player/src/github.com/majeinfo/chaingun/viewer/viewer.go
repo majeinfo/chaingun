@@ -30,7 +30,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	// Creates the outputdir if needed
 	stat, err := os.Stat(outputdir)
 	if os.IsNotExist(err) {
-		log.Debugf("Must create the Output Directory")
+		log.Debugf("Must create the Output Directory %s", outputdir)
 		if err := os.MkdirAll(outputdir, 0755); err != nil {
 			return fmt.Errorf("Cannot create Output Directory %s: %s", outputdir, err.Error())
 		}

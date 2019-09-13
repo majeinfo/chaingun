@@ -73,6 +73,7 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPActi
 		nu++
 	}
 	if a["template"] != nil {
+		addEmbeddedFilename(a["template"].(string))
 		nu++
 	}
 	if a["formdata"] != nil {

@@ -37,6 +37,9 @@ func StartBatch(mgrAddr *string, reposdir *string, prelaunched_injectors *string
 		log.Fatalf("Error while processing the Script File")
 	}
 
+	// Get the list of embedded files
+	log.Info("Embedded files: %v", action.GetEmbeddedFilenames())
+
 	// Build the Injector list
 	if len(*prelaunched_injectors) > 0 {
 		injectors = strings.Split(*prelaunched_injectors, ",")
@@ -101,8 +104,20 @@ func StartBatch(mgrAddr *string, reposdir *string, prelaunched_injectors *string
 }
 
 func runScript(script_file *string) {
-	// Read the file and convert it in Base64
-	// Read the scenario from file
+	// Read all the data files
+	var encoded_files = make(map[string]string, len(action.GetEmbeddedFilenames()))
+	for _, fname := range action.GetEmbeddedFilenames() {
+		data, err := ioutil.ReadFile(fname) // TODO: compute the filename (canonicalize at playbook analysis time)
+		if err != nil {
+			log.Fatalf("Cannot read the date file %s: %s", fname, err)
+		}
+		encoded_files[fname] = base64.StdEncoding.EncodeToString(data)
+		if err != nil {
+			log.Fatalf("Cannot encode the data file %s: %s", fname, err)
+		}
+	}
+
+	// Read the scenario file and convert it in Base64
 	data, err := ioutil.ReadFile(*script_file)
 	if err != nil {
 		log.Fatalf("Cannot read the script file %s: %s", *script_file, err)
@@ -116,7 +131,7 @@ func runScript(script_file *string) {
 	wg := sync.WaitGroup{}
 	for injector, conn := range injectorClients {
 		wg.Add(1)
-		go runScriptOnInjector(injector, conn, script_file, encoded_data, &wg)
+		go runScriptOnInjector(injector, conn, script_file, encoded_data, encoded_files, &wg)
 	}
 	log.Info("Waiting for the Injectors to complete their job...")
 	wg.Wait()
@@ -139,23 +154,29 @@ func runScript(script_file *string) {
 	}
 }
 
-func runScriptOnInjector(injector string, conn *websocket.Conn, script_file *string, encoded_data string, wg *sync.WaitGroup) error {
+func runScriptOnInjector(injector string, conn *websocket.Conn, script_file *string, encoded_data string, encoded_files map[string]string, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
+	// TODO: file names are computed from script file locate or they can be given using S3 URL ?
+
+	// Send the data and feeder files
+	for _, fname := range action.GetEmbeddedFilenames() {
+		sendDataFile(injector, conn, fname, encoded_files[fname])
+	}
+
+	// Send the script
 	err := sendScript(injector, conn, script_file, encoded_data)
 	if err != nil {
 		return err
 	}
 
-	// TODO: should send the feeder data !
-	// TODO: should send the template data file !
-	// TODO: file names are computed from script file locate or they can be given using S3 URL ?
-
+	// Start the script
 	err = startScript(injector, conn)
 	if err != nil {
 		return err
 	}
 
+	// Get the results
 	err = getResults(injector, conn)
 	if err != nil {
 		return err
@@ -167,6 +188,46 @@ func runScriptOnInjector(injector string, conn *websocket.Conn, script_file *str
 func sendScript(injector string, conn *websocket.Conn, script_file *string, encoded_data string) error {
 	log.Infof("Send script to Injector %s", injector)
 	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"script\", \"moreinfo\": \""+*script_file+"\", \"value\": \""+encoded_data+"\" }"))
+	if err != nil {
+		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+		return err
+	}
+	_, message, err := conn.ReadMessage()
+	if err != nil {
+		log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+		return err
+	}
+	//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+	log.Debugf("Injector %s answers: %s", injector, message)
+	log.Infof("Injector %s answers: %s", injector, decodeInjectorStatus(injector, message))
+
+	return nil
+}
+
+/*
+func sendFeederFile(injector string, conn *websocket.Conn, fname string) error {
+	log.Infof("Send feeder file to Injector %s", injector)
+	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"datafeed\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data+"\" }"))
+	if err != nil {
+		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+		return err
+	}
+	_, message, err := conn.ReadMessage()
+	if err != nil {
+		log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+		return err
+	}
+	//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+	log.Debugf("Injector %s answers: %s", injector, message)
+	log.Infof("Injector %s answers: %s", injector, decodeInjectorStatus(injector, message))
+
+	return nil
+}
+*/
+
+func sendDataFile(injector string, conn *websocket.Conn, fname string, encoded_data string) error {
+	log.Infof("Send data file to Injector %s", injector)
+	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"datafile\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data+"\" }"))
 	if err != nil {
 		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
 		return err

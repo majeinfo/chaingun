@@ -24,6 +24,7 @@ var (
 	must_display_srv_resp bool
 	must_trace_request    bool
 	disable_dns_cache     bool
+	embedded_files        []string // list of filenames embedded in the current playbook
 )
 
 func SetContext(displaySrvResp bool, mustTraceReq bool) {
