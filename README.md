@@ -79,6 +79,7 @@ a) run a Player in standalone mode :
         --display-response displays the full response sent by the remote stressed server
 	--syntax-check-only is used to only check the syntax of the script
 	--disable-dns-cache can be used to disable the internal DNS cache that reduces the number of DNS Requests
+	--trace-requests displays all the HTTP/S requests and their return code
 
 b) run a Player in daemon mode :
 

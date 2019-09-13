@@ -27,15 +27,24 @@ var (
 
 // DoHTTPRequest accepts a Httpaction and a one-way channel to write the results to.
 func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+	var trace_req string
 	req, err := buildHTTPRequest(httpAction, sessionMap, vulog)
 	if err != nil {
 		vulog.Error(err)
 		return false
 	}
 	if req.Method != "POST" {
-		vulog.Debugf("New Request: Method: %s, URL: %s", req.Method, req.URL)
+		if must_trace_request {
+			trace_req = fmt.Sprintf("%s: %s", req.Method, req.URL)
+		} else {
+			vulog.Debugf("New Request: Method: %s, URL: %s", req.Method, req.URL)
+		}
 	} else {
-		vulog.Debugf("New Request: Method: %s, URL: %s, Body: %v", req.Method, req.URL, req.Body)
+		if must_trace_request {
+			trace_req = fmt.Sprintf("%s: %s: %s", req.Method, req.URL, req.Body)
+		} else {
+			vulog.Debugf("New Request: Method: %s, URL: %s, Body: %s", req.Method, req.URL, req.Body)
+		}
 	}
 
 	// Try to substitute the server name by an IP address
@@ -59,6 +68,9 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	vulog.Debugf("%v", resp)
 
 	if err != nil {
+		if must_trace_request {
+			vulog.Infof("%s: FAILED (%s)", trace_req, err)
+		}
 		vulog.Errorf("HTTP request failed: %s", err)
 		sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, httpAction.Title, err.Error())
 		if resp != nil {
@@ -75,12 +87,18 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
+		if must_trace_request {
+			vulog.Infof("%s: FAILED (%s)", trace_req, err)
+		}
 		vulog.Printf("Reading HTTP response failed: %s", err)
 		sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], 0, resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title, req.URL.String())
 		resultsChannel <- sampleReqResult
 		return false
 	}
 
+	if must_trace_request {
+		vulog.Infof("%s: %d", trace_req, resp.StatusCode)
+	}
 	if must_display_srv_resp {
 		vulog.Debugf("[HTTP Response=%d] Received data: %s", resp.StatusCode, responseBody)
 	}

@@ -22,11 +22,13 @@ type FullAction struct {
 
 var (
 	must_display_srv_resp bool
+	must_trace_request    bool
 	disable_dns_cache     bool
 )
 
-func SetContext(displaySrvResp bool) {
+func SetContext(displaySrvResp bool, mustTraceReq bool) {
 	must_display_srv_resp = displaySrvResp
+	must_trace_request = mustTraceReq
 }
 
 func DisableDNSCache(discache bool) {
