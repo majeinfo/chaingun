@@ -3,6 +3,8 @@ package manager
 import (
 	"encoding/base64"
 	"encoding/json"
+	"github.com/majeinfo/chaingun/action"
+	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
 	"github.com/majeinfo/chaingun/viewer"
 	"io/ioutil"
@@ -23,6 +25,19 @@ var (
 
 // Start the Batch mode
 func StartBatch(mgrAddr *string, reposdir *string, prelaunched_injectors *string, script_file *string) error {
+	// Build the action from playbook
+	var playbook config.TestDef
+	var actions []action.FullAction
+
+	data, err := ioutil.ReadFile(*script_file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if !action.CreatePlaybook(script_file, []byte(data), &playbook, &actions) {
+		log.Fatalf("Error while processing the Script File")
+	}
+
+	// Build the Injector list
 	if len(*prelaunched_injectors) > 0 {
 		injectors = strings.Split(*prelaunched_injectors, ",")
 	} else {
@@ -32,7 +47,7 @@ func StartBatch(mgrAddr *string, reposdir *string, prelaunched_injectors *string
 	nu_injectors := 0
 
 	// Creates the repository directory if needed
-	_, err := os.Stat(targetDir)
+	_, err = os.Stat(targetDir)
 	log.Debugf("Repository Directory is '%s'", targetDir)
 
 	if os.IsNotExist(err) {

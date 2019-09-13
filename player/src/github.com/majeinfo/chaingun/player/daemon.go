@@ -12,6 +12,7 @@ import (
 	"time"
 
 	_ "github.com/gorilla/websocket"
+	"github.com/majeinfo/chaingun/action"
 	"github.com/majeinfo/chaingun/feeder"
 	"github.com/majeinfo/chaingun/manager"
 	"github.com/majeinfo/chaingun/reporter"
@@ -21,7 +22,7 @@ import (
 // Different states of remote daemon
 const (
 	IDLE manager.DaemonStatus = 0 + iota
-	WAITING_FOR_DATA
+	WAITING_FOR_FEEDER_DATA
 	READY_TO_RUN
 	RUNNING
 	STOPPING_NOW
@@ -166,22 +167,28 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 		sendStatusError(c, "Error while decoding string from Base64")
 		return
 	}
-	if !createPlaybook(data, &gp_playbook, &gp_actions) {
+	if !action.CreatePlaybook(gp_scriptfile, data, &gp_playbook, &gp_actions) {
 		gp_daemon_status = IDLE
 		sendStatusError(c, "Error while processing the Script data")
 	} else {
 		gp_valid_playbook = true
-		gp_daemon_status = READY_TO_RUN
-		sendStatusOKMsg(c, "Script received")
+		//gp_daemon_status = READY_TO_RUN
+		//sendStatusOKMsg(c, "Script received")
 
 		// Ask for feeder data if needed
 		if gp_playbook.DataFeeder.Type == "csv" {
+			gp_daemon_status = WAITING_FOR_FEEDER_DATA
+			sendStatusOKMsg(c, "Script received")
 			//feeder.Csv(gp_playbook.DataFeeder, path.Dir(*gp_scriptfile))
 			log.Debugf("Ask for datafile %s", gp_playbook.DataFeeder.Filename)
 			sendStatusOKMsg(c, fmt.Sprintf("Waiting for Data Feed: %s", gp_playbook.DataFeeder.Filename))
 			sendGetDataFile(c, gp_playbook.DataFeeder.Filename)
 		} else if gp_playbook.DataFeeder.Type != "" {
+			gp_daemon_status = IDLE
 			sendStatusError(c, fmt.Sprintf("Unsupported feeder type: %s", gp_playbook.DataFeeder.Type))
+		} else {
+			gp_daemon_status = READY_TO_RUN
+			sendStatusOKMsg(c, "Script received")
 		}
 	}
 }

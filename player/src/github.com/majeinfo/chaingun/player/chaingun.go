@@ -21,7 +21,6 @@ import (
 	"github.com/majeinfo/chaingun/reporter"
 	"github.com/majeinfo/chaingun/utils"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -182,7 +181,8 @@ func main() {
 			log.Fatal(err)
 		}
 
-		if !createPlaybook([]byte(data), &gp_playbook, &gp_actions) {
+		//if !createPlaybook(gp_scriptfile, []byte(data), &gp_playbook, &gp_actions) {
+		if !action.CreatePlaybook(gp_scriptfile, []byte(data), &gp_playbook, &gp_actions) {
 			log.Fatalf("Error while processing the Script File")
 		}
 		if *gp_syntax_check_only {
@@ -256,30 +256,6 @@ func main() {
 		log.Debug("Batch mode started")
 		manager.StartBatch(gp_manager_addr, gp_repositorydir, gp_injectors, gp_scriptfile)
 	}
-}
-
-// Create a Playbook from the YAML data
-func createPlaybook(data []byte, playbook *config.TestDef, actions *[]action.FullAction) bool {
-	err := yaml.UnmarshalStrict([]byte(data), playbook)
-	if err != nil {
-		log.Fatalf("YAML error: %v", err)
-	}
-	log.Debug("Playbook:")
-	log.Debug(playbook)
-
-	if !config.ValidateTestDefinition(playbook) {
-		return false
-	}
-
-	var isValid bool
-	*actions, isValid = action.BuildActionList(playbook, path.Dir(*gp_scriptfile))
-	if !isValid {
-		return false
-	}
-	log.Debug("Tests Definition:")
-	log.Debug(playbook)
-
-	return true
 }
 
 // Launch VUs
