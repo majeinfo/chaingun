@@ -34,6 +34,7 @@ var (
 	gp_daemon_status manager.DaemonStatus = IDLE
 	statusString                          = []string{
 		"Idle waiting for a Script",
+		"Waiting for feeder data",
 		"Ready to run Script",
 		"Running",
 		"Stopping",
