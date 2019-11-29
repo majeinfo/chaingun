@@ -104,8 +104,9 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPActi
 	formdatas, validData := NewFormDatas(a)
 	responseHandlers, validResp := NewResponseHandlers(a)
 	template, validTempl := getTemplate(a)
+	body, validBody := getBody(a)
 
-	if !valid || !validResp || !validData || !validTempl {
+	if !valid || !validResp || !validData || !validTempl || !validBody {
 		log.Errorf("Your YAML Playbook contains an invalid HTTPAction, see errors listed above.")
 		valid = false
 	}
@@ -113,7 +114,7 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPActi
 	httpAction := HTTPAction{
 		Method:           a["method"].(string),
 		URL:              a["url"].(string),
-		Body:             getBody(a),
+		Body:             body,
 		Template:         template,
 		FormDatas:        formdatas,
 		Headers:          headers,

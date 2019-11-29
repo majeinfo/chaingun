@@ -44,15 +44,16 @@ func NewWSAction(a map[interface{}]interface{}, dflt config.Default) (WSAction, 
     }
 
     responseHandlers, validResp := NewResponseHandlers(a)
+    body, validBody := getBody(a)
 
-    if !valid || !validResp {
+    if !valid || !validResp || !validBody {
         log.Errorf("Your YAML Playbook contains an invalid WSAction, see errors listed above.")
         valid = false
     }
 
     WSAction := WSAction{
         a["url"].(string),
-        getBody(a),
+        body,
         a["title"].(string),
         storeCookie,
         responseHandlers,

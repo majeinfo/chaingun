@@ -113,13 +113,23 @@ func setDefaultURL(a map[interface{}]interface{}, dflt config.Default) bool {
 	return valid
 }
 
-func getBody(action map[interface{}]interface{}) string {
+func getBody(action map[interface{}]interface{}) (string, bool) {
 	//var body string = ""
 	if action["body"] != nil {
-		return action["body"].(string)
+		// Fix bug: if the user wants to send JSON, he may forget to enclose the body between quotes
+		// 				body: {k:v}
+		// and the confuses the YAML analyzer...
+		// So we check the type of the "body" value
+		switch v := action["body"].(type) {
+		case string:
+		default:
+			log.Errorf("body value is not of type string: %v", v)
+			return "", false
+		}
+		return action["body"].(string), true
 	}
 
-	return ""
+	return "", true
 }
 
 func getTemplate(action map[interface{}]interface{}) (string, bool) {
@@ -144,7 +154,6 @@ func getTemplate(action map[interface{}]interface{}) (string, bool) {
 		}
 		log.Debugf("templateData: %s", string(templateData))
 		return string(templateData), true
-
 	}
 
 	log.Debugf("no template data")
