@@ -35,13 +35,13 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	}
 	if req.Method != "POST" {
 		if must_trace_request {
-			trace_req = fmt.Sprintf("%s: %s", req.Method, req.URL)
+			trace_req = fmt.Sprintf("%s %s", req.Method, req.URL)
 		} else {
 			vulog.Debugf("New Request: Method: %s, URL: %s", req.Method, req.URL)
 		}
 	} else {
 		if must_trace_request {
-			trace_req = fmt.Sprintf("%s: %s: %s", req.Method, req.URL, req.Body)
+			trace_req = fmt.Sprintf("%s %s; BODY(%s)", req.Method, req.URL, req.Body)
 		} else {
 			vulog.Debugf("New Request: Method: %s, URL: %s, Body: %s", req.Method, req.URL, req.Body)
 		}
@@ -97,7 +97,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	}
 
 	if must_trace_request {
-		vulog.Infof("%s: %d", trace_req, resp.StatusCode)
+		vulog.Infof("%s; RetCode=%d; RcvdBytes=%d", trace_req, resp.StatusCode, len(responseBody))
 	}
 	if must_display_srv_resp {
 		vulog.Debugf("[HTTP Response=%d] Received data: %s", resp.StatusCode, responseBody)
