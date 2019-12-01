@@ -32,7 +32,7 @@ manager)
 	fi
 	#LISTEN_ADDR=${1:-0.0.0.0:8000}
 	cd player
-	bin/player --mode manager --manager-listen-addr ${LISTEN_ADDR} ${VERBOSE_MODE} -v /data $*
+	bin/player --mode manager --manager-listen-addr ${LISTEN_ADDR} ${VERBOSE_MODE} $*
 ;;
 
 batch)
