@@ -30,7 +30,7 @@ RUN sed -i '/^#.* fr_FR.UTF-8.* /s/^#//' /etc/locale.gen && locale-gen
 
 RUN mkdir /scripts /output /data /appli && \
 	cd /appli && \
-	git clone -b embed_manager https://github.com/majeinfo/chaingun.git && \
+	git clone -b master https://github.com/majeinfo/chaingun.git && \
 	rm -rf Dockerfile start.sh player/src
 
 WORKDIR /appli/chaingun
