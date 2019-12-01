@@ -3,7 +3,7 @@ FROM debian:buster as builder
 RUN apt-get clean && apt-get update -y
 RUN apt-get install -y git golang
 
-RUN mkdir /appli && cd /appli && git clone -b embed_manager https://github.com/majeinfo/chaingun.git
+RUN mkdir /appli && cd /appli && git clone -b master https://github.com/majeinfo/chaingun.git
 WORKDIR /appli/chaingun
 
 RUN export GOPATH=/appli/chaingun/player && \
