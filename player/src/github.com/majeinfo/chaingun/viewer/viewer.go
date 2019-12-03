@@ -289,7 +289,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		"HTTP return codes per second",
 		"Elapsed Time (seconds)",
 		"#err",
-		series)
+		series) // err_series ! et changer le titre pour éviter les espaces et les accents
 
 	// Output the HTTP Code array
 	// First sort the HTTP codes (keys of the colUniqStatus map)
@@ -343,10 +343,14 @@ func graph(w *os.File, totalTime int, name, title, xtitle, ytitle string, series
 		fmt.Fprintf(w, "%d, ", idx)
 	}
 	fmt.Fprintf(w, "], title: { text: '%s' }, },\n", title)
-	fmt.Fprintf(w, "yAxis: { title: { text: '%s' }, },\n", ytitle)
+	fmt.Fprintf(w, "yAxis: [{ title: { text: '%s' }, }, { title: { text: '#VU' }, opposite: true }],\n", ytitle)
 	fmt.Fprintf(w, "series: [\n")
 	for k, v := range series {
-		fmt.Fprintf(w, "{ name: '%s', data: [", k)
+		if k == "#VU" {
+			fmt.Fprintf(w, "{ name: '%s', yAxis: 1, data: [", k)
+		} else {
+			fmt.Fprintf(w, "{ name: '%s', data: [", k)
+		}
 		for idx := 0; idx < len(v); idx++ {
 			fmt.Fprintf(w, "%d, ", v[idx])
 		}
