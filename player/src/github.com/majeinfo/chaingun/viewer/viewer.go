@@ -279,9 +279,9 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		"time(ms)",
 		series)
 
-	err_series := make(map[int][]int)
+	err_series := make(map[string][]int)
 	for errCode, _ := range errorsPerSeconds {
-		err_series[errCode] = errorsPerSeconds[errCode]
+		err_series[strconv.Itoa(errCode)] = errorsPerSeconds[errCode]
 	}
 	graph(output,
 		total_elapsed_time,
@@ -289,7 +289,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		"HTTP return codes per second",
 		"Elapsed Time (seconds)",
 		"#err",
-		series) // err_series ! et changer le titre pour éviter les espaces et les accents
+		err_series)
 
 	// Output the HTTP Code array
 	// First sort the HTTP codes (keys of the colUniqStatus map)
@@ -343,7 +343,11 @@ func graph(w *os.File, totalTime int, name, title, xtitle, ytitle string, series
 		fmt.Fprintf(w, "%d, ", idx)
 	}
 	fmt.Fprintf(w, "], title: { text: '%s' }, },\n", title)
-	fmt.Fprintf(w, "yAxis: [{ title: { text: '%s' }, }, { title: { text: '#VU' }, opposite: true }],\n", ytitle)
+	if _, ok := series["#VU"]; ok {
+		fmt.Fprintf(w, "yAxis: [{ title: { text: '%s' }, }, { title: { text: '#VU' }, opposite: true }],\n", ytitle)
+	} else {
+		fmt.Fprintf(w, "yAxis: { title: { text: '%s' }, },\n", ytitle)
+	}
 	fmt.Fprintf(w, "series: [\n")
 	for k, v := range series {
 		if k == "#VU" {
