@@ -31,7 +31,8 @@ RUN sed -i '/^#.* fr_FR.UTF-8.* /s/^#//' /etc/locale.gen && locale-gen
 RUN mkdir /scripts /output /data /appli && \
 	cd /appli && \
 	git clone -b master https://github.com/majeinfo/chaingun.git && \
-	rm -rf Dockerfile start.sh player/src
+	cd chaingun && \
+	rm -rf .git .gitignore Dockerfile start.sh samples tests player/src
 
 WORKDIR /appli/chaingun
 
