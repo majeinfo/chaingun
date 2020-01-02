@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 PLAYER=../player/bin/player
-#VERBOSE=--verbose
+VERBOSE=--verbose
 
 function Arg_Error {
 	if "$PLAYER" $1 2>&1 | grep "$2" >/dev/null 2>&1; then
@@ -43,7 +43,7 @@ function Req_OK {
 	fi
 }
 # Test player arguments
-Arg_Error "--output-dir /tmp/chaingun/output/" "When not started as a daemon, needs a 'script' file"
+Arg_Error "--output-dir /tmp/chaingun/output/" "When started in standalone mode, needs a script filename (option --script)"
 Arg_Error "--output-dir /tmp/chaingun/output/ --script dummy" "no such file or directory"
 
 # Test script syntax
