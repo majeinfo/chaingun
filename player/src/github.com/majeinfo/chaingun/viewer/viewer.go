@@ -249,7 +249,9 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	// vus = make([]int, len(internalVus))
 	vus = make([]int, total_elapsed_time)
 	for k, v := range internalVus {
-		vus[k-1] = v
+		if len(vus) > k-1 {
+			vus[k-1] = v
+		}
 	}
 
 	graph(output,
