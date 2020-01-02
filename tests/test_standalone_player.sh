@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 PLAYER=../player/bin/player
 #VERBOSE=--verbose
