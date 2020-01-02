@@ -21,7 +21,7 @@ actions:
       method: POST
       url: http://localhost:8000/page4.php
       template: tpl/template1.tpl
-      response:
-        regex: "is: (.*)<br>"
-        index: first
-        variable: address
+      responses:
+        - regex: "is: (.*)<br>"
+          index: first
+          variable: address

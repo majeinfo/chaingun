@@ -25,10 +25,10 @@ actions:
       method: POST
       url: http://localhost:8000/page4.php
       body: name=${name}&age=${age}
-      response:
-        regex: "is: (.*)<br>"
-        index: first
-        variable: address
+      responses:
+        - regex: "is: (.*)<br>"
+          index: first
+          variable: address
   - http:
       title: Page 5
       method: GET
@@ -38,10 +38,10 @@ actions:
       method: POST
       url: http://localhost:8000/page4.php
       body: name=${name}&age=${age}
-      response:
-        regex: "is: (.*), (.*)<br>"
-        index: first
-        variable: address
+      responses:
+        - regex: "is: (.*), (.*)<br>"
+          index: first
+          variable: address
   - http:
       title: Page 5bis
       method: GET
