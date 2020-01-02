@@ -1,13 +1,15 @@
 #!/bin/sh
 #
 PLAYER=../player/bin/player
-VERBOSE=--verbose
+#VERBOSE=--verbose
+ERRORS=0
 
 function Arg_Error {
 	if "$PLAYER" $1 2>&1 | grep "$2" >/dev/null 2>&1; then
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
+		ERRORS=[$ERRORS + 1]
 	fi
 }
 
@@ -16,6 +18,7 @@ function Syn_Error {
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
+		ERRORS=[$ERRORS + 1]
 	fi
 }
 
@@ -24,6 +27,7 @@ function Syn_OK {
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
+		ERRORS=[$ERRORS + 1]
 	fi
 }
 
@@ -32,6 +36,7 @@ function Req_Error {
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
+		ERRORS=[$ERRORS + 1]
 	fi
 }
 
@@ -40,6 +45,7 @@ function Req_OK {
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
+		ERRORS=[$ERRORS + 1]
 	fi
 }
 # Test player arguments
@@ -90,4 +96,7 @@ Req_OK requests/2VU-extract-from-header.yml
 Req_Error requests/1VU-http-timeout.yml 'HTTP request failed: net/http: timeout awaiting response headers'
 # TODO: test timeout with ws
 
+if [ $ERRORS -gt 0 ]; then
+	exit 1
+fi
 # EOF
