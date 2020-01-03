@@ -4,7 +4,7 @@ PLAYER=../player/bin/player
 #VERBOSE=--verbose
 ERRORS=0
 
-function Arg_Error {
+Arg_Error() {
 	if $PLAYER $1 2>&1 | tee $$.out | grep "$2" >/dev/null 2>&1; then
 		echo '[OK]' $1
 	else
@@ -14,7 +14,7 @@ function Arg_Error {
 	fi
 }
 
-function Syn_Error {
+Syn_Error() {
 	if $PLAYER --output-dir output/ $VERBOSE --script "$1" 2>&1 | tee $$.out | grep "$2" >/dev/null 2>&1; then
 		echo '[OK]' $1
 	else
@@ -24,7 +24,7 @@ function Syn_Error {
 	fi
 }
 
-function Syn_OK {
+Syn_OK() {
 	if $PLAYER --output-dir output/ $VERBOSE --script "$1" >$$.out 2>&1; then
 		echo '[OK]' $1
 	else
@@ -34,7 +34,7 @@ function Syn_OK {
 	fi
 }
 
-function Req_Error {
+Req_Error() {
 	if $PLAYER --output-dir output/ $VERBOSE --script "$1" 2>&1 | tee $$.out | grep "$2" >/dev/null 2>&1; then
 		echo '[OK]' $1
 	else
@@ -44,7 +44,7 @@ function Req_Error {
 	fi
 }
 
-function Req_OK {
+Req_OK() {
 	if $PLAYER --output-dir output/ $VERBOSE --script "$1" >$$.out 2>&1; then
 		echo '[OK]' $1
 	else
@@ -53,6 +53,7 @@ function Req_OK {
 		cat $$.out
 	fi
 }
+
 # Test player arguments
 Arg_Error "--output-dir /tmp/chaingun/output/" "When started in standalone mode, needs a script filename (option --script)"
 Arg_Error "--output-dir /tmp/chaingun/output/ --script dummy" "no such file or directory"
