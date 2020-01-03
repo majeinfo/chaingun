@@ -5,56 +5,56 @@ PLAYER=../player/bin/player
 ERRORS=0
 
 function Arg_Error {
-	if "$PLAYER" $1 2>&1 | tee $$.out | grep "$2" >/dev/null 2>&1; then
+	if $PLAYER $1 2>&1 | tee $$.out | grep "$2" >/dev/null 2>&1; then
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
-		ERRORS=$[$ERRORS + 1]
+		ERRORS=`expr $ERRORS + 1`
 		cat $$.out
 	fi
 }
 
 function Syn_Error {
-	if "$PLAYER" --output-dir output/ $VERBOSE --script "$1" 2>&1 | tee $$.out | grep "$2" >/dev/null 2>&1; then
+	if $PLAYER --output-dir output/ $VERBOSE --script "$1" 2>&1 | tee $$.out | grep "$2" >/dev/null 2>&1; then
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
-		ERRORS=$[$ERRORS + 1]
+		ERRORS=`expr $ERRORS + 1`
 		cat $$.out
 	fi
 }
 
 function Syn_OK {
-	if "$PLAYER" --output-dir output/ $VERBOSE --script "$1" >$$.out 2>&1; then
+	if $PLAYER --output-dir output/ $VERBOSE --script "$1" >$$.out 2>&1; then
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
-		ERRORS=$[$ERRORS + 1]
+		ERRORS=`expr $ERRORS + 1`
 		cat $$.out
 	fi
 }
 
 function Req_Error {
-	if "$PLAYER" --output-dir output/ $VERBOSE --script "$1" 2>&1 | tee $$.out | grep "$2" >/dev/null 2>&1; then
+	if $PLAYER --output-dir output/ $VERBOSE --script "$1" 2>&1 | tee $$.out | grep "$2" >/dev/null 2>&1; then
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
-		ERRORS=$[$ERRORS + 1]
+		ERRORS=`expr $ERRORS + 1`
 		cat $$.out
 	fi
 }
 
 function Req_OK {
-	if "$PLAYER" --output-dir output/ $VERBOSE --script "$1" >$$.out 2>&1; then
+	if $PLAYER --output-dir output/ $VERBOSE --script "$1" >$$.out 2>&1; then
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
-		ERRORS=$[$ERRORS + 1]
+		ERRORS=`expr $ERRORS + 1`
 		cat $$.out
 	fi
 }
 # Test player arguments
-Arg_Error "--output-dir /tmp/chaingun/output/" "when started in standalone mode, needs a script filename (option --script)"
+Arg_Error "--output-dir /tmp/chaingun/output/" "When started in standalone mode, needs a script filename (option --script)"
 Arg_Error "--output-dir /tmp/chaingun/output/ --script dummy" "no such file or directory"
 
 # Test script syntax
