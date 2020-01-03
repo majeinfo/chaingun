@@ -1,0 +1,36 @@
+stages:
+  - deploy
+  - test
+
+build:
+  stage: deploy
+  image: golang
+  before_script:
+    - pwd
+    - echo $CI_PROJECT_NAME
+    - echo $CI_PROJECT_DIR
+    - echo $GOPATH
+    - ls -a $CI_PROJECT_DIR
+    - export GOPATH=`pwd`/player
+  script:
+    - go get ./... || true
+    - go get ./player/src/github.com/rakyll/statik
+    - cd player/src
+    - ../bin/statik -f -src=../../manager/go_web
+    - go install github.com/majeinfo/chaingun/player
+    - cd ..
+    - bin/player -h || [ $? -eq 2 ]
+  artifacts:
+    paths:
+      - player/bin/player
+    
+test1:
+  stage: test
+  image: docker
+  services:
+    - docker:dind
+  script:
+    - cd tests
+    - /bin/sh run_web_server.sh
+    - /bin/sh test_standalone_player.sh
+    - docker container rm -f $(docker container ps -qa)
