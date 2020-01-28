@@ -27,6 +27,7 @@ type TestDef struct {
 	DfltValues     Default                  `yaml:"default"`
 	Variables      map[string]string        `yaml:"variables"`
 	DataFeeder     Feeder                   `yaml:"feeder"`
+	PreActions     []map[string]interface{} `yaml:"pre_actions"`
 	Actions        []map[string]interface{} `yaml:"actions"`
 }
 

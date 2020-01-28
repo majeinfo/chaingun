@@ -73,15 +73,23 @@ The supported parameter_name(s) are:
 | `method`   | HTTP method to use | GET or POST |
 
 
-# Actions
+# Actions and Pre-Actions
 
-Actions are defined as a list under the `actions` key :
+Actions and Pre-Actions are defined as a list under the `actions` and `pre_actions` key :
 
 ```
+pre_actions:
+  - action1 ...
+  - action2 ...
+
 actions:
- - action1 ...
- - action2 ...
+  - action1 ...
+  - action2 ...
 ```
+
+Pre-Actions are played only once before starting the VUs.
+Actions are played by the VUs.
+
 
 Here is the list and the description of the implemented Actions :
 
@@ -93,7 +101,7 @@ Here is the list and the description of the implemented Actions :
 | `method` | GET, PUT, POST, HEAD, DELETE. If absent use the value given by the `method` key in the default section |
 | `url` | mandatory. If the string does not contain a server specification, use the value given by the `server` key in the default section |
 | `storeCookie` | if set, indicates which cookies must be stored in the VU session. The predefined value __all__ implies the capture of all possible cookies |
-| `body` | value of HTTP body if POST method is used (one of `body` or `template` is mandatory) |
+| `body` | value of HTTP body (works for any HTTP method) (one of `body` or `template` is mandatory) |
 | `template` | a filename which contents will be interpolated and will be used as the request body (one of `body` or `template` is mandatory) |
 | `upload_file` | when used with the POST or PUT methods, indicates a file which contents will be sent to the server as-is |
 | `headers` | additional HTTP headers to transmit. Each header has the form `header_name: value`. In case of a POST method, the body is sent with the HTTP Header `content-type: application/x-www-form-urlencoded` | |

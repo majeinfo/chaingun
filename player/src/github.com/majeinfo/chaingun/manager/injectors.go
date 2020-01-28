@@ -27,13 +27,14 @@ var (
 func StartBatch(mgrAddr *string, reposdir *string, prelaunched_injectors *string, script_file *string) error {
 	// Build the action from playbook
 	var playbook config.TestDef
+	var pre_actions []action.FullAction
 	var actions []action.FullAction
 
 	data, err := ioutil.ReadFile(*script_file)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if !action.CreatePlaybook(script_file, []byte(data), &playbook, &actions) {
+	if !action.CreatePlaybook(script_file, []byte(data), &playbook, &pre_actions, &actions) {
 		log.Fatalf("Error while processing the Script File")
 	}
 

@@ -14,12 +14,24 @@ var (
 )
 
 // BuildActionList builds all the Actions !
-func BuildActionList(playbook *config.TestDef, scriptDir string) ([]FullAction, bool) {
+func BuildActionList(playbook *config.TestDef, scriptDir string) ([]FullAction, []FullAction, bool) {
 	gpScriptDir = scriptDir
-	valid := true
+	var pre_actions []FullAction
+	var actions []FullAction
+	valid_pre_actions := true
+	valid_actions := true
 
-	actions := make([]FullAction, len(playbook.Actions), len(playbook.Actions))
-	for _, element := range playbook.Actions {
+	pre_actions, valid_pre_actions = _buildActionList(playbook, playbook.PreActions)
+	actions, valid_actions = _buildActionList(playbook, playbook.Actions)
+
+	return pre_actions, actions, valid_pre_actions && valid_actions
+}
+
+func _buildActionList(playbook *config.TestDef, playbook_actions []map[string]interface{}) ([]FullAction, bool) {
+	valid := true
+	actions := make([]FullAction, len(playbook_actions), len(playbook_actions))
+
+	for _, element := range playbook_actions {
 		log.Debugf("element=%v", element)
 		var action Action
 		var fullAction FullAction
@@ -35,7 +47,13 @@ func BuildActionList(playbook *config.TestDef, scriptDir string) ([]FullAction, 
 					valid = false
 				}
 			} else {
-				actionMap := value.(map[interface{}]interface{})
+				var actionMap map[interface{}]interface{}
+				var ok bool
+				if actionMap, ok = value.(map[interface{}]interface{}); !ok {
+					log.Errorf("Either %s is not allowed here, either its value is not a subdocument", key)
+					valid = false
+					continue
+				}
 				switch key {
 				case "sleep":
 					action, valid = NewSleepAction(actionMap)

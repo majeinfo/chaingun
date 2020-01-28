@@ -170,7 +170,7 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 		sendStatusError(c, "Error while decoding string from Base64")
 		return
 	}
-	if !action.CreatePlaybook(gp_scriptfile, data, &gp_playbook, &gp_actions) {
+	if !action.CreatePlaybook(gp_scriptfile, data, &gp_playbook, &gp_pre_actions, &gp_actions) {
 		gp_daemon_status = IDLE
 		sendStatusError(c, "Error while processing the Script data")
 	} else {

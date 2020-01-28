@@ -9,7 +9,7 @@ import (
 )
 
 // Create a Playbook from the YAML data
-func CreatePlaybook(scriptFile *string, data []byte, playbook *config.TestDef, actions *[]FullAction) bool {
+func CreatePlaybook(scriptFile *string, data []byte, playbook *config.TestDef, pre_actions *[]FullAction, actions *[]FullAction) bool {
 	err := yaml.UnmarshalStrict([]byte(data), playbook)
 	if err != nil {
 		log.Fatalf("YAML error: %v", err)
@@ -28,7 +28,7 @@ func CreatePlaybook(scriptFile *string, data []byte, playbook *config.TestDef, a
 	}
 
 	var isValid bool
-	*actions, isValid = BuildActionList(playbook, path.Dir(*scriptFile))
+	*pre_actions, *actions, isValid = BuildActionList(playbook, path.Dir(*scriptFile))
 	if !isValid {
 		return false
 	}
