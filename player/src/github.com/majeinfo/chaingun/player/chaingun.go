@@ -62,8 +62,11 @@ var (
 	gp_disable_dns_cache *bool
 	gp_trace_requests    *bool
 
-	gp_playbook config.TestDef
-	gp_actions  []action.FullAction
+	gp_playbook    config.TestDef
+	gp_pre_actions []action.FullAction
+	gp_actions     []action.FullAction
+
+	GitCommit string = "1.1.1"
 )
 
 // Analyze the command line
@@ -74,6 +77,7 @@ func command_line() {
 	gp_repositorydir = flag.String("repository-dir", ".", "directory where to store results (in manager|batch mode)")
 	gp_connect_to = flag.String("connect-to", "", "Address and port to connect to - in daemon mode (not supported yet)")
 	verbose := flag.Bool("verbose", false, "Set verbose mode")
+	version := flag.Bool("version", false, "Displays the Version")
 	gp_scriptfile = flag.String("script", "", "Set the Script")
 	gp_outputdir = flag.String("output-dir", "", "Set the output directory (standalone|graph-only mode)")
 	gp_outputtype = flag.String("output-type", "csv", "Set the output type in file (csv|json)")
@@ -86,6 +90,11 @@ func command_line() {
 	gp_injectors = flag.String("injectors", "", "Comma-separated list on already started injectors (ex: inject1:12345,inject2,inject3:1234) (manager|batch mode)")
 
 	flag.Parse()
+
+	if *version {
+		log.Infof("Version: %s", GitCommit)
+		os.Exit(0)
+	}
 
 	log_level := log.InfoLevel
 	if *verbose {
@@ -182,7 +191,7 @@ func main() {
 		}
 
 		//if !createPlaybook(gp_scriptfile, []byte(data), &gp_playbook, &gp_actions) {
-		if !action.CreatePlaybook(gp_scriptfile, []byte(data), &gp_playbook, &gp_actions) {
+		if !action.CreatePlaybook(gp_scriptfile, []byte(data), &gp_playbook, &gp_pre_actions, &gp_actions) {
 			log.Fatalf("Error while processing the Script File")
 		}
 		if *gp_syntax_check_only {
@@ -206,6 +215,7 @@ func main() {
 		}
 		reporter.OpenResultsFile(outputfile)
 
+		playPreActions(&gp_playbook, &gp_pre_actions)
 		spawnUsers(&gp_playbook, &gp_actions)
 
 		log.Infof("Done in %v", time.Since(reporter.SimulationStart))
@@ -258,8 +268,77 @@ func main() {
 	}
 }
 
+// Launch Pre-Actions
+func playPreActions(playbook *config.TestDef, actions *[]action.FullAction) {
+	log.Debug("playPreActions")
+	var sessionMap = make(map[string]string)
+	resultsChannel := make(chan reporter.SampleReqResult, 100)
+
+	i := 0
+	UID := "preActions"
+	vulog := log.WithFields(log.Fields{"vuid": UID, "iter": i, "action": ""})
+
+	// Make sure the sessionMap is cleared before each iteration - except for the UID which stays
+	cleanSessionMapAndResetUID(UID, sessionMap, playbook)
+
+	// If we have feeder data, pop an item and push its key-value pairs into the sessionMap
+	feedSession(playbook, sessionMap)
+
+	// Iterate over the actions. Note the use of the command-pattern like Execute method on the Action interface
+iterLoop:
+	for _, action := range *actions {
+		if action.Action != nil {
+			// Check for a "when" expression
+			if action.CompiledWhen != nil {
+				vulog.Debugf("Evaluate 'when' expression: %s", action.When)
+
+				// if evaluation is False, skip the action
+				result, err := utils.Evaluate(sessionMap, vulog, action.CompiledWhen, action.When)
+				skip := false
+				if err == nil {
+					switch result.(type) {
+					case float64:
+						skip = result.(float64) == 0
+					case string:
+						skip = result.(string) == ""
+					case bool:
+						skip = !result.(bool)
+					default:
+						vulog.Errorf("Error when evaluating expression: unknown type %v", result)
+					}
+				}
+				if skip {
+					vulog.Infof("Action skipped due to its 'when' condition")
+					continue
+				}
+			}
+			if !action.Action.Execute(resultsChannel, sessionMap, vulog, playbook) {
+				// An error occurred : continue, stop the vu or stop the test ?
+				switch playbook.OnError {
+				case config.ERR_CONTINUE:
+					vulog.Info("Continue on error")
+					break
+				case config.ERR_STOP_ITERATION:
+					vulog.Info("Stop this iteration")
+					break iterLoop
+				case config.ERR_STOP_TEST:
+					vulog.Info("Stop test on error")
+					gp_daemon_status = STOPPING_NOW
+					break iterLoop
+				case config.ERR_STOP_VU:
+					vulog.Info("Stop VU on error")
+					break iterLoop
+				}
+			}
+		}
+	}
+
+	log.Debug("exit playPreActions")
+}
+
 // Launch VUs
 func spawnUsers(playbook *config.TestDef, actions *[]action.FullAction) {
+	log.Debug("spanwUsers")
 	resultsChannel := make(chan reporter.SampleReqResult, 10000)
 	go reporter.AcceptResults(resultsChannel, &VU_count, &lock_vu_count, &hub.broadcast, gp_mode == daemonMode)
 	VU_start = time.Now()
