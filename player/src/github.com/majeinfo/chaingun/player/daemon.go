@@ -76,6 +76,8 @@ func cmdHandler(c *Client, msg []byte) {
 	switch cmd.Cmd {
 	case "status":
 		sendStatusOKMsg(c, "") //, statusString[gp_daemon_status])
+	case "pre_start":
+		preStartCommand(c)
 	case "start":
 		startCommand(c)
 	case "stop":
@@ -92,6 +94,31 @@ func cmdHandler(c *Client, msg []byte) {
 		sendStatusError(c, fmt.Sprintf("Message not supported: %s", msg))
 	}
 	log.Debug("Message handled")
+}
+
+func preStartCommand(c *Client) {
+	// Check no run in progress
+	if gp_daemon_status != READY_TO_RUN {
+		sendStatusError(c, "PreStart command ignored because daemon is not idle")
+		return
+	}
+
+	// Check if there is a valid playbook
+	if !gp_valid_playbook {
+		sendStatusError(c, "PresStart command ignored because there is no valid playbook")
+		return
+	}
+
+	gp_daemon_status = RUNNING
+	sendStatusOK(c)
+	go _preStartCommand(c)
+}
+
+func _preStartCommand(c *Client) {
+	playPreActions(&gp_playbook, &gp_pre_actions)
+
+	gp_daemon_status = READY_TO_RUN
+	sendStatusOK(c)
 }
 
 func startCommand(c *Client) {

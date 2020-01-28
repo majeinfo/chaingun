@@ -130,9 +130,11 @@ func runScript(script_file *string) {
 	}
 
 	wg := sync.WaitGroup{}
+	first_injector := true
 	for injector, conn := range injectorClients {
 		wg.Add(1)
-		go runScriptOnInjector(injector, conn, script_file, encoded_data, encoded_files, &wg)
+		go runScriptOnInjector(first_injector, injector, conn, script_file, encoded_data, encoded_files, &wg)
+		first_injector = false
 	}
 	log.Info("Waiting for the Injectors to complete their job...")
 	wg.Wait()
@@ -155,7 +157,7 @@ func runScript(script_file *string) {
 	}
 }
 
-func runScriptOnInjector(injector string, conn *websocket.Conn, script_file *string, encoded_data string, encoded_files map[string]string, wg *sync.WaitGroup) error {
+func runScriptOnInjector(first_injector bool, injector string, conn *websocket.Conn, script_file *string, encoded_data string, encoded_files map[string]string, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
 	// TODO: file names are computed from script file locate or they can be given using S3 URL ?
@@ -169,6 +171,14 @@ func runScriptOnInjector(injector string, conn *websocket.Conn, script_file *str
 	err := sendScript(injector, conn, script_file, encoded_data)
 	if err != nil {
 		return err
+	}
+
+	// Start the pre-actions only on first Injector
+	if first_injector {
+		err = preStartScript(injector, conn)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Start the script
@@ -241,6 +251,53 @@ func sendDataFile(injector string, conn *websocket.Conn, fname string, encoded_d
 	//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 	log.Debugf("Injector %s answers: %s", injector, message)
 	log.Infof("Injector %s answers: %s", injector, decodeInjectorStatus(injector, message))
+
+	return nil
+}
+
+func preStartScript(injector string, conn *websocket.Conn) error {
+	log.Infof("Start pre-actions on Injector %s", injector)
+	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"pre_start\" }"))
+	if err != nil {
+		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+		return err
+	}
+	_, message, err := conn.ReadMessage()
+	if err != nil {
+		log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+		return err
+	}
+	//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+	log.Debugf("Injector %s answers: %s", injector, message)
+	log.Infof("Injector %s answers: %s", injector, decodeInjectorStatus(injector, message))
+
+	for {
+		_, message, err := conn.ReadMessage()
+		if err != nil {
+			log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+			return err
+		}
+		log.Debugf("Injector %s sent: %s", injector, message)
+		var stat reporter.StatFrame
+		err = json.Unmarshal(message, &stat)
+		if err != nil {
+			log.Errorf("Message from Injector %s could not be decoded as JSON", injector)
+			return err
+		}
+
+		if stat.Type == "status" {
+			var status PlayerStatus
+			err = json.Unmarshal(message, &status)
+			if err != nil {
+				log.Errorf("Message from Injector %s could not be decoded as JSON", injector)
+				return err
+			}
+			log.Debug("status rcvd")
+			break
+		} else {
+			log.Debug("rt frame rcvd")
+		}
+	}
 
 	return nil
 }
