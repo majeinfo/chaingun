@@ -21,6 +21,8 @@ import (
 var (
 	injectorClients = make(map[string]*websocket.Conn)
 	targetDir       = "/tmp/results"
+	pre_tasks_lock  = sync.Mutex{}
+	pre_tasks_cond  = sync.NewCond(&pre_tasks_lock)
 )
 
 // Start the Batch mode
@@ -39,7 +41,7 @@ func StartBatch(mgrAddr *string, reposdir *string, prelaunched_injectors *string
 	}
 
 	// Get the list of embedded files
-	log.Info("Embedded files: %v", action.GetEmbeddedFilenames())
+	log.Infof("Embedded files: %v", action.GetEmbeddedFilenames())
 
 	// Build the Injector list
 	if len(*prelaunched_injectors) > 0 {
@@ -130,6 +132,7 @@ func runScript(script_file *string) {
 	}
 
 	wg := sync.WaitGroup{}
+	pre_tasks_lock.Lock()
 	first_injector := true
 	for injector, conn := range injectorClients {
 		wg.Add(1)
@@ -173,12 +176,18 @@ func runScriptOnInjector(first_injector bool, injector string, conn *websocket.C
 		return err
 	}
 
+	// sync mechanism so that the other go routines (injectors) do
+	// not start playing the script until the pre-tasks are made
+
 	// Start the pre-actions only on first Injector
 	if first_injector {
 		err = preStartScript(injector, conn)
+		pre_tasks_cond.Broadcast()
 		if err != nil {
 			return err
 		}
+	} else {
+		pre_tasks_cond.Wait()
 	}
 
 	// Start the script
