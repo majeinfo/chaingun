@@ -270,7 +270,7 @@ func main() {
 
 // Launch Pre-Actions
 func playPreActions(playbook *config.TestDef, actions *[]action.FullAction) {
-	log.Debug("playPreActions")
+	log.Info("Play pre-actions")
 	var sessionMap = make(map[string]string)
 	resultsChannel := make(chan reporter.SampleReqResult, 100)
 
@@ -338,7 +338,7 @@ iterLoop:
 
 // Launch VUs
 func spawnUsers(playbook *config.TestDef, actions *[]action.FullAction) {
-	log.Debug("spanwUsers")
+	log.Info("Launch VUs to play the actions")
 	resultsChannel := make(chan reporter.SampleReqResult, 10000)
 	go reporter.AcceptResults(resultsChannel, &VU_count, &lock_vu_count, &hub.broadcast, gp_mode == daemonMode)
 	VU_start = time.Now()
@@ -360,7 +360,7 @@ func spawnUsers(playbook *config.TestDef, actions *[]action.FullAction) {
 			break
 		}
 	}
-	log.Info("All users started, waiting at WaitGroup")
+	log.Info("All VUs started, waiting at WaitGroup")
 	wg.Wait()
 	reporter.StopResults()
 }
