@@ -417,6 +417,12 @@ feeder:			# Only one Feeder can be defined
   filename: data1.csv	# MAND - the first line gives the column names and so the variable names
   separator: ","	# MAND
 
+pre_actions:		# some kind of inits just played once before the actions
+  - http:
+      title: init
+      method: DELETE
+      url: http://server/index
+
 actions:
   # A simple GET
   - http:
