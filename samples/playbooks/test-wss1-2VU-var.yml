@@ -1,0 +1,20 @@
+---
+iterations: 2
+users: 2
+rampup: 4
+timeout: 3
+feeder:
+  type: csv
+  filename: data1.csv
+  separator: ","
+
+variables:
+  uri: echo
+
+actions:
+  - ws:
+      title: Page 1
+      url: wss://echo.websocket.org/${uri}
+      body: ${nom}+${age}
+      responses:
+        - regex: ".+\\+.+"
