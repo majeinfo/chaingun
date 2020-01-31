@@ -91,15 +91,28 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPActi
 
 	headers := make(map[string]string, 20)
 	if a["headers"] != nil {
-		for hdr, value := range a["headers"].(map[interface{}]interface{}) {
-			log.Debugf("Header Key=%s / Value=%s", hdr.(string), value.(string))
-			headers[strings.ToLower(hdr.(string))] = value.(string)
+		// Check the type : otherwise crashes if headers content is a list instead of a map...
+		switch v := a["headers"].(type) {
+		case map[interface{}]interface{}:
+			//for hdr, value := range a["headers"].(map[interface{}]interface{}) {
+			for hdr, value := range v {
+				log.Debugf("Header Key=%s / Value=%s", hdr.(string), value.(string))
+				headers[strings.ToLower(hdr.(string))] = value.(string)
+			}
+		default:
+			log.Fatalf("headers format is invalid: it should be a map (you probably set it as a list ?)")
 		}
 	}
+
+	// Set the Accept header if not set in Playbook
 	if _, ok := headers["accept"]; !ok {
 		headers["accept"] = "text/html,application/json,application/xhtml+xml,application/xml,text/plain"
 	}
-	headers["user-agent"] = "chaingun-by-JD"
+	// Set the User-Agent header if not set in Playbook
+	// TODO: the User-Agent header value could be injector specific ?
+	if _, ok := headers["user-agent"]; !ok {
+		headers["user-agent"] = "chaingun-by-JD"
+	}
 
 	formdatas, validData := NewFormDatas(a)
 	responseHandlers, validResp := NewResponseHandlers(a)
@@ -149,7 +162,7 @@ func NewFormDatas(a map[interface{}]interface{}) ([]FormData, bool) {
 				formDatas[idx] = newFormData
 			}
 		default:
-			log.Error("formdata format is invalid")
+			log.Error("formdata format is invalid: should be a list of maps")
 			valid = false
 		}
 	}

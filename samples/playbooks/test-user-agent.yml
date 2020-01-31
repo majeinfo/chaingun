@@ -1,0 +1,21 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+default:
+  server: www.delamarche.com:80
+  protocol: http
+  method: GET
+actions:
+  - http:
+      title: Page 1
+      url: /chaingun/user-agent.php
+      responses:
+        - regex: chaingun-by-JD
+  - http:
+      title: Page 2
+      url: chaingun/user-agent.php
+      headers:
+        user-agent: CHAINGUN
+      responses:
+        - regex: CHAINGUN
