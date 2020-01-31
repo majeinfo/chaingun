@@ -153,7 +153,6 @@ func buildHTTPRequest(httpAction HTTPAction, sessionMap map[string]string, vulog
 
 		for _, formdata := range httpAction.FormDatas {
 			if formdata.Type != "file" {
-				// TODO: should apply variable interpolation
 				_ = writer.WriteField(formdata.Name, SubstParams(sessionMap, formdata.Value, vulog))
 			} else {
 				part, err := writer.CreateFormFile(formdata.Name, filepath.Base(formdata.Value))
