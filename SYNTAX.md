@@ -339,6 +339,11 @@ Examples:
   expression: "strlen(var3) > 0"
 ```
 
+## Session variables and Cookies
+
+The session variables and the Cookies are deleted at the end of each script loop (if there are many) played by a VU.
+
+
 ## The `when` clause to trigger Actions
 
 Each Action can be triggered by a `when` clause which defines an expression that must be evaluated to True to trigger the Action.
