@@ -6,7 +6,7 @@ actions:
   - http:
       title: Page upload
       method: POST
-      url: http://www.delamarche.com/upload.php
+      url: http://www.delamarche.com/chaingun/upload.php
       formdata:
         - name: nom
           value: bob

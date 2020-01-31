@@ -16,15 +16,15 @@ feeder:
 actions:
   - http:
       title: Page 1
-      url: /page1.php
+      url: /chaingun/page1.php
       storeCookie: __all__
   - http:
       title: Page 3
-      url: /page3.php?nom=${nom}
+      url: /chaingun/page3.php?nom=${nom}
   - http:
       title: Page 4
       method: POST
-      url: /page4.php
+      url: /chaingun/page4.php
       template: tpl/template1.tpl
       responses:
         - regex: "is: (.*)<br>"

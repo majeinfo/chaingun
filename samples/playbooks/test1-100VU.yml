@@ -7,11 +7,11 @@ actions:
   - http:
       title: Page 1
       method: GET
-      url: http://www.delamarche.com/page1.php
+      url: http://www.delamarche.com/chaingun/page1.php
   - http:
       title: Page 2
       method: GET
-      url: http://www.delamarche.com/page2.php
+      url: http://www.delamarche.com/chaingun/page2.php
   - http:
       title: Page SSL
       method: GET

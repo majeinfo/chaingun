@@ -10,16 +10,17 @@ on_error: stop_test
 actions:
   - http:
       title: Page 1
-      url: /page1.php
+      url: /chaingun/page1.php
       storeCookie: __all__
   - http:
       title: Page 2
-      url: page2.php
+      url: chaingun/page2.php
+  #- http:
+  #    title: Page SSL
+  #    method: GET
+  #    url: https://www.delamarche.com:443/
   - http:
-      title: Page SSL
-      method: GET
-      url: https://www.delamarche.com:443/
-  - http:
-      title: Page SSL2
+      title: Page Form1
       method: POST
-      url: /
+      url: /chaingun/form1.php
+      body: p1[item]=v1&p2[item]=v2
