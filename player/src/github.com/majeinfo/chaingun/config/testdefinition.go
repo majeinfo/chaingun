@@ -15,6 +15,9 @@ const ERR_STOP_ITERATION = "stop_iteration"
 const ERR_STOP_VU = "stop_vu"
 const ERR_STOP_TEST = "stop_test"
 
+const DFLT_TIMEOUT = 10
+const DFLT_ERR = ERR_CONTINUE
+
 type TestDef struct {
 	Version        string                   `yaml:"version"`
 	Iterations     int                      `yaml:"iterations"` // (mandatory) -1 implies use of "duration"
@@ -43,9 +46,6 @@ type Feeder struct {
 	Separator string `yaml:"separator"`
 }
 
-// TODO: set default parms
-// cookie_manager": { "enabled" :True, "clear_on_each_iteration": True }
-
 // Validate the Test Definition Consistency
 func ValidateTestDefinition(t *TestDef) bool {
 	valid := true
@@ -72,7 +72,7 @@ func ValidateTestDefinition(t *TestDef) bool {
 		valid = false
 	}
 	if t.OnError == "" {
-		t.OnError = ERR_CONTINUE
+		t.OnError = DFLT_ERR
 	} else {
 		if t.OnError != ERR_CONTINUE && t.OnError != ERR_STOP_TEST && t.OnError != ERR_STOP_VU && t.OnError != ERR_STOP_ITERATION {
 			log.Error("onerror parameter must be one of 'continue', 'stop_iteration', stop_vu' or 'stop_test'")
@@ -86,7 +86,7 @@ func ValidateTestDefinition(t *TestDef) bool {
 	}
 
 	if t.Timeout == 0 {
-		t.Timeout = 10
+		t.Timeout = DFLT_TIMEOUT
 	}
 
 	log.Infof("Playbook Version is %s", t.Version)
