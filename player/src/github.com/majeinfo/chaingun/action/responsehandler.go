@@ -49,7 +49,7 @@ func NewResponseHandlers(a map[interface{}]interface{}) ([]ResponseHandler, bool
 				responseHandlers[idx] = newResponse
 			}
 		default:
-			log.Error("responses format is invalid")
+			log.Error("responses format is invalid: it should be a list of maps")
 			valid = false
 		}
 	}
