@@ -11,13 +11,16 @@ import (
 // DoWSRequest handles requests made using WebSocket Protocol
 // TODO: manage cookies !
 func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
-	//req := buildWSRequest(wsAction, sessionMap)
 	vulog.Debugf("New Request: URL: %s", wsAction.URL)
 
 	start := time.Now()
 
-	// TODO: should be done once per VU and per script or this could be configurable (for HTTP/S too)
-	c, _, err := websocket.DefaultDialer.Dial(wsAction.URL, nil)
+	// Hack: the Path has been concatened with EscapedPath() (from net/url.go)
+	// We must re-convert strings like $%7Bxyz%7D into ${xyz} to make variable substitution work !
+	unescapedURL := RedecodeEscapedPath(wsAction.URL)
+	url := SubstParams(sessionMap, unescapedURL, vulog)
+	vulog.Debugf("Translated Request: URL: %s", url)
+	c, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		vulog.Errorf("WS Connection failed: %s", err)
 		return false
@@ -26,7 +29,8 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 
 	vulog.Debugf("wsAction.Body=%s", wsAction.Body)
 	if wsAction.Body != "" {
-		err = c.WriteMessage(websocket.TextMessage, []byte(wsAction.Body))
+		body := SubstParams(sessionMap, wsAction.Body, vulog)
+		err = c.WriteMessage(websocket.TextMessage, []byte(body))
 		if err != nil {
 			vulog.Errorf("WS WriteMessage failed: %s", err)
 			return false
@@ -36,7 +40,7 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 	bodyLen := 0
 	respCode := -1
 	ok := true
-	//if wsAction.ResponseHandler.Regex != nil || wsAction.ResponseHandler.Jsonpaths != nil || wsAction.ResponseHandler.Xmlpath != nil {
+
 	if len(wsAction.ResponseHandlers) > 0 {
 		vulog.Debugf("Starts a new timeout for %d seconds before reading the message", playbook.Timeout)
 		ticker := time.NewTicker(time.Duration(playbook.Timeout) * time.Second)
@@ -81,25 +85,3 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 
 	return ok
 }
-
-/*
-func buildWSRequest(wsAction WSAction, sessionMap map[string]string) { //*http.Request {
-	/*
-	var req *http.Request
-	var err error
-	if httpAction.Body != "" {
-		reader := strings.NewReader(SubstParams(sessionMap, httpAction.Body))
-		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), reader)
-	} else if httpAction.Template != "" {
-		reader := strings.NewReader(SubstParams(sessionMap, httpAction.Template))
-		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), reader)
-	} else {
-		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, httpAction.Url), nil)
-	}
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return req
-}
-*/
