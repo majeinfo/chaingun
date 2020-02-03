@@ -6,16 +6,12 @@ import (
 
 	"github.com/Knetic/govaluate"
 	"github.com/majeinfo/chaingun/config"
+	"github.com/majeinfo/chaingun/utils"
 	log "github.com/sirupsen/logrus"
 )
 
-var (
-	gpScriptDir string
-)
-
 // BuildActionList builds all the Actions !
-func BuildActionList(playbook *config.TestDef, scriptDir string) ([]FullAction, []FullAction, bool) {
-	gpScriptDir = scriptDir
+func BuildActionList(playbook *config.TestDef) ([]FullAction, []FullAction, bool) {
 	var pre_actions []FullAction
 	var actions []FullAction
 	valid_pre_actions := true
@@ -155,15 +151,7 @@ func getTemplate(action map[interface{}]interface{}) (string, bool) {
 		var templateFile = action["template"].(string)
 		log.Debugf("getTemplate: %s", templateFile)
 
-		if templateFile[0] != '/' {
-			templateData, err := ioutil.ReadFile(gpScriptDir + "/" + templateFile)
-			if err != nil {
-				log.Errorf("Error while reading template file %s: %v", gpScriptDir+"/"+templateFile, err)
-				return "", false
-			}
-			log.Debugf("templateData: %s", string(templateData))
-			return string(templateData), true
-		}
+		templateFile = utils.ComputeFilename(templateFile, gpScriptDir)
 
 		templateData, err := ioutil.ReadFile(templateFile)
 		if err != nil {
@@ -182,15 +170,7 @@ func getFileToUpload(filename string) ([]byte, bool) {
 	log.Debugf("getFileToUpload: %s", filename)
 
 	// TODO: should check if  file has been found - how to do in distributed mode ?
-	if filename[0] != '/' {
-		content, err := ioutil.ReadFile(gpScriptDir + "/" + filename)
-		if err != nil {
-			log.Errorf("Error while reading file %s: %v", gpScriptDir+"/"+filename, err)
-			return nil, false
-		}
-		log.Debugf("content: %s", string(content))
-		return content, true
-	}
+	filename = utils.ComputeFilename(filename, gpScriptDir)
 
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {

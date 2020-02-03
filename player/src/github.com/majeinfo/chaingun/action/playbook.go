@@ -1,6 +1,7 @@
 package action
 
 import (
+	"github.com/majeinfo/chaingun/utils"
 	"gopkg.in/yaml.v2"
 	"path"
 
@@ -10,6 +11,9 @@ import (
 
 // Create a Playbook from the YAML data
 func CreatePlaybook(scriptFile *string, data []byte, playbook *config.TestDef, pre_actions *[]FullAction, actions *[]FullAction) bool {
+	gpScriptDir = path.Dir(*scriptFile)
+	log.Debugf("ScriptDir=%s", gpScriptDir)
+
 	err := yaml.UnmarshalStrict([]byte(data), playbook)
 	if err != nil {
 		log.Fatalf("YAML error: %v", err)
@@ -24,11 +28,11 @@ func CreatePlaybook(scriptFile *string, data []byte, playbook *config.TestDef, p
 	// Add the Feeder filename in the list
 	embedded_files = make([]string, 0)
 	if playbook.DataFeeder.Type != "" {
-		embedded_files = append(embedded_files, playbook.DataFeeder.Filename)
+		addEmbeddedFilename(playbook.DataFeeder.Filename)
 	}
 
 	var isValid bool
-	*pre_actions, *actions, isValid = BuildActionList(playbook, path.Dir(*scriptFile))
+	*pre_actions, *actions, isValid = BuildActionList(playbook)
 	if !isValid {
 		return false
 	}
@@ -40,7 +44,7 @@ func CreatePlaybook(scriptFile *string, data []byte, playbook *config.TestDef, p
 
 // Add a filename to the list of embedded filnames
 func addEmbeddedFilename(fname string) {
-	embedded_files = append(embedded_files, fname)
+	embedded_files = append(embedded_files, utils.ComputeFilename(fname, gpScriptDir))
 }
 
 // Return the list of embedded filenames

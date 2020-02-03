@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/majeinfo/chaingun/config"
+	"github.com/majeinfo/chaingun/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,10 +47,7 @@ func NextFromFeeder() {
 func Csv(feeder config.Feeder, dirname string) bool {
 	var filename = feeder.Filename
 
-	// Check if filename is absolute or not
-	if feeder.Filename[0] != '/' {
-		filename = dirname + "/" + feeder.Filename
-	}
+	filename = utils.ComputeFilename(feeder.Filename, dirname)
 
 	log.Debugf("Read CSV File %s", filename)
 	file, err := os.Open(filename)

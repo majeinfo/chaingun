@@ -110,7 +110,7 @@ func runScript(script_file *string) {
 	// Read all the data files
 	var encoded_files = make(map[string]string, len(action.GetEmbeddedFilenames()))
 	for _, fname := range action.GetEmbeddedFilenames() {
-		data, err := ioutil.ReadFile(fname) // TODO: compute the filename (canonicalize at playbook analysis time)
+		data, err := ioutil.ReadFile(fname)
 		if err != nil {
 			log.Fatalf("Cannot read the data file %s: %s", fname, err)
 		}

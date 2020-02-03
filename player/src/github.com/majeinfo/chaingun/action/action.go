@@ -21,6 +21,7 @@ type FullAction struct {
 }
 
 var (
+	gpScriptDir           string
 	is_daemon_mode        bool
 	injector_id           string // unique ID for an injector
 	must_display_srv_resp bool

@@ -207,7 +207,7 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 		log.Infof("Script received %s", cmd.MoreInfo)
 
 		if gp_playbook.DataFeeder.Type == "csv" {
-			if !feeder.Csv(gp_playbook.DataFeeder, path.Dir(".")) {
+			if !feeder.Csv(gp_playbook.DataFeeder, path.Dir(*gp_scriptfile)) {
 				sendStatusError(c, fmt.Sprintf("Could not load feeder data"))
 			}
 		} else if gp_playbook.DataFeeder.Type != "" {
