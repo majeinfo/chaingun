@@ -111,7 +111,11 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPActi
 	// Set the User-Agent header if not set in Playbook
 	// TODO: the User-Agent header value could be injector specific ?
 	if _, ok := headers["user-agent"]; !ok {
-		headers["user-agent"] = "chaingun-by-JD"
+		if is_daemon_mode {
+			headers["user-agent"] = "chaingun-" + injector_id
+		} else {
+			headers["user-agent"] = "chaingun"
+		}
 	}
 
 	formdatas, validData := NewFormDatas(a)

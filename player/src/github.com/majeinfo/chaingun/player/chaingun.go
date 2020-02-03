@@ -101,9 +101,6 @@ func command_line() {
 		log_level = log.DebugLevel
 	}
 	log.SetLevel(log_level)
-	action.DisableLogAction(*gp_no_log)
-	action.DisableDNSCache(*gp_disable_dns_cache)
-	action.SetContext(*gp_display_srv_resp, *gp_trace_requests)
 
 	// Check the mode
 	var ok bool
@@ -112,6 +109,10 @@ func command_line() {
 		log.Fatalf("Unknown mode value: %s (allowed values are: standalone, daemon or manager)", *mode)
 	}
 	log.Debugf("Player mode is %s", *mode)
+
+	action.DisableLogAction(*gp_no_log)
+	action.DisableDNSCache(*gp_disable_dns_cache)
+	action.SetContext(gp_mode == daemonMode, *gp_listen_addr, *gp_display_srv_resp, *gp_trace_requests)
 
 	// Do some command line consistency tests
 	if gp_mode == standaloneMode {

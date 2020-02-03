@@ -21,13 +21,17 @@ type FullAction struct {
 }
 
 var (
+	is_daemon_mode        bool
+	injector_id           string // unique ID for an injector
 	must_display_srv_resp bool
 	must_trace_request    bool
 	disable_dns_cache     bool
 	embedded_files        []string // list of filenames embedded in the current playbook
 )
 
-func SetContext(displaySrvResp bool, mustTraceReq bool) {
+func SetContext(daemon_mode bool, injectorID string, displaySrvResp bool, mustTraceReq bool) {
+	is_daemon_mode = daemon_mode
+	injector_id = injectorID
 	must_display_srv_resp = displaySrvResp
 	must_trace_request = mustTraceReq
 }
