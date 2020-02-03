@@ -112,7 +112,7 @@ func runScript(script_file *string) {
 	for _, fname := range action.GetEmbeddedFilenames() {
 		data, err := ioutil.ReadFile(fname) // TODO: compute the filename (canonicalize at playbook analysis time)
 		if err != nil {
-			log.Fatalf("Cannot read the date file %s: %s", fname, err)
+			log.Fatalf("Cannot read the data file %s: %s", fname, err)
 		}
 		encoded_files[fname] = base64.StdEncoding.EncodeToString(data)
 		if err != nil {
