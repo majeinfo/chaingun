@@ -106,7 +106,7 @@ func command_line() {
 	var ok bool
 	gp_mode, ok = modeTypeMap[*mode]
 	if !ok {
-		log.Fatalf("Unknown mode value: %s (allowed values are: standalone, daemon or manager)", *mode)
+		log.Fatalf("Unknown mode value: %s (allowed values are: standalone, daemon, manager, batch or graph-only)", *mode)
 	}
 	log.Debugf("Player mode is %s", *mode)
 
