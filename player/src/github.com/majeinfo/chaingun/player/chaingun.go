@@ -234,7 +234,7 @@ func main() {
 			log.Error(err.Error())
 		}
 	} else if gp_mode == graphOnlyMode {
-		// Just the graph production (TODO: does not work for merged data)
+		// Just the graph production
 		outputfile, dir := computeOutputFilename()
 		if err := reporter.InitReport(*gp_outputtype); err != nil {
 			log.Fatal(err)
