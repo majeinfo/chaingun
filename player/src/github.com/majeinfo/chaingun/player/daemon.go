@@ -63,7 +63,7 @@ func startWsServer(listen_addr string) {
 // Handler of Request in daemon mode - called by Client ReadPump()
 // TODO: manager and worker should exchange their versions
 func cmdHandler(c *Client, msg []byte) {
-	log.Infof("Received Message: %s", msg[:int(math.Min(float64(len(msg)), 128))])
+	log.Infof("Received Message: %s ...", msg[:int(math.Min(float64(len(msg)), 128))])
 	log.Debugf("Count of goroutines=%d", runtime.NumGoroutine())
 
 	// Decode JSON message
