@@ -168,7 +168,6 @@ func JSONProcessor(responseHandler ResponseHandler, sessionMap map[string]string
 		return false
 	}
 
-	// TODO optimization: Don't reinitialize each time, reuse this somehow.
 	max_values := 20
 	resultsArray := make([]string, 0, max_values)
 	idx := 0
@@ -177,7 +176,7 @@ func JSONProcessor(responseHandler ResponseHandler, sessionMap map[string]string
 			value := strings.TrimSpace(result.Pretty(false))
 			vulog.Debugf("JSON extracted value: %s", value)
 			idx++
-			if idx > max_values {
+			if idx >= max_values {
 				vulog.Errorf("Too many JSON values to extract (%d maximum), value %s ignored", max_values, value)
 			} else {
 				resultsArray = append(resultsArray, trimChar(value, '"'))
@@ -222,11 +221,18 @@ func XMLPathProcessor(responseHandler ResponseHandler, sessionMap map[string]str
 	iterator := responseHandler.Xmlpath.Iter(root)
 	hasNext := iterator.Next()
 	if hasNext {
-		resultsArray := make([]string, 0, 10)
+		max_values := 20
+		resultsArray := make([]string, 0, max_values)
+		idx := 0
 		for {
 			if hasNext {
 				node := iterator.Node()
-				resultsArray = append(resultsArray, node.String())
+				idx++
+				if idx >= max_values {
+					vulog.Errorf("Too many XML values to extract (%d maximum), value %s ignored", max_values, node.String())
+				} else {
+					resultsArray = append(resultsArray, node.String())
+				}
 				hasNext = iterator.Next()
 			} else {
 				break
@@ -315,8 +321,8 @@ func passResultIntoSessionMap(resultsArray []string, responseHandler ResponseHan
 		}
 
 	} else {
-		// TODO how to handle requested, but missing result?
-		vulog.Errorf("No value found in Response")
+		// This message should never be displayed
+		vulog.Errorf("No value found in Response (this message should never be displayed)")
 	}
 }
 
