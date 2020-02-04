@@ -85,8 +85,6 @@ func cmdHandler(c *Client, msg []byte) {
 		stopCommand(c)
 	case "script":
 		scriptCommand(c, &cmd)
-	case "datafeed":
-		handleDataFeed(c, &cmd)
 	case "datafile":
 		handleDataFile(c, &cmd)
 	case "get_results":
@@ -215,22 +213,6 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 			sendStatusError(c, fmt.Sprintf("Unsupported feeder type: %s", gp_playbook.DataFeeder.Type))
 		}
 	}
-}
-
-func handleDataFeed(c *Client, cmd *manager.PlayerCommand) {
-	data, err := base64.StdEncoding.DecodeString(cmd.Value)
-	if err != nil {
-		gp_daemon_status = IDLE
-		sendStatusError(c, "Error while decoding string from Base64")
-		return
-	}
-
-	str_data := string(data[:])
-	log.Debug(str_data)
-	feeder.CsvInline(gp_playbook.DataFeeder, str_data)
-	gp_daemon_status = READY_TO_RUN
-
-	sendStatusOKMsg(c, "Data received")
 }
 
 func handleDataFile(c *Client, cmd *manager.PlayerCommand) {
