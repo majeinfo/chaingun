@@ -163,7 +163,7 @@ func runScript(script_file *string) {
 func runScriptOnInjector(first_injector bool, injector string, conn *websocket.Conn, script_file *string, encoded_data string, encoded_files map[string]string, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
-	// TODO: file names are computed from script file locate or they can be given using S3 URL ?
+	// TODO: file names are computed from script file location or they can be given using S3 URL ?
 
 	// Send the data and feeder files
 	for _, fname := range action.GetEmbeddedFilenames() {
@@ -223,27 +223,6 @@ func sendScript(injector string, conn *websocket.Conn, script_file *string, enco
 
 	return nil
 }
-
-/*
-func sendFeederFile(injector string, conn *websocket.Conn, fname string) error {
-	log.Infof("Send feeder file to Injector %s", injector)
-	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"datafeed\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data+"\" }"))
-	if err != nil {
-		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
-		return err
-	}
-	_, message, err := conn.ReadMessage()
-	if err != nil {
-		log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
-		return err
-	}
-	//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-	log.Debugf("Injector %s answers: %s", injector, message)
-	log.Infof("Injector %s answers: %s", injector, decodeInjectorStatus(injector, message))
-
-	return nil
-}
-*/
 
 func sendDataFile(injector string, conn *websocket.Conn, fname string, encoded_data string) error {
 	log.Infof("Send data file %s to Injector %s", fname, injector)
