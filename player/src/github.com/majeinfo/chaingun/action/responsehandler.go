@@ -79,16 +79,8 @@ func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) 
 		valid = false
 	}
 
-	/*
-		if !valid {
-			log.Fatalf("Your YAML definition contains an invalid Action, see errors listed above.")
-			valid = false
-		}
-	*/
-
 	if a["jsonpath"] != nil && a["jsonpath"] != "" {
 		var err error
-		//responseHandler.Jsonpath = response["jsonpath"].(string)
 		responseHandler.Jsonpaths, err = jsonpath.ParsePaths(a["jsonpath"].(string))
 		if err != nil {
 			log.Errorf("Jsonpath could not be compiled: %s", a["jsonpath"].(string))
@@ -96,8 +88,6 @@ func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) 
 		}
 	}
 	if a["xmlpath"] != nil && a["xmlpath"] != "" {
-		// TODO perhaps compile Xmlpath expressions so we can validate early?
-		//responseHandler.Xmlpath = response["xmlpath"].(string)
 		var err error
 		responseHandler.Xmlpath, err = xmlpath.Compile(a["xmlpath"].(string))
 		if err != nil {
