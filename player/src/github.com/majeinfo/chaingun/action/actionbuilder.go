@@ -166,10 +166,21 @@ func getTemplate(action map[interface{}]interface{}) (string, bool) {
 	return "", true
 }
 
+func getFileToPUT(action map[interface{}]interface{}) ([]byte, bool) {
+	if action["upload_file"] != nil {
+		var filename = action["upload_file"].(string)
+		log.Debugf("getFileToPUT: %s", filename)
+
+		return getFileToUpload(filename)
+	}
+
+	log.Debugf("no file to PUT")
+	return nil, true
+}
+
 func getFileToUpload(filename string) ([]byte, bool) {
 	log.Debugf("getFileToUpload: %s", filename)
 
-	// TODO: should check if  file has been found - how to do in distributed mode ?
 	filename = utils.ComputeFilename(filename, gpScriptDir)
 
 	content, err := ioutil.ReadFile(filename)
@@ -179,5 +190,4 @@ func getFileToUpload(filename string) ([]byte, bool) {
 	}
 	log.Debugf("content: %s", string(content))
 	return content, true
-
 }

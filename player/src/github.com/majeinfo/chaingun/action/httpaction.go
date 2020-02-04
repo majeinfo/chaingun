@@ -18,6 +18,7 @@ type HTTPAction struct {
 	FormDatas        []FormData        `yaml:"formdatas"`
 	Headers          map[string]string `yaml:"headers"`
 	Title            string            `yaml:"title"`
+	UploadFile       []byte            `yaml:"upload_file"`
 	StoreCookie      string            `yaml:"storeCookie"`
 	ResponseHandlers []ResponseHandler `yaml:"responses"`
 }
@@ -76,11 +77,15 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPActi
 		addEmbeddedFilename(a["template"].(string))
 		nu++
 	}
+	if a["upload_file"] != nil {
+		addEmbeddedFilename(a["upload_file"].(string))
+		nu++
+	}
 	if a["formdata"] != nil {
 		nu++
 	}
 	if nu > 1 {
-		log.Error("A HttpAction can contain a single 'body' or a 'template' or a 'formdata'.")
+		log.Error("A HttpAction can contain a single 'body' or a 'template' or a 'formdata' or an 'upload_file'.")
 		valid = false
 	}
 
@@ -121,8 +126,9 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPActi
 	responseHandlers, validResp := NewResponseHandlers(a)
 	template, validTempl := getTemplate(a)
 	body, validBody := getBody(a)
+	upload, validUpload := getFileToPUT(a)
 
-	if !valid || !validResp || !validData || !validTempl || !validBody {
+	if !valid || !validResp || !validData || !validTempl || !validBody || !validUpload {
 		log.Errorf("Your YAML Playbook contains an invalid HTTPAction, see errors listed above.")
 		valid = false
 	}
@@ -135,6 +141,7 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPActi
 		FormDatas:        formdatas,
 		Headers:          headers,
 		Title:            a["title"].(string),
+		UploadFile:       upload,
 		StoreCookie:      storeCookie,
 		ResponseHandlers: responseHandlers,
 	}
@@ -197,6 +204,7 @@ func NewFormData(a map[interface{}]interface{}) (FormData, error) {
 			log.Error("'type' attribute of FormData must be 'file'.")
 			valid = false
 		} else {
+			addEmbeddedFilename(formData.Value)
 			formData.Content, valid = getFileToUpload(formData.Value)
 		}
 	}

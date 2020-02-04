@@ -105,7 +105,7 @@ Here is the list and the description of the implemented Actions :
 | `storeCookie` | if set, indicates which cookies must be stored in the VU session. The predefined value __all__ implies the capture of all possible cookies |
 | `body` | value of HTTP body (works for any HTTP method) (one of `body` or `template` is mandatory) |
 | `template` | a filename which contents will be interpolated and will be used as the request body (one of `body` or `template` is mandatory) |
-| `upload_file` | when used with the POST or PUT methods, indicates a file which contents will be sent to the server as-is |
+| `upload_file` | when used with the POST or PUT methods, indicates a file which contents will be sent to the server as-is (not implemented) |
 | `headers` | additional HTTP headers to transmit. Each header has the form `header_name: value`. In case of a POST method, the body is sent with the HTTP Header `content-type: application/x-www-form-urlencoded` | |
 | `responses` | data can be extracted from server responses. The extraction can use the body or a HTTP Header. regex, jsonpath or xmlpath can be used to collect the substrings |
 

@@ -172,6 +172,10 @@ func buildHTTPRequest(httpAction HTTPAction, sessionMap map[string]string, vulog
 
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescapedURL, vulog), body)
 		req.Header.Set("Content-Type", writer.FormDataContentType())
+	} else if httpAction.Method == "PUT" && httpAction.UploadFile != nil {
+		log.Debugf("prepare for uploading file content with PUT")
+		reader := bytes.NewReader(httpAction.UploadFile)
+		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescapedURL, vulog), reader)
 	} else {
 		// DEFAULT
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescapedURL, vulog), nil)
