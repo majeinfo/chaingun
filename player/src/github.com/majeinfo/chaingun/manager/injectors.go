@@ -225,20 +225,79 @@ func sendScript(injector string, conn *websocket.Conn, script_file *string, enco
 }
 
 func sendDataFile(injector string, conn *websocket.Conn, fname string, encoded_data string) error {
-	log.Infof("Send data file %s to Injector %s", fname, injector)
-	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"datafile\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data+"\" }"))
-	if err != nil {
-		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
-		return err
+	log.Infof("Send data file %s (%d) to Injector %s", fname, len(encoded_data), injector)
+
+	// Data to be sent may be huge, so we must send them by chunks...
+	const CHUNKSIZE = 30_000
+
+	if len(encoded_data) < CHUNKSIZE {
+		// No need to split the data in chunks
+		err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"datafile\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data+"\" }"))
+		if err != nil {
+			log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+			return err
+		}
+		_, message, err := conn.ReadMessage()
+		if err != nil {
+			log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+			return err
+		}
+		//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		log.Debugf("Injector %s answers: %s", injector, message)
+		log.Infof("Injector %s answers: %s", injector, decodeInjectorStatus(injector, message))
+	} else {
+		// Send first chunk
+		err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"datafile\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data[:CHUNKSIZE]+"\" }"))
+		if err != nil {
+			log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+			return err
+		}
+		_, message, err := conn.ReadMessage()
+		if err != nil {
+			log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+			return err
+		}
+		//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		log.Debugf("Injector %s answers: %s", injector, message)
+		log.Infof("Injector %s answers: %s", injector, decodeInjectorStatus(injector, message))
+
+		encoded_data = encoded_data[CHUNKSIZE:]
+		for len(encoded_data) > CHUNKSIZE {
+			// send next chunk
+			log.Infof("Send data chunk %s to Injector %s", fname, injector)
+			err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"nextchunk\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data[:CHUNKSIZE]+"\" }"))
+			if err != nil {
+				log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+				return err
+			}
+			_, message, err := conn.ReadMessage()
+			if err != nil {
+				log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+				return err
+			}
+			//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+			log.Debugf("Injector %s answers: %s", injector, message)
+			log.Infof("Injector %s answers: %s", injector, decodeInjectorStatus(injector, message))
+
+			encoded_data = encoded_data[CHUNKSIZE:]
+		}
+
+		// last chunk
+		log.Infof("Send last data chunk %s to Injector %s", fname, injector)
+		err = conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"nextchunk\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data+"\" }"))
+		if err != nil {
+			log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+			return err
+		}
+		_, message, err = conn.ReadMessage()
+		if err != nil {
+			log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+			return err
+		}
+		//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		log.Debugf("Injector %s answers: %s", injector, message)
+		log.Infof("Injector %s answers: %s", injector, decodeInjectorStatus(injector, message))
 	}
-	_, message, err := conn.ReadMessage()
-	if err != nil {
-		log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
-		return err
-	}
-	//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-	log.Debugf("Injector %s answers: %s", injector, message)
-	log.Infof("Injector %s answers: %s", injector, decodeInjectorStatus(injector, message))
 
 	return nil
 }

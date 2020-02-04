@@ -87,10 +87,12 @@ func cmdHandler(c *Client, msg []byte) {
 		scriptCommand(c, &cmd)
 	case "datafile":
 		handleDataFile(c, &cmd)
+	case "nextchunk":
+		handleDataChunk(c, &cmd)
 	case "get_results":
 		getResultsCommand(c, &cmd)
 	default:
-		sendStatusError(c, fmt.Sprintf("Message not supported: %s", msg))
+		sendStatusError(c, fmt.Sprintf("Message not supported: %s ...", msg[:int(math.Min(float64(len(msg)), 128))]))
 	}
 	log.Debug("Message handled")
 }
@@ -247,6 +249,48 @@ func handleDataFile(c *Client, cmd *manager.PlayerCommand) {
 
 	sendStatusOKMsg(c, "File received")
 	log.Infof("Received file %s", cmd.MoreInfo)
+}
+
+func handleDataChunk(c *Client, cmd *manager.PlayerCommand) {
+	data, err := base64.StdEncoding.DecodeString(cmd.Value)
+	if err != nil {
+		gp_daemon_status = IDLE
+		sendStatusError(c, "Error while decoding string from Base64")
+		return
+	}
+
+	// The file should already exist and we must write the data in append mode
+	//outputdir := path.Dir(path.Dir(*gp_scriptfile) + "/" + cmd.MoreInfo)
+	outputdir := path.Dir("./" + cmd.MoreInfo)
+	stat, err := os.Stat(outputdir)
+	if os.IsNotExist(err) {
+		log.Debugf("Must create the Output Directory %s", outputdir)
+		if err := os.MkdirAll(outputdir, 0755); err != nil {
+			sendStatusError(c, fmt.Sprintf("Cannot create Output Directory %s: %s", outputdir, err.Error()))
+			return
+		}
+	} else if stat.Mode().IsRegular() {
+		sendStatusError(c, fmt.Sprintf("Output Directory %s already exists as a file !", outputdir))
+		return
+	}
+
+	f, err := os.OpenFile(cmd.MoreInfo, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		sendStatusError(c, fmt.Sprintf("Cannot open the file %s in append mode", cmd.MoreInfo))
+		return
+	}
+	if _, err := f.Write(data); err != nil {
+		gp_daemon_status = IDLE
+		sendStatusError(c, fmt.Sprintf("Error while writing file %s", cmd.MoreInfo))
+		return
+	}
+	if err := f.Close(); err != nil {
+		sendStatusError(c, fmt.Sprintf("Error while closing file %s", cmd.MoreInfo))
+		return
+	}
+
+	sendStatusOKMsg(c, "Chunk of file received")
+	log.Infof("Received file chunk %s", cmd.MoreInfo)
 }
 
 func getResultsCommand(c *Client, cmd *manager.PlayerCommand) {
