@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	_ "net"
 	"net/http"
 	"os"
@@ -62,7 +63,7 @@ func startWsServer(listen_addr string) {
 // Handler of Request in daemon mode - called by Client ReadPump()
 // TODO: manager and worker should exchange their versions
 func cmdHandler(c *Client, msg []byte) {
-	log.Infof("Received Message: %s", msg)
+	log.Infof("Received Message: %s", msg[:int(math.Min(float64(len(msg)), 128))])
 	log.Debugf("Count of goroutines=%d", runtime.NumGoroutine())
 
 	// Decode JSON message
@@ -213,24 +214,6 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 		} else if gp_playbook.DataFeeder.Type != "" {
 			sendStatusError(c, fmt.Sprintf("Unsupported feeder type: %s", gp_playbook.DataFeeder.Type))
 		}
-
-		/*
-			// Ask for feeder data if needed
-			if gp_playbook.DataFeeder.Type == "csv" {
-				gp_daemon_status = WAITING_FOR_FEEDER_DATA
-				sendStatusOKMsg(c, "Script received")
-				//feeder.Csv(gp_playbook.DataFeeder, path.Dir(*gp_scriptfile))
-				log.Debugf("Ask for datafile %s", gp_playbook.DataFeeder.Filename)
-				sendStatusOKMsg(c, fmt.Sprintf("Waiting for Data Feed: %s", gp_playbook.DataFeeder.Filename))
-				sendGetDataFile(c, gp_playbook.DataFeeder.Filename)
-			} else if gp_playbook.DataFeeder.Type != "" {
-				gp_daemon_status = IDLE
-				sendStatusError(c, fmt.Sprintf("Unsupported feeder type: %s", gp_playbook.DataFeeder.Type))
-			} else {
-				gp_daemon_status = READY_TO_RUN
-				sendStatusOKMsg(c, "Script received")
-			}
-		*/
 	}
 }
 
