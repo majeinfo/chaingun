@@ -17,6 +17,11 @@ func BuildActionList(playbook *config.TestDef) ([]FullAction, []FullAction, bool
 	valid_pre_actions := true
 	valid_actions := true
 
+	log.Debug("Variables list:")
+	for k, v := range playbook.Variables {
+		log.Debugf("variable %s => %s", k, v)
+	}
+
 	pre_actions, valid_pre_actions = _buildActionList(playbook, playbook.PreActions)
 	actions, valid_actions = _buildActionList(playbook, playbook.Actions)
 
@@ -55,7 +60,7 @@ func _buildActionList(playbook *config.TestDef, playbook_actions []map[string]in
 					action, valid = NewSleepAction(actionMap)
 					break
 				case "http":
-					action, valid = NewHTTPAction(actionMap, playbook.DfltValues)
+					action, valid = NewHTTPAction(actionMap, playbook.DfltValues, playbook)
 					break
 				case "mqtt":
 					action, valid = NewMQTTAction(actionMap, playbook.DfltValues)

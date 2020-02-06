@@ -2,6 +2,7 @@ package action
 
 import (
 	"errors"
+	"net/url"
 	"strings"
 
 	"github.com/majeinfo/chaingun/config"
@@ -38,7 +39,7 @@ func (h HTTPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessio
 }
 
 // NewHTTPAction creates a new HTTP Action
-func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPAction, bool) {
+func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default, playbook *config.TestDef) (HTTPAction, bool) {
 	log.Debugf("NewhttpAction=%v", a)
 	valid := true
 
@@ -47,6 +48,22 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default) (HTTPActi
 		a["url"] = ""
 		valid = false
 	} else {
+		// Try to substitute already known variables: needed if variables are used
+		// protocol://in the user:auth@server:port/ part of the URL
+		// (cannot use SubstParams() here)
+		textData := a["url"].(string)
+		if strings.ContainsAny(textData, "${") {
+			res := re.FindAllStringSubmatch(textData, -1)
+			for _, v := range res {
+				log.Debugf("playbook.Variables[%s]=%s", v[1], playbook.Variables[v[1]])
+				if _, err := playbook.Variables[v[1]]; !err {
+					log.Debugf("Variable ${%s} not set", v[1])
+				} else {
+					textData = strings.Replace(textData, "${"+v[1]+"}", url.QueryEscape(playbook.Variables[v[1]]), 1)
+				}
+			}
+			a["url"] = textData
+		}
 		valid = setDefaultURL(a, dflt)
 	}
 
