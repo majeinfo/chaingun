@@ -124,7 +124,8 @@ Examples:
   - http:
       title: Page 4
       method: POST
-      url: http://server/page4.php              # variables are interpolated in URL
+      url: http://server/page4.php              # variables are interpolated in URL, but only
+						# for the URI part (not the server name)
       body: name=${name}&age=${age}	# MAND for POST http action
       headers:
         accept: "text/html,application/json"    # variables are interpolated in Headers
@@ -259,14 +260,14 @@ Example:
 
 | Parameter Name | Description |
 | :--- | :--- |
-| `name` | mandatory variable name |
+| `variable` | mandatory variable name |
 | `expression` | mandatory string that defines an expression to be evaluated |
 
 Example :
 
 ```
   - setvar:
-      name: my_var
+      variable: my_var
       expression: "2 * age"
 ```
 
@@ -351,7 +352,7 @@ Each Action can be triggered by a `when` clause which defines an expression that
 Example:
 ```
   - setvar:
-      name: xyz
+      variable: xyz
       expression: "10 * delay"
     when: "delay > 2"
 ```
@@ -549,7 +550,7 @@ actions:
 
   # Compute formula with variables
   - setvar:
-      name: my_var
+      variable: my_var
       expression: "2 * age"
 
       # notes on expressions:
