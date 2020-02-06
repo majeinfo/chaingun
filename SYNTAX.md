@@ -261,7 +261,7 @@ Example:
 | Parameter Name | Description |
 | :--- | :--- |
 | `variable` | mandatory variable name |
-| `expression` | mandatory string that defines an expression to be evaluated |
+| `expression` | mandatory string that defines an expression to be evaluated. If the expression is an integer or a float, it will be converted into a string |
 
 Example :
 
