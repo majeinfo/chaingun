@@ -100,7 +100,7 @@ func setDefaultURL(a map[interface{}]interface{}, dflt config.Default) bool {
 	u, err := url.Parse(a["url"].(string))
 	if err != nil {
 		log.Errorf("Wrong URL: %s", err)
-		valid = false
+		return false
 	}
 	if u.Scheme == "" {
 		if dflt.Protocol == "" {
