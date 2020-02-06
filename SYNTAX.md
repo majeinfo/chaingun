@@ -397,6 +397,29 @@ your form embeds a field of type `file`.
         - name: submit
 ```
 
+## Handle Basic authentication
+
+This method should not be used on unencrypted channel (HTTP)... If the web server requires a basic authentication
+you just have to specify the username and the password in the URL.
+Since variable interpolation is possible in the "server" part of the URL, you can reference variables defined
+in the 'variable' section. Here are some examples :
+
+```
+variable:
+  user: bob
+  pwd: secret
+
+actions:
+  - http:
+      title: private page1
+      url: https://${user}:${pwd}@myserver/private/page1.html
+
+  - http:
+      title: private page2
+      url: http://alice:terces@myserver/private/page2.html
+```
+
+
 # Full sample
 
 ```

@@ -65,6 +65,7 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default, playbook 
 			a["url"] = textData
 		}
 		valid = setDefaultURL(a, dflt)
+		log.Debugf("setDefaultURL returned %v", a)
 	}
 
 	if a["method"] == nil || a["method"] == "" {

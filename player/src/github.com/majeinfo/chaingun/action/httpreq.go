@@ -180,6 +180,13 @@ func buildHTTPRequest(httpAction HTTPAction, sessionMap map[string]string, vulog
 		// DEFAULT
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescapedURL, vulog), nil)
 	}
+
+	// Add the Basic Auth if required
+	if err == nil && req.URL != nil {
+		pwd, _ := req.URL.User.Password()
+		req.SetBasicAuth(req.URL.User.Username(), pwd)
+	}
+
 	if err != nil {
 		err := fmt.Errorf("http.newRequest failed in buildHttpRequest: %s", err)
 		return nil, err
