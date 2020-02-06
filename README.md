@@ -75,8 +75,8 @@ a) run a Player in standalone mode :
 	--script sets the name of the script file and is mandatory
 	--verbose is optional 
 	--no-log disables the 'log actions' (see below for the actions)
-        --trace generates a trace file named traced.out that can be used by 'go tool trace' command
-        --display-response displays the full response sent by the remote stressed server
+	--trace generates a trace file named traced.out that can be used by 'go tool trace' command
+	--display-response displays the full response sent by the remote stressed server
 	--syntax-check-only is used to only check the syntax of the script
 	--disable-dns-cache can be used to disable the internal DNS cache that reduces the number of DNS Requests
 	--trace-requests displays all the HTTP/S requests and their return code
