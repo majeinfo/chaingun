@@ -1,6 +1,7 @@
 package action
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/Knetic/govaluate"
@@ -63,6 +64,19 @@ func NewSetVarAction(a map[interface{}]interface{}) (SetVarAction, bool) {
 		log.Error("setvar action needs 'expression' attribute")
 		a["expression"] = ""
 		valid = false
+	} else {
+		switch a["expression"].(type) {
+		case string:
+			// nothing to do
+		case int:
+			a["expression"] = strconv.Itoa(a["expression"].(int))
+		case float64:
+			a["expression"] = fmt.Sprintf("%f", a["expression"].(float64))
+		default:
+			log.Errorf("The expression %v should be a string", a["expression"])
+			a["expression"] = ""
+			valid = false
+		}
 	}
 
 	expression, err := govaluate.NewEvaluableExpressionWithFunctions(a["expression"].(string), getExpressionFunctions())
