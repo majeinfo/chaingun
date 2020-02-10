@@ -29,6 +29,11 @@ test1:
   image: docker
   services:
     - docker:dind
+  before_script:
+    - pwd
+    - echo $CI_PROJECT_NAME
+    - echo $CI_PROJECT_DIR
+    - ls -a $CI_PROJECT_DIR
   script:
     - cd tests
     - /bin/sh run_web_server.sh
