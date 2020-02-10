@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"crypto/tls"
+	"golang.org/x/net/http2"
 
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
@@ -55,15 +56,24 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	}
 
 	start := time.Now()
-	var DefaultTransport http.RoundTripper = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		Dial: (&net.Dialer{
-			Timeout:   time.Duration(playbook.Timeout) * time.Second,
-			KeepAlive: time.Duration(playbook.Timeout) * time.Second,
-		}).Dial,
-		ResponseHeaderTimeout: time.Duration(playbook.Timeout) * time.Second,
-		DisableKeepAlives:     true,
+
+	var DefaultTransport http.RoundTripper
+	if httpAction.UseHTTP2 {
+		DefaultTransport = &http2.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+	} else {
+		DefaultTransport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			DialContext: (&net.Dialer{
+				Timeout:   time.Duration(playbook.Timeout) * time.Second,
+				KeepAlive: time.Duration(playbook.Timeout) * time.Second,
+			}).DialContext,
+			ResponseHeaderTimeout: time.Duration(playbook.Timeout) * time.Second,
+			DisableKeepAlives:     true,
+		}
 	}
+
 	resp, err := DefaultTransport.RoundTrip(req)
 	vulog.Debugf("%v", resp)
 

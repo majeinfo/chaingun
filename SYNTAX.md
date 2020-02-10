@@ -101,6 +101,7 @@ Here is the list and the description of the implemented Actions :
 | :--- | :--- |
 | `title` | mandatory string that qualifies the request - used for the result output and logging |
 | `method` | GET, PUT, POST, HEAD, DELETE. If absent use the value given by the `method` key in the default section |
+| `use_http2` | set to true if you want to use HTTP/2 protocol (default value is false) |
 | `url` | mandatory. If the string does not contain a server specification, use the value given by the `server` key in the default section |
 | `storeCookie` | if set, indicates which cookies must be stored in the VU session. The predefined value __all__ implies the capture of all possible cookies |
 | `body` | value of HTTP body (works for any HTTP method) (one of `body` or `template` is mandatory) |
@@ -124,6 +125,7 @@ Examples:
   - http:
       title: Page 4
       method: POST
+      use_http2: true
       url: http://server/page4.php              # variables are interpolated in URL, but only
 						# for the URI part (not the server name)
       body: name=${name}&age=${age}	# MAND for POST http action

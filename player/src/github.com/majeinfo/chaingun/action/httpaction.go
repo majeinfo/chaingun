@@ -13,6 +13,7 @@ import (
 // HTTPAction describes a HTTP Action
 type HTTPAction struct {
 	Method           string            `yaml:"method"`
+	UseHTTP2         bool              `yaml:"use_http2"`
 	URL              string            `yaml:"url"`
 	Body             string            `yaml:"body"`
 	Template         string            `yaml:"template"`
@@ -85,6 +86,15 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default, playbook 
 		a["title"] = ""
 		valid = false
 	}
+	if a["use_http2"] == nil {
+		a["use_http2"] = false
+	} else {
+		if _, ok := a["use_http2"].(bool); !ok {
+			log.Error("use_http2 value must be a boolean (true or false)")
+			a["use_http2"] = false
+			valid = false
+		}
+	}
 
 	// Check formdatas
 	nu := 0
@@ -153,6 +163,7 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default, playbook 
 
 	httpAction := HTTPAction{
 		Method:           a["method"].(string),
+		UseHTTP2:         a["use_http2"].(bool),
 		URL:              a["url"].(string),
 		Body:             body,
 		Template:         template,
