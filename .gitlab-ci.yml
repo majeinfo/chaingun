@@ -34,6 +34,8 @@ test1:
     - echo $CI_PROJECT_NAME
     - echo $CI_PROJECT_DIR
     - ls -a $CI_PROJECT_DIR
+    - ls -a $CI_PROJECT_DIR/player/
+    - ls -a $CI_PROJECT_DIR/player/bin/
   script:
     - cd tests
     - /bin/sh run_web_server.sh
