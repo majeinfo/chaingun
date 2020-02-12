@@ -22,7 +22,7 @@ build:
     - bin/player -h || [ $? -eq 2 ]
   artifacts:
     paths:
-      - player/bin/player
+      - player/bin/
     
 test1:
   stage: test
