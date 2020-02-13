@@ -6,12 +6,12 @@ actions:
   - http:
       title: Page 1
       method: GET
-      url: http://localhost:8000/page1.php
+      url: http://docker:8000/page1.php
       storeCookie: __all__
   - http:
       title: Page 2
       method: GET
-      url: http://localhost:8000/page2.php
+      url: http://docker:8000/page2.php
       responses:
         - regex: "Bye (.*)<br>"
           variable: name
@@ -20,5 +20,5 @@ actions:
   - http:
       title: Page 3
       method: GET
-      url: http://localhost:8000/page3.php?name=${name}
+      url: http://docker:8000/page3.php?name=${name}
 
