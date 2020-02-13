@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-PLAYER=../player/bin/player
+PLAYER=../player/bin/player 
 #VERBOSE=--verbose
 ERRORS=0
 
