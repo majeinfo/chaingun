@@ -22,14 +22,21 @@ build:
     - bin/player -h || [ $? -eq 2 ]
   artifacts:
     paths:
-      - player/bin/player
+      - player/bin/
     
 test1:
   stage: test
   image: docker
   services:
     - docker:dind
+  before_script:
+    - pwd
+    - echo $CI_PROJECT_NAME
+    - echo $CI_PROJECT_DIR
+    - ls -a $CI_PROJECT_DIR
+    - ls -alR /builds
   script:
+    - /builds/majeinfo/chaingun/player/bin/player -h
     - cd tests
     - /bin/sh run_web_server.sh
     - /bin/sh test_standalone_player.sh

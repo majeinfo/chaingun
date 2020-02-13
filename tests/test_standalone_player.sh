@@ -4,6 +4,11 @@ PLAYER=../player/bin/player
 #VERBOSE=--verbose
 ERRORS=0
 
+pwd
+ls -laR /builds
+test -f /builds/majeinfo/chaingun/player/bin/player
+PLAYER=/builds/majeinfo/chaingun/player/bin/player
+
 Arg_Error() {
 	if $PLAYER $1 2>&1 | tee $$.out | grep "$2" >/dev/null 2>&1; then
 		echo '[OK]' $1
