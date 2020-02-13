@@ -27,7 +27,8 @@ test1:
   script:
     - cd tests
     - /bin/sh run_web_server.sh
-    - netstat -tlnp
+    - netstat -tlnpa
+    - ps -edf
     - docker container ps -a
     - /bin/sh test_standalone_player.sh
     - docker container rm -f $(docker container ps -qa)
