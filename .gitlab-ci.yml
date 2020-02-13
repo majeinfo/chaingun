@@ -36,6 +36,7 @@ test1:
     - ls -a $CI_PROJECT_DIR
     - ls -alR /builds
   script:
+    - /builds/majeinfo/chaingun/player/bin/player -h
     - cd tests
     - /bin/sh run_web_server.sh
     - /bin/sh test_standalone_player.sh
