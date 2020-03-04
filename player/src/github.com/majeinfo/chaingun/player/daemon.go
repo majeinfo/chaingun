@@ -19,6 +19,7 @@ import (
 	"github.com/majeinfo/chaingun/feeder"
 	"github.com/majeinfo/chaingun/manager"
 	"github.com/majeinfo/chaingun/reporter"
+	"github.com/majeinfo/chaingun/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -70,7 +71,7 @@ func cmdHandler(c *Client, msg []byte) {
 	var cmd manager.PlayerCommand
 	err := json.Unmarshal(msg, &cmd)
 	if err != nil {
-		sendStatusError(c, "Message could not be decoded as JSON")
+		sendStatusError(c, "Message could not be decoded as JSON", err.Error())
 		return
 	}
 
@@ -85,6 +86,8 @@ func cmdHandler(c *Client, msg []byte) {
 		stopCommand(c)
 	case "script":
 		scriptCommand(c, &cmd)
+	case "getmd5":
+		handleGetMD5(c, &cmd)
 	case "datafile":
 		handleDataFile(c, &cmd)
 	case "nextchunk":
@@ -92,7 +95,7 @@ func cmdHandler(c *Client, msg []byte) {
 	case "get_results":
 		getResultsCommand(c, &cmd)
 	default:
-		sendStatusError(c, fmt.Sprintf("Message not supported: %s ...", msg[:int(math.Min(float64(len(msg)), 128))]))
+		sendStatusError(c, fmt.Sprintf("Message not supported: %s ...", msg[:int(math.Min(float64(len(msg)), 128))]), "")
 	}
 	log.Debug("Message handled")
 }
@@ -100,13 +103,13 @@ func cmdHandler(c *Client, msg []byte) {
 func preStartCommand(c *Client) {
 	// Check no run in progress
 	if gp_daemon_status != READY_TO_RUN {
-		sendStatusError(c, "PreStart command ignored because daemon is not idle")
+		sendStatusError(c, "PreStart command ignored because daemon is not idle", "")
 		return
 	}
 
 	// Check if there is a valid playbook
 	if !gp_valid_playbook {
-		sendStatusError(c, "PresStart command ignored because there is no valid playbook")
+		sendStatusError(c, "PresStart command ignored because there is no valid playbook", "")
 		return
 	}
 
@@ -125,13 +128,13 @@ func _preStartCommand(c *Client) {
 func startCommand(c *Client) {
 	// Check no run in progress
 	if gp_daemon_status != READY_TO_RUN {
-		sendStatusError(c, "Start command ignored because daemon is not idle")
+		sendStatusError(c, "Start command ignored because daemon is not idle", "")
 		return
 	}
 
 	// Check if there is a valid playbook
 	if !gp_valid_playbook {
-		sendStatusError(c, "Start command ignored because there is no valid playbook")
+		sendStatusError(c, "Start command ignored because there is no valid playbook", "")
 		return
 	}
 
@@ -145,7 +148,7 @@ func _startCommand(c *Client) {
 
 	tmpfile, err := ioutil.TempFile("", "example")
 	if err != nil {
-		sendStatusError(c, fmt.Sprintf("Error while creating the temporary Results file: %s", err))
+		sendStatusError(c, "Error while creating the temporary Results file", err.Error())
 		return
 	}
 
@@ -153,7 +156,7 @@ func _startCommand(c *Client) {
 	gp_outputfile = tmpfile.Name()
 	log.Infof("Open outputfile: %s", gp_outputfile)
 	if err := reporter.InitReport(*gp_outputtype); err != nil {
-		sendStatusError(c, fmt.Sprintf("%s", err))
+		sendStatusError(c, "Reporter could not Init", err.Error())
 		return
 	}
 	reporter.OpenTempResultsFile(tmpfile)
@@ -172,7 +175,7 @@ func _startCommand(c *Client) {
 func stopCommand(c *Client) {
 	// Check  run in progress
 	if gp_daemon_status != RUNNING {
-		sendStatusError(c, "Stop command ignored because daemon is idle")
+		sendStatusError(c, "Stop command ignored because daemon is idle", "")
 		return
 	}
 
@@ -183,7 +186,7 @@ func stopCommand(c *Client) {
 func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 	// Check no run in progress
 	if gp_daemon_status != IDLE && gp_daemon_status != READY_TO_RUN && gp_daemon_status != WAITING_FOR_FEEDER_DATA {
-		sendStatusError(c, "Script ignored because daemon is not idle or ready to run or wating for data")
+		sendStatusError(c, "Script ignored because daemon is not idle or ready to run or wating for data", "")
 		return
 	}
 	log.Debugf("Original filename is %s", cmd.MoreInfo)
@@ -195,12 +198,12 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 	data, err := base64.StdEncoding.DecodeString(cmd.Value)
 	if err != nil {
 		gp_daemon_status = IDLE
-		sendStatusError(c, "Error while decoding string from Base64")
+		sendStatusError(c, "Error while decoding string from Base64", err.Error())
 		return
 	}
 	if !action.CreatePlaybook(gp_scriptfile, data, &gp_playbook, &gp_pre_actions, &gp_actions) {
 		gp_daemon_status = IDLE
-		sendStatusError(c, "Error while processing the Script data")
+		sendStatusError(c, "Error while processing the Script data", "")
 	} else {
 		gp_valid_playbook = true
 		gp_daemon_status = READY_TO_RUN
@@ -209,11 +212,23 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 
 		if gp_playbook.DataFeeder.Type == "csv" {
 			if !feeder.Csv(gp_playbook.DataFeeder, path.Dir(*gp_scriptfile)) {
-				sendStatusError(c, fmt.Sprintf("Could not load feeder data"))
+				sendStatusError(c, fmt.Sprintf("Could not load feeder data %s", gp_playbook.DataFeeder), "")
 			}
 		} else if gp_playbook.DataFeeder.Type != "" {
-			sendStatusError(c, fmt.Sprintf("Unsupported feeder type: %s", gp_playbook.DataFeeder.Type))
+			sendStatusError(c, fmt.Sprintf("Unsupported feeder type: %s", gp_playbook.DataFeeder.Type), "")
 		}
+	}
+}
+
+func handleGetMD5(c *Client, cmd *manager.PlayerCommand) {
+	// Must compute and return the MD5 sum of the filename given in Value.
+	// If the file does not exist, returns an error
+	if md5sum, err := utils.Hash_file_md5(cmd.Value); err == nil {
+		sendStatusOKMsg(c, md5sum)
+		log.Infof("Received GetMD5 for file %s", cmd.Value)
+		log.Infof("MD5 sum is %s", md5sum)
+	} else {
+		sendStatusError(c, fmt.Sprintf("Could not compute MD5sum of file %s", cmd.Value), err.Error())
 	}
 }
 
@@ -221,7 +236,7 @@ func handleDataFile(c *Client, cmd *manager.PlayerCommand) {
 	data, err := base64.StdEncoding.DecodeString(cmd.Value)
 	if err != nil {
 		gp_daemon_status = IDLE
-		sendStatusError(c, "Error while decoding string from Base64")
+		sendStatusError(c, "Error while decoding string from Base64", err.Error())
 		return
 	}
 
@@ -232,18 +247,18 @@ func handleDataFile(c *Client, cmd *manager.PlayerCommand) {
 	if os.IsNotExist(err) {
 		log.Debugf("Must create the Output Directory %s", outputdir)
 		if err := os.MkdirAll(outputdir, 0755); err != nil {
-			sendStatusError(c, fmt.Sprintf("Cannot create Output Directory %s: %s", outputdir, err.Error()))
+			sendStatusError(c, fmt.Sprintf("Cannot create Output Directory %s", outputdir), err.Error())
 			return
 		}
 	} else if stat.Mode().IsRegular() {
-		sendStatusError(c, fmt.Sprintf("Output Directory %s already exists as a file !", outputdir))
+		sendStatusError(c, fmt.Sprintf("Output Directory %s already exists as a file !", outputdir), "")
 		return
 	}
 
 	err = ioutil.WriteFile(cmd.MoreInfo, data, 0644)
 	if err != nil {
 		gp_daemon_status = IDLE
-		sendStatusError(c, fmt.Sprintf("Error while writing file %s", cmd.MoreInfo))
+		sendStatusError(c, fmt.Sprintf("Error while writing file %s", cmd.MoreInfo), err.Error())
 		return
 	}
 
@@ -255,7 +270,7 @@ func handleDataChunk(c *Client, cmd *manager.PlayerCommand) {
 	data, err := base64.StdEncoding.DecodeString(cmd.Value)
 	if err != nil {
 		gp_daemon_status = IDLE
-		sendStatusError(c, "Error while decoding string from Base64")
+		sendStatusError(c, "Error while decoding string from Base64", err.Error())
 		return
 	}
 
@@ -266,26 +281,26 @@ func handleDataChunk(c *Client, cmd *manager.PlayerCommand) {
 	if os.IsNotExist(err) {
 		log.Debugf("Must create the Output Directory %s", outputdir)
 		if err := os.MkdirAll(outputdir, 0755); err != nil {
-			sendStatusError(c, fmt.Sprintf("Cannot create Output Directory %s: %s", outputdir, err.Error()))
+			sendStatusError(c, fmt.Sprintf("Cannot create Output Directory %s", outputdir), err.Error())
 			return
 		}
 	} else if stat.Mode().IsRegular() {
-		sendStatusError(c, fmt.Sprintf("Output Directory %s already exists as a file !", outputdir))
+		sendStatusError(c, fmt.Sprintf("Output Directory %s already exists as a file !", outputdir), "")
 		return
 	}
 
 	f, err := os.OpenFile(cmd.MoreInfo, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		sendStatusError(c, fmt.Sprintf("Cannot open the file %s in append mode", cmd.MoreInfo))
+		sendStatusError(c, fmt.Sprintf("Cannot open the file %s in append mode", cmd.MoreInfo), err.Error())
 		return
 	}
 	if _, err := f.Write(data); err != nil {
 		gp_daemon_status = IDLE
-		sendStatusError(c, fmt.Sprintf("Error while writing file %s", cmd.MoreInfo))
+		sendStatusError(c, fmt.Sprintf("Error while writing file %s", cmd.MoreInfo), err.Error())
 		return
 	}
 	if err := f.Close(); err != nil {
-		sendStatusError(c, fmt.Sprintf("Error while closing file %s", cmd.MoreInfo))
+		sendStatusError(c, fmt.Sprintf("Error while closing file %s", cmd.MoreInfo), err.Error())
 		return
 	}
 
@@ -295,7 +310,7 @@ func handleDataChunk(c *Client, cmd *manager.PlayerCommand) {
 
 func getResultsCommand(c *Client, cmd *manager.PlayerCommand) {
 	if !g_results_available {
-		sendStatusError(c, "No Results available")
+		sendStatusError(c, "No Results available", "")
 		return
 	}
 
@@ -303,7 +318,7 @@ func getResultsCommand(c *Client, cmd *manager.PlayerCommand) {
 
 	data, err := ioutil.ReadFile(gp_outputfile)
 	if err != nil {
-		sendStatusError(c, "Error while readin File Results")
+		sendStatusError(c, "Error while readin File Results", "")
 		return
 	}
 
@@ -325,28 +340,29 @@ func getResultsCommand(c *Client, cmd *manager.PlayerCommand) {
 
 // Send OK
 func sendStatusOK(c *Client) {
-	sendStatus(c, "OK", "")
+	sendStatus(c, "OK", "", "")
 }
 
 // Send OK
 func sendStatusOKMsg(c *Client, msg string) {
-	sendStatus(c, "OK", msg)
+	sendStatus(c, "OK", msg, "")
 }
 
 // Send an Error
-func sendStatusError(c *Client, msg string) {
+func sendStatusError(c *Client, msg string, detail string) {
 	log.Error(msg)
-	sendStatus(c, "ERR", msg)
+	sendStatus(c, "ERR", msg, detail)
 }
 
 // Send a Status back to the manager
-func sendStatus(c *Client, level string, msg string) {
+func sendStatus(c *Client, level string, msg string, detail string) {
 	log.Debugf("sendStatus: %s", msg)
 	var resp = &manager.PlayerStatus{
 		Type:   "status",
 		Status: statusString[gp_daemon_status],
 		Level:  level,
 		Msg:    msg,
+		Detail: detail,
 	}
 	j, _ := json.Marshal(resp)
 	//c.send <- j

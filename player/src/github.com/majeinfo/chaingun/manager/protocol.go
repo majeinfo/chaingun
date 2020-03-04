@@ -6,6 +6,7 @@ type PlayerStatus struct {
 	Status string `json:"status"`
 	Level  string `json:"level"`
 	Msg    string `json:"msg"`
+	Detail string `json:"detail"`
 }
 
 // PlayerCommand describes the commands exchanged in JSON message
