@@ -1,0 +1,49 @@
+# This script is used to test the transfer of
+# # the 3 file categories (feeder, data, upload)
+---
+iterations: 1
+users: 1
+rampup: 2
+
+default:
+  server: www.delamarche.com
+  protocol: http
+  method: GET
+
+feeder:
+  type: csv
+  filename: data1.csv
+  separator: ","
+
+actions:
+  - http:
+      title: Page 1
+      url: /chaingun/page1.php
+      storeCookie: __all__
+  - http:
+      title: Page 3
+      url: /chaingun/page3.php?nom=${nom}
+  - http:
+      title: Page 4
+      method: POST
+      url: /chaingun/page4.php
+      template: tpl/template1.tpl
+      responses:
+        - regex: "is: (.*)<br>"
+          index: first
+          variable: address
+  - http:
+      title: Page upload
+      method: POST
+      url: /chaingun/upload.php
+      formdata:
+        - name: nom
+          value: bob
+        - name: adresse
+          value: rue des Buissonnets
+        - name: fileToUpload
+          value: upload/un_fichier.txt
+          type: file
+        - name: submit
+          value: "1"
+

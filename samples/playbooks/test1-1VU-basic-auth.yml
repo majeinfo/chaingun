@@ -1,0 +1,19 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+
+variables:
+  auth_user: chaingun
+  auth_passwd: password
+
+actions:
+  - setvar:
+      variable: other_var
+      expression: 10
+
+  - http:
+      title: Page needs basic auth
+      method: GET
+      #url: http://${auth_user}:${auth_passwd}@www.delamarche.com/chaingun/private/page1.html?${other_var}
+      url: http://www.delamarche.com/chaingun/private/page1.html

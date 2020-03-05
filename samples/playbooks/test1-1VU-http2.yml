@@ -1,0 +1,21 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+actions:
+  - http:
+      title: Page sur serveur sans HTTP/2 mais en HTTP/1.1
+      method: GET
+      url: https://www.delamarche.com/chaingun/page1.php
+
+  - http:
+      title: Page sur serveur sans HTTP/2
+      method: GET
+      use_http2: true
+      url: https://www.delamarche.com/chaingun/page1.php
+
+  - http:
+      title: Page avec support HTTP/2
+      method: GET
+      use_http2: true
+      url: https://www.google.com/

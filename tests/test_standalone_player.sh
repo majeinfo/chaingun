@@ -102,6 +102,9 @@ Req_OK requests/2VU-extract-from-header.yml
 Req_Error requests/1VU-http-timeout.yml 'HTTP request failed: net/http: timeout awaiting response headers'
 # TODO: test timeout with ws
 
+# Test a pre-action
+Req_OK requests/pre_actions1.yml
+
 rm -f $$.out 2>/dev/null
 if [ $ERRORS -gt 0 ]; then
 	exit 1

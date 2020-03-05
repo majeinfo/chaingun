@@ -1,0 +1,20 @@
+---
+iterations: 2
+users: 2
+rampup: 1
+
+pre_actions:
+  - http:
+      title: Page pre_action
+      method: GET
+      url: http://localhost:8000/pre_action.php
+
+actions:
+  - http:
+      title: Page 1
+      method: GET
+      url: http://localhost:8000/page1.php
+
+  - log:
+      message: HTTP Response=${HTTP_Response}
+

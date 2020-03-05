@@ -1,0 +1,16 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+default:
+  server: www.delamarche.com:80
+  protocol: http
+  method: GET
+on_error: stop_test
+actions:
+  - http:
+      title: Upload a file
+      method: PUT
+      url: /chaingun/un_fichier.txt
+      upload_file: upload/words.10000
+      #upload_file: upload/un_fichier.txt
