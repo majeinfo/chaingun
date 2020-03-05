@@ -90,7 +90,7 @@ actions:
 Pre-Actions are played only once before starting the VUs.
 Actions are played by the VUs.
 In "batch" mode, only the first injector given on the command line will play the pre-actions.
-Pre-actions are not still handled in "manager" mode.
+Pre-actions are also handled in "manager" mode (i.e using the embedded Web Interface).
 
 
 Here is the list and the description of the implemented Actions :

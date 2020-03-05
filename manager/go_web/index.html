@@ -111,7 +111,7 @@
                                         <label id="label_fibut1" class="btn btn-default">Send File<input id="fibut1" type="file" hidden style="display:none;" onchange="OpenDataFile(1, event)" disabled></label>
                                         <label id="label_scriptbut1" class="btn btn-default">Send Script<input id="scriptbut1" type="file" hidden style="display:none;" onchange="OpenFile(1, event)" disabled></label>
                                         <label id="label_dfbut1" class="btn btn-default">Send Data<input id="dfbut1" type="file" hidden style="display:none;" onchange="OpenDataFeedFile(1, event)" disabled></label>
-                                        <button id="startbut1" type="button" class="btn btn-default" onclick="Start(1)" disabled>Start</button>
+                                        <button id="startbut1" type="button" class="btn btn-default" onclick="Start(1, true)" disabled>Start</button>
                                         <button id="stopbut1" type="button" class="btn btn-default" onclick="Stop(1)" disabled>Stop</button>
                                         <button id="getresbut1" type="button" class="btn btn-default" onclick="GetResults(1)" disabled>Get Results</button>
                                     </td>
@@ -165,8 +165,16 @@
 <!-- <script src="/static/js/js-yaml.min.js"></script> -->
     
 <script>
+// Injectors possible status
+const states = {
+    IDLE: 0,
+    RUNNING: 1,
+    RUNNING_PRE_ACTIONS: 2
+};
+
 var injector_count = 1;
 var ws_conns = {};
+var ws_states = {};
 var series = {};
 var column_count = 6;
 var repository_name;
@@ -239,6 +247,7 @@ function ConnectToWS(id) {
 
     // Connect
     ws_conns[host] = new WebSocket("ws://" + host + "/upgrade"); 
+    ws_states[host] = states.IDLE;
     ws_conns[host].onopen = function(event) {
         console.log('onopen', event);
         but.text('Disconnect');
@@ -271,6 +280,7 @@ function ConnectToWS(id) {
             lastmsg.text(data.msg);
             //if (data.level == "OK" && (data.msg == "Idle" || data.msg == "Ready to run Script")) {
             if (data.status == "Idle" || data.status == "Ready to run Script") { 
+                ws_states[host] = states.IDLE;
                 EnableButton("#startbut" + id); 
                 EnableButton("#getresbut" + id);
                 if (data.status == "Idle") {
@@ -319,7 +329,7 @@ function _close_conn(id) {
     var info = $("#worker" + id);         
 
     if (ws_conns[host] && ws_conns[host].hasOwnProperty('close')) {
-        ws_conns[host].websocket.close();
+        ws_conns[host].close();
     }
     ws_conns[host] = undefined;
     but.text('Connect');
@@ -510,13 +520,39 @@ function StartAll() {
     var rows_selected = _get_selected_rows();
     if (!rows_selected) return;
 
-    $.each(rows_selected, function(index, rowId){
-        console.log(index + 1);
-        Start(index + 1);
-    });
+    // First injector will launch the pre-actions
+    Start(1, true);
+    var host = $("#ws_host" + 1).val();       
+    var loop = setInterval(function() {
+        if (ws_states[host] == states.RUNNING_PRE_ACTIONS) {
+            return;
+        }
+        clearInterval(loop);
+
+        $.each(rows_selected, function(index, rowId){
+            if (index != 0) { 
+                console.log(index + 1);
+                Start(index + 1, false);
+            }
+        });
+    }, 1000);
 }
 
-function Start(id) {
+function _preStartActions(id) {
+    var host = $("#ws_host" + id).val();       
+
+    console.log('send pre_start');
+    if (!ws_conns[host]) {
+        DisplayError("Please connect the Injector " + host + ", first !");
+        return;
+    }    
+
+    // Block until the end of pre_actions
+    ws_states[host] = states.RUNNING_PRE_ACTIONS;
+    ws_conns[host].send('{ "cmd": "pre_start" }');
+}
+
+function _start(id) {
     var host = $("#ws_host" + id).val();       
 
     console.log('send start');
@@ -526,10 +562,32 @@ function Start(id) {
     }    
     series[id].setData(_init_data());
 
+    ws_states[host] = states.RUNNING;
     ws_conns[host].send('{ "cmd": "start" }');
     DisableButton("#startbut" + id);
     DisableButton("#getresbut" + id);
     EnableButton("#stopbut" + id);    
+}
+
+function Start(id, must_play_pre_actions) {
+    var host = $("#ws_host" + id).val();       
+
+    if (must_play_pre_actions) {
+        _preStartActions(id);
+        
+        // Block until pre-actions have been played
+        var loop = setInterval(function() {
+            if (ws_states[host] == states.RUNNING_PRE_ACTIONS) {
+                return;
+            }
+            clearInterval(loop);
+            _start(id);
+        }, 1000);
+        
+        return;
+    }
+
+    _start(id);
 }
 
 function StopAll() {
@@ -928,7 +986,7 @@ function AddInjector() {
                         '<label id="label_fibut' + ic +'" class="btn btn-default">Send File<input id="fibut' + ic +'" type="file" hidden style="display:none;" onchange="OpenDataFile(' + ic +', event)" disabled></label>&nbsp;' +
                         '<label id="label_scriptbut' + ic +'" class="btn btn-default">Send Script<input id="scriptbut' + ic + '" type="file" hidden style="display:none;" onchange="OpenFile(' + ic + ', event)" disabled></label>&nbsp;' +
                         '<label id="label_dfbut' + ic +'" class="btn btn-default">Send Data<input id="dfbut' + ic +'" type="file" hidden style="display:none;" onchange="OpenDataFeedFile(' + ic +', event)" disabled></label>&nbsp;' +
-                        '<button id="startbut' + ic + '" type="button" class="btn btn-default" onclick="Start(' + ic + ')" disabled>Start</button>&nbsp;' +
+                        '<button id="startbut' + ic + '" type="button" class="btn btn-default" onclick="Start(' + ic + ', true)" disabled>Start</button>&nbsp;' +
                         '<button id="stopbut' + ic + '" type="button" class="btn btn-default" onclick="Stop(' + ic + ')" disabled>Stop</button>&nbsp;' +
                         '<button id="getresbut' + ic + '" type="button" class="btn btn-default" onclick="GetResults(' + ic + ')" disabled>Get Results</button>' +
                     '</td>' +

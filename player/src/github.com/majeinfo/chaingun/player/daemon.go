@@ -114,7 +114,7 @@ func preStartCommand(c *Client) {
 	}
 
 	gp_daemon_status = RUNNING
-	sendStatusOK(c)
+	sendStatusOKMsg(c, "Launch pre-actions")
 	go _preStartCommand(c)
 }
 

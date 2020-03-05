@@ -1,7 +1,8 @@
 ---
-iterations: 3
+iterations: 30
 users: 2
 rampup: 1
+timeout: 30
 
 pre_actions:
   - http:
