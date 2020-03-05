@@ -317,7 +317,7 @@ function _close_conn(id) {
     var but = $("#connbut" + id);
     var info = $("#worker" + id);         
 
-    if (ws_conns[host]) {
+    if (ws_conns[host] && ws_conns[host].hasOwnProperty('close')) {
         ws_conns[host].close();
     }
     ws_conns[host] = undefined;
