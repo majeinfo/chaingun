@@ -6,6 +6,7 @@ import (
 	"github.com/majeinfo/chaingun/action"
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
+	"github.com/majeinfo/chaingun/utils"
 	"github.com/majeinfo/chaingun/viewer"
 	"io/ioutil"
 	"net/url"
@@ -107,17 +108,21 @@ func StartBatch(mgrAddr *string, reposdir *string, prelaunched_injectors *string
 }
 
 func runScript(script_file *string) {
-	// Read all the data files
+	// Read all the data files and compute their MD5sum
 	var encoded_files = make(map[string]string, len(action.GetEmbeddedFilenames()))
+	var md5sums = make(map[string]string, len(action.GetEmbeddedFilenames()))
+
 	for _, fname := range action.GetEmbeddedFilenames() {
 		data, err := ioutil.ReadFile(fname)
 		if err != nil {
 			log.Fatalf("Cannot read the data file %s: %s", fname, err)
 		}
 		encoded_files[fname] = base64.StdEncoding.EncodeToString(data)
+		md5sums[fname], err = utils.Hash_file_md5(fname)
 		if err != nil {
-			log.Fatalf("Cannot encode the data file %s: %s", fname, err)
+			log.Fatalf("Cannot compute MD5sum of file %s: %s", fname, err)
 		}
+		log.Debugf("MD5sum for file %s is %s", fname, md5sums[fname])
 	}
 
 	// Read the scenario file and convert it in Base64
@@ -127,16 +132,13 @@ func runScript(script_file *string) {
 	}
 
 	encoded_data := base64.StdEncoding.EncodeToString(data)
-	if err != nil {
-		log.Fatalf("Cannot encode the script file %s: %s", *script_file, err)
-	}
 
 	wg := sync.WaitGroup{}
 	pre_tasks_lock.Lock()
 	first_injector := true
 	for injector, conn := range injectorClients {
 		wg.Add(1)
-		go runScriptOnInjector(first_injector, injector, conn, script_file, encoded_data, encoded_files, &wg)
+		go runScriptOnInjector(first_injector, injector, conn, script_file, encoded_data, encoded_files, md5sums, &wg)
 		first_injector = false
 	}
 	log.Info("Waiting for the Injectors to complete their job...")
@@ -160,14 +162,15 @@ func runScript(script_file *string) {
 	}
 }
 
-func runScriptOnInjector(first_injector bool, injector string, conn *websocket.Conn, script_file *string, encoded_data string, encoded_files map[string]string, wg *sync.WaitGroup) error {
+func runScriptOnInjector(first_injector bool, injector string, conn *websocket.Conn, script_file *string, encoded_data string,
+	encoded_files map[string]string, md5sums map[string]string, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
 	// TODO: file names are computed from script file location or they can be given using S3 URL ?
 
 	// Send the data and feeder files
 	for _, fname := range action.GetEmbeddedFilenames() {
-		sendDataFile(injector, conn, fname, encoded_files[fname])
+		sendDataFile(injector, conn, fname, encoded_files[fname], md5sums[fname])
 	}
 
 	// Send the script
@@ -209,12 +212,12 @@ func sendScript(injector string, conn *websocket.Conn, script_file *string, enco
 	log.Infof("Send script %s to Injector %s", *script_file, injector)
 	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"script\", \"moreinfo\": \""+*script_file+"\", \"value\": \""+encoded_data+"\" }"))
 	if err != nil {
-		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+		log.Errorf("Error when writing to Injector %s: %s", injector, err)
 		return err
 	}
 	_, message, err := conn.ReadMessage()
 	if err != nil {
-		log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+		log.Errorf("Could not get answer from Injector %s: %s", injector, err)
 		return err
 	}
 	//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
@@ -224,8 +227,34 @@ func sendScript(injector string, conn *websocket.Conn, script_file *string, enco
 	return nil
 }
 
-func sendDataFile(injector string, conn *websocket.Conn, fname string, encoded_data string) error {
+func sendDataFile(injector string, conn *websocket.Conn, fname string, encoded_data string, md5sum string) error {
 	log.Infof("Send data file %s (%d) to Injector %s", fname, len(encoded_data), injector)
+
+	// Get the remote MD5 value
+	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"getmd5\", \"moreinfo\": \"\", \"value\": \""+fname+"\" }"))
+	if err != nil {
+		log.Errorf("Error when writing to Injector %s: %s", injector, err)
+		return err
+	}
+	_, message, err := conn.ReadMessage()
+	if err != nil {
+		log.Errorf("Could not get answer from Injector %s: %s", injector, err)
+		return err
+	}
+	// If MD5 sum match then do not send the file content !
+	var stat PlayerStatus
+	err = json.Unmarshal(message, &stat)
+	if err != nil {
+		log.Errorf("Message from Injector %s could not be decoded as JSON", injector)
+		return err
+	}
+	log.Debugf("Injector %s returned MD5sum value %s for file %s", injector, stat.Msg, fname)
+	if stat.Msg == md5sum {
+		log.Debugf("Returned MD5sum matches => file %s not transfered", fname)
+		return nil
+	} else {
+		log.Debugf("Returned MD5sum does not match => file %s (re)transferred", fname)
+	}
 
 	// Data to be sent may be huge, so we must send them by chunks...
 	const CHUNKSIZE = 30_000
@@ -234,12 +263,12 @@ func sendDataFile(injector string, conn *websocket.Conn, fname string, encoded_d
 		// No need to split the data in chunks
 		err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"datafile\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data+"\" }"))
 		if err != nil {
-			log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+			log.Errorf("Error when writing to Injector %s: %s", injector, err)
 			return err
 		}
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+			log.Errorf("Could not get answer from Injector %s: %s", injector, err)
 			return err
 		}
 		//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
@@ -249,12 +278,12 @@ func sendDataFile(injector string, conn *websocket.Conn, fname string, encoded_d
 		// Send first chunk
 		err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"datafile\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data[:CHUNKSIZE]+"\" }"))
 		if err != nil {
-			log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+			log.Errorf("Error when writing to Injector %s: %s", injector, err)
 			return err
 		}
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+			log.Errorf("Could not get answer from Injector %s: %s", injector, err)
 			return err
 		}
 		//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
@@ -267,12 +296,12 @@ func sendDataFile(injector string, conn *websocket.Conn, fname string, encoded_d
 			log.Infof("Send data chunk %s to Injector %s", fname, injector)
 			err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"nextchunk\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data[:CHUNKSIZE]+"\" }"))
 			if err != nil {
-				log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+				log.Errorf("Error when writing to Injector %s: %s", injector, err)
 				return err
 			}
 			_, message, err := conn.ReadMessage()
 			if err != nil {
-				log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+				log.Errorf("Could not get answer from Injector %s: %s", injector, err)
 				return err
 			}
 			//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
@@ -286,12 +315,12 @@ func sendDataFile(injector string, conn *websocket.Conn, fname string, encoded_d
 		log.Infof("Send last data chunk %s to Injector %s", fname, injector)
 		err = conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"nextchunk\", \"moreinfo\": \""+fname+"\", \"value\": \""+encoded_data+"\" }"))
 		if err != nil {
-			log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+			log.Errorf("Error when writing to Injector %s: %s", injector, err)
 			return err
 		}
 		_, message, err = conn.ReadMessage()
 		if err != nil {
-			log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+			log.Errorf("Could not get answer from Injector %s: %s", injector, err)
 			return err
 		}
 		//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
@@ -306,12 +335,12 @@ func preStartScript(injector string, conn *websocket.Conn) error {
 	log.Infof("Start pre-actions on Injector %s", injector)
 	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"pre_start\" }"))
 	if err != nil {
-		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+		log.Errorf("Error when writing to Injector %s: %s", injector, err)
 		return err
 	}
 	_, message, err := conn.ReadMessage()
 	if err != nil {
-		log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+		log.Errorf("Could not get answer from Injector %s: %s", injector, err)
 		return err
 	}
 	//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
@@ -321,7 +350,7 @@ func preStartScript(injector string, conn *websocket.Conn) error {
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+			log.Errorf("Could not get answer from Injector %s: %s", injector, err)
 			return err
 		}
 		log.Debugf("Injector %s sent: %s", injector, message)
@@ -353,12 +382,12 @@ func startScript(injector string, conn *websocket.Conn) error {
 	log.Infof("Start script on Injector %s", injector)
 	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"start\" }"))
 	if err != nil {
-		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+		log.Errorf("Error when writing to Injector %s: %s", injector, err)
 		return err
 	}
 	_, message, err := conn.ReadMessage()
 	if err != nil {
-		log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+		log.Errorf("Could not get answer from Injector %s: %s", injector, err)
 		return err
 	}
 	//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
@@ -368,7 +397,7 @@ func startScript(injector string, conn *websocket.Conn) error {
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+			log.Errorf("Could not get answer from Injector %s: %s", injector, err)
 			return err
 		}
 		log.Debugf("Injector %s sent: %s", injector, message)
@@ -401,12 +430,12 @@ func getResults(injector string, conn *websocket.Conn) error {
 	log.Infof("Get results from Injector %s", injector)
 	err := conn.WriteMessage(websocket.TextMessage, []byte("{ \"cmd\": \"get_results\" }"))
 	if err != nil {
-		log.Fatalf("Error when writing to Injector %s: %s", injector, err)
+		log.Errorf("Error when writing to Injector %s: %s", injector, err)
 		return err
 	}
 	_, message, err := conn.ReadMessage()
 	if err != nil {
-		log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+		log.Errorf("Could not get answer from Injector %s: %s", injector, err)
 		return err
 	}
 	log.Debugf("Injector %s answers: %s", injector, message)
@@ -414,7 +443,7 @@ func getResults(injector string, conn *websocket.Conn) error {
 
 	_, message, err = conn.ReadMessage()
 	if err != nil {
-		log.Fatalf("Could not get answer from Injector %s: %s", injector, err)
+		log.Errorf("Could not get answer from Injector %s: %s", injector, err)
 		return err
 	}
 	log.Debugf("Injector %s sent: %s", injector, message)
