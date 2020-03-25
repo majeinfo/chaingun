@@ -74,6 +74,9 @@ func _buildActionList(playbook *config.TestDef, playbook_actions []map[string]in
 				case "udp":
 					action, valid = NewUDPAction(actionMap)
 					break
+				case "mongodb":
+					action, valid = NewMongoDBAction(actionMap, playbook.DfltValues, playbook)
+					break
 				case "log":
 					action, valid = NewLogAction(actionMap)
 					break

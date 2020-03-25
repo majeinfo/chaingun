@@ -10,6 +10,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	REPORTER_TCP string = "TCP"
+)
+
 // DoTCPRequest accepts a TcpAction and a one-way channel to write the results to.
 func DoTCPRequest(tcpAction TCPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry) {
 
@@ -43,7 +47,7 @@ func DoTCPRequest(tcpAction TCPAction, resultsChannel chan reporter.SampleReqRes
 func buildTCPResult(vid string, contentLength int, status int, elapsed int64, title string) reporter.SampleReqResult {
 	sampleReqResult := reporter.SampleReqResult{
 		Vid:     vid,
-		Type:    "TCP",
+		Type:    REPORTER_TCP,
 		Latency: elapsed,
 		Size:    contentLength,
 		Status:  status,

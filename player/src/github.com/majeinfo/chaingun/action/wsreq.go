@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+const (
+	REPORTER_WS string = "WS"
+)
+
 // DoWSRequest handles requests made using WebSocket Protocol
 // TODO: manage cookies !
 func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
@@ -80,7 +84,7 @@ func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult
 	elapsed := time.Since(start)
 	vulog.Debugf("elapsed time=%d", elapsed)
 
-	sampleReqResult := buildSampleResult("WS", sessionMap["UID"], bodyLen, respCode, elapsed.Nanoseconds(), wsAction.Title, wsAction.URL)
+	sampleReqResult := buildSampleResult(REPORTER_WS, sessionMap["UID"], bodyLen, respCode, elapsed.Nanoseconds(), wsAction.Title, wsAction.URL)
 	resultsChannel <- sampleReqResult
 
 	return ok

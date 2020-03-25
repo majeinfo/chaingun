@@ -44,6 +44,7 @@ You define your custom variables like this:
 | Parameter Name | Description |
 | :--- | :--- |
 | `HTTP_Response` | contains the HTTP returned code |
+| `MONGODB_Last_Insert_ID` | contains the value of the "_id" field of the last inserted document (string) |
 
 ## User defined Variables
 
@@ -69,9 +70,11 @@ The supported parameter_name(s) are:
 
 | Name | Description | Example values |
 | :--- | :---:       | :--- |
-| `server`   | name of remoter server - may also specify a port | www.google.com:80 or www.bing.com |
+| `server`   | name of remoter server - may also specify a port | www.google.com:80 or www.bing.com or mongodb://localhost:27017 |
 | `protocol` | protocol to be used | http or https |
 | `method`   | HTTP method to use | GET or POST |
+| `database` | default database for MongoDB | |
+| `collection` | default collection for MongoDB | |
 
 
 # Actions and Pre-Actions
@@ -114,80 +117,118 @@ Here is the list and the description of the implemented Actions :
 
 Examples:
 ```
-  - http:
-      title: Page 1			# MAND for http action
-      method: GET			# MAND for http action (GET/POST/PUT/HEAD/DELETE)
-      url: http://server/page1.php	# MAND for http action
-      # name of Cookie to store. __all__ catches all cookies !
-      storeCookie: __all__
+- http:
+    title: Page 1			# MAND for http action
+    method: GET				# MAND for http action (GET/POST/PUT/HEAD/DELETE)
+    url: http://server/page1.php	# MAND for http action
+    # name of Cookie to store. __all__ catches all cookies !
+    storeCookie: __all__
 
-  # POST with application/x-www-form-urlencoded by default
-  # Extracts value from response using regexp
-  - http:
-      title: Page 4
-      method: POST
-      use_http2: true
-      url: http://server/page4.php              # variables are interpolated in URL, but only
-						# for the URI part (not the server name)
-      body: name=${name}&age=${age}	# MAND for POST http action
-      headers:
-        accept: "text/html,application/json"    # variables are interpolated in Headers
-        content-type: text/html
-      responses:			# OPT
-        - regex: "is: (.*)<br>"		# MAND must be one of regex/jsonpath/xmlpath
-          index: first			# OPT must be one of first (default)/last/random
-          variable: address		# MAND
-          default_value: bob		# used when the regex failed
-        - from_header: Via		# OPT HTTP Header name to extract the value from
-          regex: "(.*)"			# MAND 
-          index: first			# OPT must be one of first (default)/last/random
-          variable: proxy_via		# MAND
-          default_value: -		# used when the regex failed
+# POST with application/x-www-form-urlencoded by default
+# Extracts value from response using regexp
+- http:
+    title: Page 4
+    method: POST
+    use_http2: true
+    url: http://server/page4.php              # variables are interpolated in URL, but only
+					      # for the URI part (not the server name)
+    body: name=${name}&age=${age}	      # MAND for POST http action
+    headers:
+      accept: "text/html,application/json"    # variables are interpolated in Headers
+      content-type: text/html
+    responses:				# OPT
+      - regex: "is: (.*)<br>"		# MAND must be one of regex/jsonpath/xmlpath
+        index: first			# OPT must be one of first (default)/last/random
+        variable: address		# MAND
+        default_value: bob		# used when the regex failed
+      - from_header: Via		# OPT HTTP Header name to extract the value from
+        regex: "(.*)"			# MAND 
+        index: first			# OPT must be one of first (default)/last/random
+        variable: proxy_via		# MAND
+        default_value: -		# used when the regex failed
 
-  # POST with variable interpolation in the request
-  # Extracts value from response using regexps
-  - http:
-      title: Page 4bis
-      method: POST
-      url: http://server/page4.php
-      body: name=${name}&age=${age}
-      responses:
-        - regex: "is: (.*), .*<br>"
-          index: first
-          variable: address
-        - regex: "(?i)is: .*, (.*)<br>"
-          index: first
-          variable: city
+# POST with variable interpolation in the request
+# Extracts value from response using regexps
+- http:
+    title: Page 4bis
+    method: POST
+    url: http://server/page4.php
+    body: name=${name}&age=${age}
+    responses:
+      - regex: "is: (.*), .*<br>"
+        index: first
+        variable: address
+      - regex: "(?i)is: .*, (.*)<br>"
+        index: first
+        variable: city
 
-  # POST with extraction from response using JSON    
-  - http:
-      title: Page 6
-      method: POST
-      url: http://server/page4.php
-      body: name=${name}&age=${age}
-      responses:
-        - jsonpath: $.name+
-          index: first
-          variable: name
-          default_value: bob
+# POST with extraction from response using JSON    
+- http:
+    title: Page 6
+    method: POST
+    url: http://server/page4.php
+    body: name=${name}&age=${age}
+    responses:
+      - jsonpath: $.name+
+        index: first
+        variable: name
+        default_value: bob
 
-  # POST with content specified using a template file       
-  - http:
-      title: Page 7
-      method: POST
-      url: /demo/form.php
-      template: tpl/mytemplate.tpl	# POST needs body or template
+# POST with content specified using a template file       
+- http:
+    title: Page 7
+    method: POST
+    url: /demo/form.php
+    template: tpl/mytemplate.tpl	# POST needs body or template
 					# template refers to a file which contents
 					# will be used as the request body. Variables
 					# are interpolated in the file contents.
 
-  # File upload
-  - http:
-      title: Page 8
-      method: POST
-      url: http://server/page4.php
-      body: name=${name}&age=${age}     # Optional
-      upload_file: /path/to/file        # no variable interpolation
+# File upload
+- http:
+    title: Page 8
+    method: POST
+    url: http://server/page4.php
+    body: name=${name}&age=${age}     # Optional
+    upload_file: /path/to/file        # no variable interpolation
+```
+
+## mongodb: MongoDB Request
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `title` | mandatory string that qualifies the request - used for the result output and logging |
+| `server` | mandatory. If the string does not contain a server specification, use the value given by the `server` key in the default section |
+| `database` | mandatory. If the string is empty, use the value given by the `database` key in the default section |
+| `collection` | mandatory. If the string is empty, use the value given by the `collection` key in the default section |
+| `command` | mandatory. Possible commands are 'findone', 'insertone' and 'drop' |
+| `filter` | If the command is 'findone', the 'filter' parameter is a JSON document used to filter the search |
+| `document` | If the command is 'insertone', the 'document' parameter is a JSON document that must be inserted in the database collection |
+| `responses` | data can be extracted from server responses when 'findone' command is played. regex, jsonpath or xmlpath can be used to collect the substrings |
+
+Examples:
+```
+- mongodb:
+    title: Insert data
+    server: mongodb://localhost:27017
+    database: testing
+    collection: person
+    command: insertone
+    document: '{"name": "${name}", "age": 30, "children" : [ {"name": "alice"}, {"name": "bob"} ]}'
+- mongodb:
+    title: Recherche
+    server: mongodb://localhost:27017
+    database: testing
+    collection: person
+    command: findone
+    filter: '{"age": { "$eq": 30}}'
+    responses:
+      - jsonpath: $.name+
+        variable: the_name
+        index: first
+        default_value: alice
+- log:
+    message: "found name is ${the_name}"
 ```
 
 ## ws: WebSocket Request
@@ -229,15 +270,15 @@ Variable interpolation applies to url, payload and topic.
 
 Example:
 ```
-  - mqtt:
-      title: Temperature		# MAND
-      url: tcps://endpoint.iot.eu-west-1.amazonaws.com:8883/mqtt	# MAND
-      certificatepath: path/to/cert	# OPT needed if auth by certificate
-      privatekeypath: path/to/privkey	# OPT needed if auth by certificate
-      clientid: basicPubSub		# OPT "chaingun-by-JD" by default
-      topic: "sensors/room1"		# MAND
-      payload: "{ \"Temp\": \"20°C\" }"	# MAND format depends on your app
-      qos: 1				# OPT values can be 0, 1 (default) or 2
+- mqtt:
+    title: Temperature			# MAND
+    url: tcps://endpoint.iot.eu-west-1.amazonaws.com:8883/mqtt	# MAND
+    certificatepath: path/to/cert	# OPT needed if auth by certificate
+    privatekeypath: path/to/privkey	# OPT needed if auth by certificate
+    clientid: basicPubSub		# OPT "chaingun-by-JD" by default
+    topic: "sensors/room1"		# MAND
+    payload: "{ \"Temp\": \"20°C\" }"	# MAND format depends on your app
+    qos: 1				# OPT values can be 0, 1 (default) or 2
 					# Variable interpolation is applied on
 					# url, payload and topic
 ```
@@ -254,9 +295,9 @@ Variable interpolation applies to url and payload.
 
 Example:
 ```
-  - tcp:
-      address: 127.0.0.1:8081
-      payload: "ACT|LOGIN|${person}|${name}\n"
+- tcp:
+    address: 127.0.0.1:8081
+    payload: "ACT|LOGIN|${person}|${name}\n"
 ```
 
 ## setvar : creates and set variable values
@@ -269,9 +310,9 @@ Example:
 Example :
 
 ```
-  - setvar:
-      variable: my_var
-      expression: "2 * age"
+- setvar:
+    variable: my_var
+    expression: "2 * age"
 ```
 
 ## sleep : wait Action
@@ -280,11 +321,24 @@ Example :
 | :--- | :--- |
 | `duration` | mandatory integer that gives the sleep time in milliseconds |
 
+Example :
+
+```
+- sleep:
+    duration: 2000
+```
+
 ## log : log output Action
 
 | Parameter Name | Description |
 | :--- | :--- |
 | `message` | mandatory string that will be displayed on the output or gathered in the logs if the Player is launched in daemon mode. The message can reference variables. |
+
+Example:
+```
+  - log:
+      message: "Variable interpolcation is possible : ${name}"
+```
 
 ## assert : creates assertion
 
@@ -304,23 +358,23 @@ Example:
 
 Variables can be used in the following contexts :
 
-in the following Action parameters, `http.url`, `http.body`, `mqtt.url`, `log.message`, `mqtt.url`, `mqtt.topic`, `mqtt.payload` 
+in the following Action parameters, `http.url`, `http.body`, `mqtt.url`, `log.message`, `mqtt.url`, `mqtt.topic`, `mqtt.payload`, `mongodb.server`, `mongodb.document`, `mongodb.filter`. 
 In these cases, the variable names must be enclosed between `${....}`.
 
 For example:
 
 ```
-  - http:
-      title: Page 3
-      method: GET
-      url: http://server/page3.php?name=${name}
+- http:
+    title: Page 3
+    method: GET
+    url: http://server/page3.php?name=${name}
 
-  - log:
-      message: Address value is ${address} (customer=${customer})
+- log:
+    message: Address value is ${address} (customer=${customer})
 
-  # The HTTP_Response variable is always set after a HTTP action
-  - log:
-      message: HTTP return code=${HTTP_Response}
+# The HTTP_Response variable is always set after a HTTP action
+- log:
+    message: HTTP return code=${HTTP_Response}
 ```
 
 ## Expressions
@@ -354,10 +408,10 @@ Each Action can be triggered by a `when` clause which defines an expression that
 
 Example:
 ```
-  - setvar:
-      variable: xyz
-      expression: "10 * delay"
-    when: "delay > 2"
+- setvar:
+    variable: xyz
+    expression: "10 * delay"
+  when: "delay > 2"
 ```
 
 ## How to import data from the outside
@@ -387,17 +441,17 @@ You can use the `formdata` key to submit form fields encoded with `multipart/for
 your form embeds a field of type `file`.
 
 ```
-  - http:
-      title: Page upload
-      method: POST		# only for POST methods
-      url: http://yourserver/a_page.php
-      formdata:
-        - name: name
-          value: ${a_variable} Doe
-        - name: fileToUpload
-          value: a_filename.txt
-          type: file		# mandatory for files
-        - name: submit
+- http:
+    title: Page upload
+    method: POST		# only for POST methods
+    url: http://yourserver/a_page.php
+    formdata:
+      - name: name
+        value: ${a_variable} Doe
+      - name: fileToUpload
+        value: a_filename.txt
+        type: file		# mandatory for files
+      - name: submit
 ```
 
 ## Handle Basic authentication

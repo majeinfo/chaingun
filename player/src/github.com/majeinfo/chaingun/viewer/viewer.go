@@ -264,7 +264,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 			"#VU":             vus,
 			"#Req":            nbReq,
 			"Latency (in ms)": meanTime,
-			"#HTTP Errors":    errors,
+			"#Appl Errors":    errors,
 			"#Net Errors":     netErrors,
 			"#Rcv Bytes":      rcvBytes,
 		})
@@ -288,7 +288,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	graph(output,
 		total_elapsed_time,
 		"errors_by_code",
-		"HTTP return codes per second",
+		"Returned codes per second",
 		"Elapsed Time (seconds)",
 		"#err",
 		err_series)

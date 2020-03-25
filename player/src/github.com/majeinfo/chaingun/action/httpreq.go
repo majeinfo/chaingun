@@ -21,6 +21,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	REPORTER_HTTP string = "HTTP"
+)
+
 var (
 	cookiePrefix       = "__cookie__"
 	cookiePrefixLength = len(cookiePrefix)
@@ -82,7 +86,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 			vulog.Infof("%s: FAILED (%s)", trace_req, err)
 		}
 		vulog.Errorf("HTTP request failed: %s", err)
-		sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, httpAction.Title, err.Error())
+		sampleReqResult := buildSampleResult(REPORTER_HTTP, sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, httpAction.Title, err.Error())
 		if resp != nil {
 			ioutil.ReadAll(resp.Body)
 			defer resp.Body.Close()
@@ -101,7 +105,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 			vulog.Infof("%s: FAILED (%s)", trace_req, err)
 		}
 		vulog.Printf("Reading HTTP response failed: %s", err)
-		sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], 0, resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title, req.URL.String())
+		sampleReqResult := buildSampleResult(REPORTER_HTTP, sessionMap["UID"], 0, resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title, req.URL.String())
 		resultsChannel <- sampleReqResult
 		return false
 	}
@@ -134,7 +138,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	if valid && !processResult(httpAction.ResponseHandlers, sessionMap, vulog, responseBody, resp.Header) {
 		valid = false
 	}
-	sampleReqResult := buildSampleResult("HTTP", sessionMap["UID"], len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title, req.URL.String())
+	sampleReqResult := buildSampleResult(REPORTER_HTTP, sessionMap["UID"], len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title, req.URL.String())
 	resultsChannel <- sampleReqResult
 	return valid
 }

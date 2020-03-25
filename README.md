@@ -19,8 +19,8 @@ An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 8.[License](#license)
 
 # What it does
-- Provides high-throughput load testing of HTTP/TCP/UDP/WS/MQTT services
-- Supports standalone or distributed modes
+- Provides high-throughput load testing of HTTP/HTTPS/TCP/UDP/WS/MQTT/MongoDB servers
+- Supports standalone or distributed modes. The distributed mode can be used to play different tests at the same time or to inject stress load from remote injectors
 - Supports GET, HEAD, POST, PUT and DELETE HTTP methods
 - Supports HTTP/2
 - Supports HTTP Basic Authentication
@@ -29,7 +29,6 @@ An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 - Captures Set-Cookie HTTP response headers
 - POST data can be inlined or read from template files
 - Variables can be fed from an external CSV file
-- The distributed mode can be used to play different tests in the same time or to inject stress load from remote injectors
 - Embeds a Web server to manage remote injectors but also supports a "batch mode"
 - Uses a YAML syntax to describe the stress scenarii
 

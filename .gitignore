@@ -45,3 +45,4 @@ go-delve
 profile
 player/src/statik/
 MakeNowJust
+go.mongodb.org/

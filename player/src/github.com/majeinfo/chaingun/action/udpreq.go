@@ -10,6 +10,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	REPORTER_UDP string = "UDP"
+)
+
 // DoUDPRequest accepts a UdpAction and a one-way channel to write the results to.
 func DoUDPRequest(udpAction UDPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry) {
 
@@ -42,7 +46,7 @@ func DoUDPRequest(udpAction UDPAction, resultsChannel chan reporter.SampleReqRes
 func buildUDPResult(vid string, contentLength int, status int, elapsed int64, title string) reporter.SampleReqResult {
 	sampleReqResult := reporter.SampleReqResult{
 		Vid:     vid,
-		Type:    "UDP",
+		Type:    REPORTER_UDP,
 		Latency: elapsed,
 		Size:    contentLength,
 		Status:  status,

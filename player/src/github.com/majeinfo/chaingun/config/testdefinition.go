@@ -5,6 +5,7 @@ import (
 )
 
 const HTTP_RESPONSE = "HTTP_Response"
+const MONGODB_LAST_INSERT_ID = "MONGODB_Last_Insert_ID"
 
 const RE_FIRST = "first"
 const RE_LAST = "last"
@@ -35,9 +36,11 @@ type TestDef struct {
 }
 
 type Default struct {
-	Server   string `yaml:"server"` // Host or Host:Port
-	Protocol string `yaml:"protocol"`
-	Method   string `yaml:"method"`
+	Server     string `yaml:"server"` // Host or Host:Port
+	Protocol   string `yaml:"protocol"`
+	Method     string `yaml:"method"`
+	Database   string `yaml:"database"`
+	Collection string `yaml:"collection"`
 }
 
 type Feeder struct {
@@ -99,6 +102,13 @@ func IsValidHTTPMethod(method string) bool {
 	valid_methods := []string{"GET", "POST", "PUT", "HEAD", "DELETE"}
 
 	return StringInSlice(method, valid_methods)
+}
+
+// Check for method validity
+func IsValidMongoDBCommand(command string) bool {
+	valid_commands := []string{"findone", "insertone", "deletemany", "drop"}
+
+	return StringInSlice(command, valid_commands)
 }
 
 func StringInSlice(a string, list []string) bool {

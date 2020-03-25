@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+const (
+	REPORTER_MQTT string = "WS"
+)
+
 /*
 type MQTTLogger struct{}
 
@@ -74,7 +78,7 @@ func DoMQTTRequest(mqttAction MQTTAction, resultsChannel chan reporter.SampleReq
 		<-quit
 	*/
 
-	sampleReqResult := buildSampleResult("MQTT", sessionMap["UID"], 0, 0, elapsed.Nanoseconds(), mqttAction.Title, realURL)
+	sampleReqResult := buildSampleResult(REPORTER_MQTT, sessionMap["UID"], 0, 0, elapsed.Nanoseconds(), mqttAction.Title, realURL)
 	resultsChannel <- sampleReqResult
 
 	return true
