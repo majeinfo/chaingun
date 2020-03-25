@@ -22,13 +22,16 @@ An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 - Provides high-throughput load testing of HTTP/TCP/UDP/WS/MQTT services
 - Supports standalone or distributed modes
 - Supports GET, HEAD, POST, PUT and DELETE HTTP methods
-- Requests and bodies can contain parameters 
+- Supports HTTP/2
+- Supports HTTP Basic Authentication
+- HTTP Requests and bodies can contain parameters 
 - Parameter values can be extracted from HTTP response bodies and bound to a User context. User defined variables are also supported
 - Captures Set-Cookie HTTP response headers
 - POST data can be inlined or read from template files
 - Variables can be fed from an external CSV file
 - The distributed mode can be used to play different tests in the same time or to inject stress load from remote injectors
-- Use a YAML syntax to describe the stress scenarii
+- Embeds a Web server to manage remote injectors but also supports a "batch mode"
+- Uses a YAML syntax to describe the stress scenarii
 
 # Building
 
@@ -175,8 +178,7 @@ $ ./test_standalone_player.sh
 
 # TODO
 - add a web interface to create/import/export Playbooks
-- implements the "connect-to" option to reverse the roles and cross through the firewalls
-- add options to handle SSL certificates ?
+- need to support other protocols ? (SQL, MongoDB...)
 
 # License
 Licensed under the MIT license.
