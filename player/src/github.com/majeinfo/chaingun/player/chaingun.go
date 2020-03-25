@@ -66,7 +66,7 @@ var (
 	gp_pre_actions []action.FullAction
 	gp_actions     []action.FullAction
 
-	GitCommit string = "1.1.1"
+	GitCommit string = "1.1.3"
 )
 
 // Analyze the command line
