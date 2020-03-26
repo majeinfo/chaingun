@@ -19,7 +19,8 @@ An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 8.[License](#license)
 
 # What it does
-- Provides high-throughput load testing of HTTP/HTTPS/TCP/UDP/WS/MQTT/MongoDB/MySQL servers
+- Provides high-throughput load testing of HTTP/HTTPS/TCP/UDP/WS/MQTT
+- Provides limited load testing for MongoDB and MySQL database servers
 - Supports standalone or distributed modes. The distributed mode can be used to play different tests at the same time or to inject stress load from remote injectors
 - Supports GET, HEAD, POST, PUT and DELETE HTTP methods
 - Supports HTTP/2
@@ -177,7 +178,7 @@ $ ./test_standalone_player.sh
 
 # TODO
 - add a web interface to create/import/export Playbooks
-- need to support other protocols ? (SQL, MongoDB...)
+- enhance support of database protocols like SQL and MongoDB
 
 # License
 Licensed under the MIT license.
