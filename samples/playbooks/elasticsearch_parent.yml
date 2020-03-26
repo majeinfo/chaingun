@@ -1,0 +1,66 @@
+iterations: 1
+rampup: 1
+users: 1
+
+default:
+  server: localhost:9200
+  protocol: http
+ 
+pre_actions:
+  - http:
+      title: Make sure shop3 index is deleted
+      method: DELETE
+      url: /shop3
+      headers:
+        content-type: application/json
+
+  - http:
+      title: Set the mapping
+      method: PUT
+      url: /shop3
+      headers:
+        content-type: application/json
+      body: '{ "mappings": { "properties": { "name": { "type": "text", "store": "true" }, "variation": { "type": "join", "relations": { "name": "detail" } }, "detail": { "type": "nested", "properties": { "size": { "type": "keyword" }, "color": { "type": "keyword" } } } } } }'
+
+  - http:
+      title: Insert parent cloth
+      method: PUT
+      url: /shop3/_doc/1?routing=1
+      headers:
+        content-type: application/json
+      body: '{ "name": "Tee shirt", "variation": "name" }'
+
+  - http:
+      title: Insert first child
+      method: PUT
+      url: /shop3/_doc/10?routing=1
+      headers:
+        content-type: application/json
+      body: '{ "variation": { "name": "detail", "parent": 1 }, "detail" : { "color": "red", "size": "XXL" } }'
+
+  - http:
+      title: Insert second child
+      method: PUT
+      url: /shop3/_doc/11?routing=1&refresh
+      headers:
+        content-type: application/json
+      body: '{ "variation": { "name": "detail", "parent": 1 }, "detail": { "color": "black", "size": "XL" } }'
+
+  #- sleep:
+  #    duration: 2000
+
+actions:
+  - http:
+      title: Nested query
+      method: GET
+      url: /shop3/_search
+      headers:
+        content-type: application/json
+      body: '{ "query": { "has_child": { "type": "detail", "query": { "nested": { "path": "detail", "query": { "bool": { "must": [ { "term": { "detail.size": "XXL" } }, { "term": { "detail.color": "red" } } ] } } } } } } }'
+      responses:
+        - jsonpath: $.hits.total.value+
+          variable: number
+
+  - log:
+      message: "Hits number: ${number}"
+
