@@ -1,0 +1,12 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+actions:
+  - mongodb:
+      title: Insert
+      server: mongodb://localhost:27017
+      database: testing
+      collection: numbers
+      command: insertone
+

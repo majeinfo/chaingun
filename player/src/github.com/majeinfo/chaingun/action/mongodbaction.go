@@ -35,7 +35,7 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 
 	if a["server"] == "" || a["server"] == nil {
 		if dflt.Server == "" {
-			log.Error("Action has no Server and no default Server specified")
+			log.Error("MongoDBAction has no Server and no default Server specified")
 			a["server"] = ""
 			valid = false
 		} else {
@@ -63,7 +63,7 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 	}
 
 	if a["command"] == nil || a["command"] == "" {
-		log.Error("Action has no Command and no default Command specified")
+		log.Error("MongoDBAction has no Command and no default Command specified")
 		a["command"] = ""
 		valid = false
 	} else if !config.IsValidMongoDBCommand(a["command"].(string)) {
@@ -73,7 +73,7 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 
 	if a["command"] == "insertone" {
 		if a["document"] == nil || a["document"] == "" {
-			log.Error("MongoDBAction insert command must define a document.")
+			log.Error("MongoDBAction insertone command must define a document.")
 			a["document"] = ""
 			valid = false
 		}
@@ -99,7 +99,7 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 
 	if a["database"] == nil || a["database"] == "" {
 		if dflt.Database == "" {
-			log.Error("Action has no Database and no default Database specified")
+			log.Error("MongoDBAction has no Database and no default Database specified")
 			a["database"] = ""
 			valid = false
 		} else {
@@ -109,7 +109,7 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 
 	if a["collection"] == nil || a["collection"] == "" {
 		if dflt.Collection == "" {
-			log.Error("Action has no Collection and no default Collection specified")
+			log.Error("MongoDBAction has no Collection and no default Collection specified")
 			a["collection"] = ""
 			valid = false
 		} else {
