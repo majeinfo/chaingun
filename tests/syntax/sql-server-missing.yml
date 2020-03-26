@@ -1,0 +1,11 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+actions:
+  - sql:
+      title: Insert
+      db_driver: mysql
+      database: testing
+      statement: 'INSERT INTO my_table (name, age) VALUES ("bob", 30)'
+

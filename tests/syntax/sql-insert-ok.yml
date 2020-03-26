@@ -1,0 +1,32 @@
+---
+iterations: 3
+users: 2
+rampup: 1
+
+default:
+  db_driver: mysql
+  server: user:password@tcp(localhost:3306)
+  database: jdtest
+
+feeder:
+  type: csv
+  filename: sqldata1.csv
+  separator: ","
+
+pre_actions:
+  - sql:
+      title: Drop table
+      statement: "DROP TABLE IF EXISTS my_table"
+  - sql:
+      title: Drop table
+      statement: "CREATE TABLE my_table (name CHAR(32), age INT)"
+
+actions:
+  - sql:
+      title: Insertion
+      statement: 'INSERT INTO my_table (name, age) VALUES ("${name}", ${age})'
+  - sql:
+      title: Select
+      statement: 'SELECT * FROM my_table WHERE age = 30'
+  - log:
+      message: "row number: ${SQL_Row_Count}"

@@ -41,7 +41,7 @@ func NewSQLAction(a map[interface{}]interface{}, dflt config.Default, playbook *
 		}
 	} else {
 		if !config.IsValidDBDriver(a["db_driver"].(string)) {
-			log.Error("Default DB Driver must specify a valid driver (mysql)")
+			log.Error("DB Driver must specify a valid driver (mysql)")
 			valid = false
 		}
 	}
@@ -90,8 +90,8 @@ func NewSQLAction(a map[interface{}]interface{}, dflt config.Default, playbook *
 	}
 
 	if a["statement"] == nil || a["statement"] == "" {
-		log.Error("SQLAction has no request")
-		a["request"] = ""
+		log.Error("SQLAction has no Statement specified")
+		a["statement"] = ""
 		valid = false
 	}
 

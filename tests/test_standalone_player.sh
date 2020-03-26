@@ -15,7 +15,7 @@ Arg_Error() {
 }
 
 Syn_Error() {
-	if $PLAYER --output-dir output/ $VERBOSE --script "$1" 2>&1 | tee $$.out | grep "$2" >/dev/null 2>&1; then
+	if $PLAYER --output-dir output/ $VERBOSE --syntax-check-only --script "$1" 2>&1 | tee $$.out | grep "$2" >/dev/null 2>&1; then
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
@@ -25,7 +25,7 @@ Syn_Error() {
 }
 
 Syn_OK() {
-	if $PLAYER --output-dir output/ $VERBOSE --script "$1" >$$.out 2>&1; then
+	if $PLAYER --output-dir output/ $VERBOSE --syntax-check-only --script "$1" >$$.out 2>&1; then
 		echo '[OK]' $1
 	else
 		echo '[FAILED]' $1
@@ -72,11 +72,17 @@ Syn_Error syntax/mongo-database-missing.yml 'no Database and no default Database
 Syn_Error syntax/mongo-collection-missing.yml 'no Collection and no default Collection specified'
 Syn_Error syntax/mongo-bad-command.yml 'must specify a valid command'
 Syn_Error syntax/mongo-server-missing.yml 'no Server and no default Server specified'
+Syn_Error syntax/sql-db-driver-missing.yml 'no Driver and no default Driver specified'
+Syn_Error syntax/sql-bad-db-driver.yml 'DB Driver must specify a valid driver (mysql)'
+Syn_Error syntax/sql-server-missing.yml 'no Server and no default Server specified'
+Syn_Error syntax/sql-database-missing.yml 'no Database and no default Database specified'
+Syn_Error syntax/sql-statement-missing.yml 'no Statement specified'
 Syn_OK syntax/opt-duration.yml
 Syn_OK syntax/dflt-values.yml
 Syn_OK syntax/setvar1.yml 
 Syn_OK syntax/setvar2.yml 
 Syn_OK syntax/mongo-insert-ok.yml
+Syn_OK syntax/sql-insert-ok.yml
 
 # Test JSON request
 Req_Error requests/1VU-json-bad.yml 'failed to apply - no default value given'

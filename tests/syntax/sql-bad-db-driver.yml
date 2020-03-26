@@ -1,0 +1,12 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+actions:
+  - sql:
+      title: Insert
+      db_driver: oracle
+      server: dbserver
+      database: testing
+      statement: 'INSERT INTO my_table (name, age) VALUES ("bob", 30)'
+
