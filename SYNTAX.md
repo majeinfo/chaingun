@@ -74,9 +74,9 @@ The supported parameter_name(s) are:
 | `server`   | name of remoter server - may also specify a port, for SQL this a DSN | www.google.com:80 or www.bing.com or mongodb://localhost:27017 |
 | `protocol` | protocol to be used | http or https |
 | `method`   | HTTP method to use | GET or POST |
-| `database` | default database for MongoDB and SQL | |
-| `collection` | default collection for MongoDB | |
-| `db_driver` | default SQL Driver - only "mysql" is supported yet | |
+| `database` | default database for MongoDB and SQL | my_database |
+| `collection` | default collection for MongoDB | my_collection |
+| `db_driver` | default SQL Driver - only "mysql" is supported yet | mysql |
 
 
 # Actions and Pre-Actions
@@ -203,10 +203,10 @@ Examples:
 | `server` | mandatory. If the string does not contain a server specification, use the value given by the `server` key in the default section |
 | `database` | mandatory. If the string is empty, use the value given by the `database` key in the default section |
 | `collection` | mandatory. If the string is empty, use the value given by the `collection` key in the default section |
-| `command` | mandatory. Possible commands are 'findone', 'insertone' and 'drop' |
-| `filter` | If the command is 'findone', the 'filter' parameter is a JSON document used to filter the search |
-| `document` | If the command is 'insertone', the 'document' parameter is a JSON document that must be inserted in the database collection |
-| `responses` | data can be extracted from server responses when 'findone' command is played. regex, jsonpath or xmlpath can be used to collect the substrings |
+| `command` | mandatory. Possible commands are `findone`, `insertone` and `drop` |
+| `filter` | If the command is `findone`, the `filter` parameter is a JSON document used to filter the search |
+| `document` | If the command is `insertone`, the `document` parameter is a JSON document that must be inserted in the database collection |
+| `responses` | data can be extracted from server responses when `findone` command is played. regex, jsonpath or xmlpath can be used to collect the substrings |
 
 Examples:
 ```
