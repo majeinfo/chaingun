@@ -56,6 +56,8 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		return false
 	}
 
+	defer client.Disconnect(context.TODO())
+
 	/*
 		err = client.Ping(ctx, nil)
 		if err != nil {
@@ -75,7 +77,6 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 			vulog.Errorf("MongoDB drop action failed: %s", err)
 			sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, MONGODB_JSON, 0, mongodbAction.Title, err.Error())
 			resultsChannel <- sampleReqResult
-			err = client.Disconnect(context.TODO())
 			return false
 		}
 		vulog.Debugf("Drop collection done")
@@ -87,7 +88,6 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 			vulog.Errorf("MongoDB insertone action failed: %s", err)
 			sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, MONGODB_JSON, 0, mongodbAction.Title, err.Error())
 			resultsChannel <- sampleReqResult
-			err = client.Disconnect(context.TODO())
 			return false
 		}
 
@@ -96,7 +96,6 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 			vulog.Errorf("MongoDB insertone failed: %s", err)
 			sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, MONGODB_ERR, 0, mongodbAction.Title, err.Error())
 			resultsChannel <- sampleReqResult
-			err = client.Disconnect(context.TODO())
 			return false
 		}
 		sessionMap[config.MONGODB_LAST_INSERT_ID] = res.InsertedID.(primitive.ObjectID).String() // ...but the string is not useful it should keep its original type !
@@ -109,7 +108,6 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 			vulog.Errorf("MongoDB findone action failed: %s", err)
 			sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, MONGODB_JSON, 0, mongodbAction.Title, err.Error())
 			resultsChannel <- sampleReqResult
-			err = client.Disconnect(context.TODO())
 			return false
 		}
 
@@ -119,7 +117,6 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 			vulog.Errorf("MongoDB findone failed: %s", err)
 			sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, MONGODB_ERR, 0, mongodbAction.Title, err.Error())
 			resultsChannel <- sampleReqResult
-			err = client.Disconnect(context.TODO())
 			return false
 		}
 
@@ -128,7 +125,6 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 			vulog.Errorf("MongoDB findone marshal failed: %s", err)
 			sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, MONGODB_JSON, 0, mongodbAction.Title, err.Error())
 			resultsChannel <- sampleReqResult
-			err = client.Disconnect(context.TODO())
 			return false
 		}
 		vulog.Debugf("FindOne gets: %v", response)
