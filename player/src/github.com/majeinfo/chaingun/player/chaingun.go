@@ -459,6 +459,7 @@ func cleanSessionMapAndResetUID(UID string, sessionMap map[string]string, playbo
 	sessionMap["UID"] = UID
 	sessionMap[config.HTTP_RESPONSE] = ""
 	sessionMap[config.MONGODB_LAST_INSERT_ID] = ""
+	sessionMap[config.SQL_ROW_COUNT] = "0"
 
 	for k, v := range playbook.Variables {
 		sessionMap[k] = v

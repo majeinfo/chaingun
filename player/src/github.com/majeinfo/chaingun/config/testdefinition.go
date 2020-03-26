@@ -4,8 +4,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Predefined Variables
 const HTTP_RESPONSE = "HTTP_Response"
 const MONGODB_LAST_INSERT_ID = "MONGODB_Last_Insert_ID"
+const SQL_ROW_COUNT = "SQL_Row_Count"
 
 const RE_FIRST = "first"
 const RE_LAST = "last"
@@ -41,6 +43,7 @@ type Default struct {
 	Method     string `yaml:"method"`
 	Database   string `yaml:"database"`
 	Collection string `yaml:"collection"`
+	DBDriver   string `yaml:"db_driver"`
 }
 
 type Feeder struct {
@@ -88,6 +91,11 @@ func ValidateTestDefinition(t *TestDef) bool {
 		valid = false
 	}
 
+	if t.DfltValues.DBDriver != "" && !IsValidDBDriver(t.DfltValues.DBDriver) {
+		log.Error("Default DB Driver must specify a valid driver: mysql: %s", t.DfltValues.DBDriver)
+		valid = false
+	}
+
 	if t.Timeout == 0 {
 		t.Timeout = DFLT_TIMEOUT
 	}
@@ -109,6 +117,13 @@ func IsValidMongoDBCommand(command string) bool {
 	valid_commands := []string{"findone", "insertone", "deletemany", "drop"}
 
 	return StringInSlice(command, valid_commands)
+}
+
+// Check for DBDriver validity
+func IsValidDBDriver(db_driver string) bool {
+	valid_drivers := []string{"mysql"}
+
+	return StringInSlice(db_driver, valid_drivers)
 }
 
 func StringInSlice(a string, list []string) bool {

@@ -73,7 +73,7 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 
 	if a["command"] == "insertone" {
 		if a["document"] == nil || a["document"] == "" {
-			log.Error("MongoDBAction insertone command must define a document.")
+			log.Error("MongoDBAction insertone command must define a document")
 			a["document"] = ""
 			valid = false
 		}
@@ -83,7 +83,7 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 
 	if a["command"] == "findone" {
 		if a["filter"] == nil || a["filter"] == "" {
-			log.Error("MongoDBAction findone command must define a filter.")
+			log.Error("MongoDBAction findone command must define a filter")
 			a["filter"] = ""
 			valid = false
 		}
@@ -92,7 +92,7 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 	}
 
 	if a["title"] == nil || a["title"] == "" {
-		log.Error("MongoDBAction must define a title.")
+		log.Error("MongoDBAction must define a title")
 		a["title"] = ""
 		valid = false
 	}
@@ -120,7 +120,7 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 	responseHandlers, validResp := NewResponseHandlers(a)
 
 	if !valid || !validResp {
-		log.Errorf("Your YAML Playbook contains an invalid MongoDBAction, see errors listed above.")
+		log.Errorf("Your YAML Playbook contains an invalid MongoDBAction, see errors listed above")
 		valid = false
 	}
 

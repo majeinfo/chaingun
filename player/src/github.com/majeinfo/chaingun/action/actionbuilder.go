@@ -58,28 +58,22 @@ func _buildActionList(playbook *config.TestDef, playbook_actions []map[string]in
 				switch key {
 				case "sleep":
 					action, valid = NewSleepAction(actionMap)
-					break
 				case "http":
 					action, valid = NewHTTPAction(actionMap, playbook.DfltValues, playbook)
-					break
 				case "mqtt":
 					action, valid = NewMQTTAction(actionMap, playbook.DfltValues)
-					break
 				case "ws":
 					action, valid = NewWSAction(actionMap, playbook.DfltValues)
-					break
 				case "tcp":
 					action, valid = NewTCPAction(actionMap)
-					break
 				case "udp":
 					action, valid = NewUDPAction(actionMap)
-					break
 				case "mongodb":
 					action, valid = NewMongoDBAction(actionMap, playbook.DfltValues, playbook)
-					break
+				case "sql":
+					action, valid = NewSQLAction(actionMap, playbook.DfltValues, playbook)
 				case "log":
 					action, valid = NewLogAction(actionMap)
-					break
 				case "setvar":
 					action, valid = NewSetVarAction(actionMap)
 				case "assert":
@@ -87,7 +81,6 @@ func _buildActionList(playbook *config.TestDef, playbook_actions []map[string]in
 				default:
 					valid = false
 					log.Errorf("Unknown action type encountered: %s", key)
-					break
 				}
 			}
 		}

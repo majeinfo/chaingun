@@ -45,6 +45,7 @@ You define your custom variables like this:
 | :--- | :--- |
 | `HTTP_Response` | contains the HTTP returned code |
 | `MONGODB_Last_Insert_ID` | contains the value of the "_id" field of the last inserted document (string) |
+| `SQL_Row_Count` | contains the count of rows selected, updated or deleted |
 
 ## User defined Variables
 
@@ -70,11 +71,12 @@ The supported parameter_name(s) are:
 
 | Name | Description | Example values |
 | :--- | :---:       | :--- |
-| `server`   | name of remoter server - may also specify a port | www.google.com:80 or www.bing.com or mongodb://localhost:27017 |
+| `server`   | name of remoter server - may also specify a port, for SQL this a DSN | www.google.com:80 or www.bing.com or mongodb://localhost:27017 |
 | `protocol` | protocol to be used | http or https |
 | `method`   | HTTP method to use | GET or POST |
-| `database` | default database for MongoDB | |
+| `database` | default database for MongoDB and SQL | |
 | `collection` | default collection for MongoDB | |
+| `db_driver` | default SQL Driver - only "mysql" is supported yet | |
 
 
 # Actions and Pre-Actions
@@ -229,6 +231,37 @@ Examples:
         default_value: alice
 - log:
     message: "found name is ${the_name}"
+```
+
+## sql: SQL Request
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `title` | mandatory string that qualifies the request - used for the result output and logging |
+| `db_driver` | mandatory. If the string is empty, use the value given by the `db_driver` key in the default section |
+| `server` | mandatory. If the string does not contain a server (DSN) specification, use the value given by the `server` key in the default section |
+| `database` | mandatory. If the string is empty, use the value given by the `database` key in the default section |
+| `statement` | mandatory. SQL Statement to execute (CREATE, SELECT, INSERT...) |
+
+Examples:
+```
+- sql:
+    title: Clean Table
+    server: "user:password@tcp(localhost:3306)"
+    database: testing
+    statament: 'DROP TABLE IF EXISTS my_table'
+- sql:
+    title: Create Table
+    server: "user:password@tcp(localhost:3306)"
+    database: testing
+    statement: 'CREATE TABLE my_table (name CHAR(32), age INT)'
+- sql:
+    title: Select
+    server: "user:password@tcp(localhost:3306)"
+    database: testing
+    statement: 'INSERT INTO my_table (name, age) VALUES("bob", 30)'
+- log:
+    message: "Row count=${SQL_Row_Count}"
 ```
 
 ## ws: WebSocket Request
