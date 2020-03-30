@@ -27,6 +27,7 @@ const (
 // DoMongoDBRequest accepts a MongoDBAction and a one-way channel to write the results to.
 func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
 	var trace_req string
+	sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, mongodbAction.Title, "")
 
 	if must_trace_request {
 		trace_req = fmt.Sprintf("%s %s", mongodbAction.Server, mongodbAction.Command)
@@ -51,7 +52,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 	err = client.Connect(ctx)
 	if err != nil {
 		vulog.Errorf("MongoDB request failed: %s", err)
-		sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, mongodbAction.Title, err.Error())
+		buildMongoDBSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
 		resultsChannel <- sampleReqResult
 		return false
 	}
@@ -75,7 +76,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		err = collection.Drop(ctx)
 		if err != nil {
 			vulog.Errorf("MongoDB drop action failed: %s", err)
-			sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, MONGODB_JSON, 0, mongodbAction.Title, err.Error())
+			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -86,7 +87,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		err = bson.UnmarshalExtJSON([]byte(doc), true, &bdoc)
 		if err != nil {
 			vulog.Errorf("MongoDB insertone action failed: %s", err)
-			sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, MONGODB_JSON, 0, mongodbAction.Title, err.Error())
+			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -94,7 +95,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		res, err := collection.InsertOne(ctx, &bdoc)
 		if err != nil {
 			vulog.Errorf("MongoDB insertone failed: %s", err)
-			sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, MONGODB_ERR, 0, mongodbAction.Title, err.Error())
+			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_ERR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -106,7 +107,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		err = bson.UnmarshalExtJSON([]byte(doc), true, &bdoc)
 		if err != nil {
 			vulog.Errorf("MongoDB findone action failed: %s", err)
-			sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, MONGODB_JSON, 0, mongodbAction.Title, err.Error())
+			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -115,7 +116,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		err = find_res.Decode(&bdoc)
 		if err != nil {
 			vulog.Errorf("MongoDB findone failed: %s", err)
-			sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, MONGODB_ERR, 0, mongodbAction.Title, err.Error())
+			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_ERR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -123,7 +124,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		response, err = bson.MarshalExtJSON(bdoc, true, false)
 		if err != nil {
 			vulog.Errorf("MongoDB findone marshal failed: %s", err)
-			sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, MONGODB_JSON, 0, mongodbAction.Title, err.Error())
+			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -147,7 +148,14 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		valid = false
 	}
 
-	sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, statusCode, elapsed.Nanoseconds(), mongodbAction.Title, "")
+	buildMongoDBSampleResult(&sampleReqResult, 0, statusCode, elapsed.Nanoseconds(), "")
 	resultsChannel <- sampleReqResult
 	return valid
+}
+
+func buildMongoDBSampleResult(sample *reporter.SampleReqResult, contentLength int, status int, elapsed int64, fullreq string) {
+	sample.Status = status
+	sample.Size = contentLength
+	sample.Latency = elapsed
+	sample.FullRequest = fullreq
 }

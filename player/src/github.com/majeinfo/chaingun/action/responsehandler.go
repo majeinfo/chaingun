@@ -5,14 +5,12 @@ import (
 	"errors"
 	"github.com/JumboInteractiveLimited/jsonpath"
 	"github.com/majeinfo/chaingun/config"
-	"github.com/majeinfo/chaingun/reporter"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/xmlpath.v2"
 	"math/rand"
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
 )
 
 // ResponseHandler describes the actions to apply on returned data
@@ -340,18 +338,4 @@ func trimChar(s string, r byte) string {
 		s = s[1:sz]
 	}
 	return s
-}
-
-func buildSampleResult(actionType string, vid string, contentLength int, status int, elapsed int64, title string, fullreq string) reporter.SampleReqResult {
-	sampleReqResult := reporter.SampleReqResult{
-		Vid:         vid,
-		Type:        actionType,
-		Latency:     elapsed,
-		Size:        contentLength,
-		Status:      status,
-		Title:       title,
-		When:        time.Since(reporter.SimulationStart).Nanoseconds(),
-		FullRequest: fullreq,
-	}
-	return sampleReqResult
 }

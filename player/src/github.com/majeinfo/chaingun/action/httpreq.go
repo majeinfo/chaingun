@@ -33,6 +33,8 @@ var (
 // DoHTTPRequest accepts a Httpaction and a one-way channel to write the results to.
 func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
 	var trace_req string
+	sampleReqResult := buildSampleResult(REPORTER_HTTP, sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, httpAction.Title, "")
+
 	req, err := buildHTTPRequest(httpAction, sessionMap, vulog)
 	if err != nil {
 		vulog.Error(err)
@@ -86,7 +88,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 			vulog.Infof("%s: FAILED (%s)", trace_req, err)
 		}
 		vulog.Errorf("HTTP request failed: %s", err)
-		sampleReqResult := buildSampleResult(REPORTER_HTTP, sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, httpAction.Title, err.Error())
+		buildHTTPSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
 		if resp != nil {
 			ioutil.ReadAll(resp.Body)
 			defer resp.Body.Close()
@@ -105,7 +107,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 			vulog.Infof("%s: FAILED (%s)", trace_req, err)
 		}
 		vulog.Printf("Reading HTTP response failed: %s", err)
-		sampleReqResult := buildSampleResult(REPORTER_HTTP, sessionMap["UID"], 0, resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title, req.URL.String())
+		buildHTTPSampleResult(&sampleReqResult, 0, resp.StatusCode, elapsed.Nanoseconds(), req.URL.String())
 		resultsChannel <- sampleReqResult
 		return false
 	}
@@ -138,7 +140,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	if valid && !processResult(httpAction.ResponseHandlers, sessionMap, vulog, responseBody, resp.Header) {
 		valid = false
 	}
-	sampleReqResult := buildSampleResult(REPORTER_HTTP, sessionMap["UID"], len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), httpAction.Title, req.URL.String())
+	buildHTTPSampleResult(&sampleReqResult, len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), req.URL.String())
 	resultsChannel <- sampleReqResult
 	return valid
 }
@@ -227,4 +229,11 @@ func buildHTTPRequest(httpAction HTTPAction, sessionMap map[string]string, vulog
 	}
 
 	return req, nil
+}
+
+func buildHTTPSampleResult(sample *reporter.SampleReqResult, contentLength int, status int, elapsed int64, fullreq string) {
+	sample.Status = status
+	sample.Size = contentLength
+	sample.Latency = elapsed
+	sample.FullRequest = fullreq
 }
