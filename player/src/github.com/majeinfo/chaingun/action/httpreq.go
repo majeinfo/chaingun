@@ -31,7 +31,7 @@ var (
 )
 
 // DoHTTPRequest accepts a Httpaction and a one-way channel to write the results to.
-func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	var trace_req string
 	sampleReqResult := buildSampleResult(REPORTER_HTTP, sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, httpAction.Title, "")
 

@@ -46,6 +46,7 @@ func spawnUsers(playbook *config.TestDef, actions *[]action.FullAction) {
 func launchActions(playbook *config.TestDef, resultsChannel chan reporter.SampleReqResult, wg *sync.WaitGroup, actions *[]action.FullAction, UID string) {
 	log.Debugf("launchActions called (%s)", UID)
 	var sessionMap = make(map[string]string)
+	var vucontext config.VUContext
 
 	i := 0
 	vulog := log.WithFields(log.Fields{"vuid": UID, "iter": i, "action": ""})
@@ -88,7 +89,7 @@ actionLoop:
 						continue
 					}
 				}
-				if !action.Action.Execute(resultsChannel, sessionMap, vulog, playbook) {
+				if !action.Action.Execute(resultsChannel, sessionMap, &vucontext, vulog, playbook) {
 					// An error occurred : continue, stop the vu or stop the test ?
 					switch playbook.OnError {
 					case config.ERR_CONTINUE:
@@ -122,5 +123,11 @@ actionLoop:
 	lock_vu_count.Lock()
 	VU_count--
 	lock_vu_count.Unlock()
+
+	if vucontext.CloseFunc != nil {
+		log.Debugf("Call CloseFunc")
+		vucontext.CloseFunc(&vucontext)
+	}
+
 	log.Debugf("exit launchActions (%s)", UID)
 }

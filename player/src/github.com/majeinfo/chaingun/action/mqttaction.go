@@ -32,8 +32,8 @@ type MQTTAction struct {
 }
 
 // Execute a MQTT Action
-func (h MQTTAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
-	return DoMQTTRequest(h, resultsChannel, sessionMap, vulog, playbook)
+func (h MQTTAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
+	return DoMQTTRequest(h, resultsChannel, sessionMap, vucontext, vulog, playbook)
 }
 
 // NewMQTTAction creates a new MQTT Action

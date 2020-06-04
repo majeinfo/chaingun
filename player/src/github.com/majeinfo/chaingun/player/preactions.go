@@ -13,6 +13,7 @@ func playPreActions(playbook *config.TestDef, actions *[]action.FullAction) {
 	log.Info("Play pre-actions")
 	var sessionMap = make(map[string]string)
 	resultsChannel := make(chan reporter.SampleReqResult, 100)
+	var vucontext config.VUContext
 
 	i := 0
 	UID := "preActions"
@@ -52,7 +53,7 @@ iterLoop:
 					continue
 				}
 			}
-			if !action.Action.Execute(resultsChannel, sessionMap, vulog, playbook) {
+			if !action.Action.Execute(resultsChannel, sessionMap, &vucontext, vulog, playbook) {
 				// An error occurred : continue, stop the vu or stop the test ?
 				switch playbook.OnError {
 				case config.ERR_CONTINUE:

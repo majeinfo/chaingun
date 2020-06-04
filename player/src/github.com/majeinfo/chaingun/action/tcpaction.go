@@ -14,8 +14,8 @@ type TCPAction struct {
 }
 
 // Execute a TCP Action
-func (t TCPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
-	DoTCPRequest(t, resultsChannel, sessionMap, vulog)
+func (t TCPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
+	DoTCPRequest(t, resultsChannel, sessionMap, vucontext, vulog)
 	return true
 }
 

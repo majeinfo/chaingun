@@ -14,7 +14,7 @@ type SleepAction struct {
 }
 
 // Execute a sleep Action
-func (s SleepAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+func (s SleepAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	time.Sleep(time.Duration(s.Duration) * time.Millisecond)
 	return true
 }

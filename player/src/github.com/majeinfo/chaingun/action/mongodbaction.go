@@ -23,9 +23,9 @@ type MongoDBAction struct {
 }
 
 // Execute a MongoDB Action
-func (h MongoDBAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+func (h MongoDBAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	vulog.Data["action"] = h.Title
-	return DoMongoDBRequest(h, resultsChannel, sessionMap, vulog, playbook)
+	return DoMongoDBRequest(h, resultsChannel, sessionMap, vucontext, vulog, playbook)
 }
 
 // NewMongoDBAction creates a new MongoDB Action

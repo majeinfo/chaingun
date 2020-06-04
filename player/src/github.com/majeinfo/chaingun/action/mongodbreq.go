@@ -18,6 +18,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type MongoClientContext struct {
+	client *mongo.Client
+	ctx    context.Context
+}
+
 const (
 	REPORTER_MONGODB string = "MONGODB"
 	MONGODB_ERR             = 500
@@ -25,8 +30,11 @@ const (
 )
 
 // DoMongoDBRequest accepts a MongoDBAction and a one-way channel to write the results to.
-func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	var trace_req string
+	var client *mongo.Client
+	var ctx context.Context
+	var err error
 	sampleReqResult := buildSampleResult(REPORTER_MONGODB, sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, mongodbAction.Title, "")
 
 	if must_trace_request {
@@ -35,29 +43,43 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		vulog.Debugf("New Request: URL: %s, Command: %s", mongodbAction.Server, mongodbAction.Command)
 	}
 
-	// Try to substitute the server name by an IP address
-	server := mongodbAction.Server
-	if !disable_dns_cache {
-		url, err := url.Parse(mongodbAction.Server)
-		if err != nil {
-			if addr, status := utils.GetServerAddress(url.Host); status == true {
-				url.Host = addr
-				server = url.String()
+	if !playbook.PersistentConn || vucontext.InitObject == nil { // persistent
+		// Try to substitute the server name by an IP address
+		server := mongodbAction.Server
+		if !disable_dns_cache {
+			url, err := url.Parse(mongodbAction.Server)
+			if err != nil {
+				if addr, status := utils.GetServerAddress(url.Host); status == true {
+					url.Host = addr
+					server = url.String()
+				}
 			}
 		}
+
+		vulog.Debugf("Create new MongoDB Client")
+		client, err = mongo.NewClient(options.Client().ApplyURI(server))
+		ctx, _ := context.WithTimeout(context.Background(), time.Duration(playbook.Timeout)*time.Second)
+		err = client.Connect(ctx)
+		if err != nil {
+			vulog.Errorf("MongoDB request failed: %s", err)
+			buildMongoDBSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			resultsChannel <- sampleReqResult
+			return false
+		}
+		clientContext := MongoClientContext{client, ctx}
+		vucontext.InitObject = &clientContext
+	} else {
+		vulog.Debugf("Reuse connection")
+		clientContext := vucontext.InitObject.(*MongoClientContext)
+		client = clientContext.client
+		ctx = clientContext.ctx
 	}
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(server))
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(playbook.Timeout)*time.Second)
-	err = client.Connect(ctx)
-	if err != nil {
-		vulog.Errorf("MongoDB request failed: %s", err)
-		buildMongoDBSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
-		resultsChannel <- sampleReqResult
-		return false
+	if !playbook.PersistentConn {
+		defer client.Disconnect(context.TODO())
+	} else {
+		vucontext.CloseFunc = mongodb_disconnect
 	}
-
-	defer client.Disconnect(context.TODO())
 
 	/*
 		err = client.Ping(ctx, nil)
@@ -73,7 +95,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 
 	switch mongodbAction.Command {
 	case "drop":
-		err = collection.Drop(ctx)
+		err := collection.Drop(ctx)
 		if err != nil {
 			vulog.Errorf("MongoDB drop action failed: %s", err)
 			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
@@ -84,7 +106,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 
 	case "insertone":
 		doc := SubstParams(sessionMap, mongodbAction.Document, vulog)
-		err = bson.UnmarshalExtJSON([]byte(doc), true, &bdoc)
+		err := bson.UnmarshalExtJSON([]byte(doc), true, &bdoc)
 		if err != nil {
 			vulog.Errorf("MongoDB insertone action failed: %s", err)
 			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
@@ -104,7 +126,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 
 	case "findone":
 		doc := SubstParams(sessionMap, mongodbAction.Filter, vulog)
-		err = bson.UnmarshalExtJSON([]byte(doc), true, &bdoc)
+		err := bson.UnmarshalExtJSON([]byte(doc), true, &bdoc)
 		if err != nil {
 			vulog.Errorf("MongoDB findone action failed: %s", err)
 			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
@@ -158,4 +180,10 @@ func buildMongoDBSampleResult(sample *reporter.SampleReqResult, contentLength in
 	sample.Size = contentLength
 	sample.Latency = elapsed
 	sample.FullRequest = fullreq
+}
+
+func mongodb_disconnect(vucontext *config.VUContext) {
+	clientContext := vucontext.InitObject.(*MongoClientContext)
+	client := clientContext.client
+	client.Disconnect(context.TODO())
 }

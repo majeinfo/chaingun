@@ -14,8 +14,8 @@ type UDPAction struct {
 }
 
 // Execute an UDP Request
-func (t UDPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
-	DoUDPRequest(t, resultsChannel, sessionMap, vulog)
+func (t UDPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
+	DoUDPRequest(t, resultsChannel, sessionMap, vucontext, vulog)
 	return true
 }
 

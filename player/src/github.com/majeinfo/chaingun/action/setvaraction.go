@@ -19,7 +19,7 @@ type SetVarAction struct {
 }
 
 // Execute a setvar Action
-func (s SetVarAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+func (s SetVarAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	// Create the variable if needed
 	if _, err := sessionMap[s.Variable]; !err {
 		vulog.Debugf("Variable ${%s} not set: creates it !", s.Variable)

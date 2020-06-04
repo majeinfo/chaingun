@@ -6,6 +6,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
 	log "github.com/sirupsen/logrus"
 )
@@ -15,7 +16,7 @@ const (
 )
 
 // DoTCPRequest accepts a TcpAction and a one-way channel to write the results to.
-func DoTCPRequest(tcpAction TCPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry) {
+func DoTCPRequest(tcpAction TCPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry) {
 
 	address := SubstParams(sessionMap, tcpAction.Address, vulog)
 	payload := SubstParams(sessionMap, tcpAction.Payload, vulog)

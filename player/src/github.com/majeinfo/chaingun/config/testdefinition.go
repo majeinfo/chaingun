@@ -27,6 +27,7 @@ type TestDef struct {
 	Duration       int                      `yaml:"duration"`
 	Users          int                      `yaml:"users"`
 	Rampup         int                      `yaml:"rampup"`
+	PersistentConn bool						`yaml:"persistent_connections"`	// (default is false)
 	OnError        string                   `yaml:"on_error"` // continue (default) | stop_vu | stop_test
 	HttpErrorCodes string                   `yaml:"http_error_codes"`
 	Timeout        int                      `yaml:"timeout"` // default is 10s
@@ -50,6 +51,11 @@ type Feeder struct {
 	Type      string `yaml:"type"`
 	Filename  string `yaml:"filename"`
 	Separator string `yaml:"separator"`
+}
+
+type VUContext struct {
+	InitObject	interface{}
+	CloseFunc	func(*VUContext)
 }
 
 // Validate the Test Definition Consistency

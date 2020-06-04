@@ -14,7 +14,7 @@ const (
 
 // DoWSRequest handles requests made using WebSocket Protocol
 // TODO: manage cookies !
-func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+func DoWSRequest(wsAction WSAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	vulog.Debugf("New Request: URL: %s", wsAction.URL)
 
 	start := time.Now()

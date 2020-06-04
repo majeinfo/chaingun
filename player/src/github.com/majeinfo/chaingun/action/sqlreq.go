@@ -16,14 +16,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type SQLClientContext struct {
+	db *sql.DB
+}
+
 const (
 	REPORTER_SQL string = "SQL"
 	SQL_ERR             = 500
 )
 
 // DoSQLRequest accepts a SQLAction and a one-way channel to write the results to.
-func DoSQLRequest(sqlAction SQLAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+func DoSQLRequest(sqlAction SQLAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	var trace_req string
+	var db *sql.DB
+	var err error
 	sampleReqResult := buildSampleResult(REPORTER_SQL, sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, sqlAction.Title, "")
 
 	// Applies variable to the statement
@@ -35,32 +41,45 @@ func DoSQLRequest(sqlAction SQLAction, resultsChannel chan reporter.SampleReqRes
 		vulog.Debugf("New Request: URL: %s, Request: %s", sqlAction.Server, stmt)
 	}
 
-	// Special case for MySQL
-	server := sqlAction.Server
-	if sqlAction.DBDriver == "mysql" {
-		server += "/" + sqlAction.Database
-	}
+	if !playbook.PersistentConn || vucontext.InitObject == nil { // persistent
+		// Special case for MySQL
+		server := sqlAction.Server
+		if sqlAction.DBDriver == "mysql" {
+			server += "/" + sqlAction.Database
+		}
 
-	// Try to substitute the server name by an IP address
-	if !disable_dns_cache {
-		if config, err := mysql.ParseDSN(server); err == nil {
-			log.Debugf("%v", config)
-			server = config.Addr
-			if addr, status := utils.GetServerAddress(server); status == true {
-				config.Addr = addr
-				server = config.FormatDSN()
+		// Try to substitute the server name by an IP address
+		if !disable_dns_cache {
+			if config, err := mysql.ParseDSN(server); err == nil {
+				log.Debugf("%v", config)
+				server = config.Addr
+				if addr, status := utils.GetServerAddress(server); status == true {
+					config.Addr = addr
+					server = config.FormatDSN()
+				}
 			}
 		}
+
+		db, err = sql.Open(sqlAction.DBDriver, server)
+		if err != nil {
+			vulog.Errorf("SQL Open failed: %s", err)
+			buildSQLSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			resultsChannel <- sampleReqResult
+			return false
+		}
+		clientContext := SQLClientContext{db}
+		vucontext.InitObject = &clientContext
+	} else {
+		vulog.Debugf("Reuse connection")
+		clientContext := vucontext.InitObject.(*SQLClientContext)
+		db = clientContext.db
 	}
 
-	db, err := sql.Open(sqlAction.DBDriver, server)
-	if err != nil {
-		vulog.Errorf("SQL Open failed: %s", err)
-		buildSQLSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
-		resultsChannel <- sampleReqResult
-		return false
+	if !playbook.PersistentConn {
+		defer db.Close()
+	} else {
+		vucontext.CloseFunc = sql_disconnect
 	}
-	defer db.Close()
 
 	var start time.Time = time.Now()
 
@@ -132,4 +151,10 @@ func buildSQLSampleResult(sample *reporter.SampleReqResult, contentLength int, s
 	sample.Size = contentLength
 	sample.Latency = elapsed
 	sample.FullRequest = fullreq
+}
+
+func sql_disconnect(vucontext *config.VUContext) {
+	clientContext := vucontext.InitObject.(*SQLClientContext)
+	db := clientContext.db
+	db.Close()
 }

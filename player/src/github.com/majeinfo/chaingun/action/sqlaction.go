@@ -21,9 +21,9 @@ type SQLAction struct {
 }
 
 // Execute a SQL Action
-func (h SQLAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+func (h SQLAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	vulog.Data["action"] = h.Title
-	return DoSQLRequest(h, resultsChannel, sessionMap, vulog, playbook)
+	return DoSQLRequest(h, resultsChannel, sessionMap, vucontext, vulog, playbook)
 }
 
 // NewSQLAction creates a new MongoDB Action

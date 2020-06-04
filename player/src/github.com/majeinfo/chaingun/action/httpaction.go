@@ -34,9 +34,9 @@ type FormData struct {
 }
 
 // Execute a HTTP Action
-func (h HTTPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vulog *log.Entry, playbook *config.TestDef) bool {
+func (h HTTPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	vulog.Data["action"] = h.Title
-	return DoHTTPRequest(h, resultsChannel, sessionMap, vulog, playbook)
+	return DoHTTPRequest(h, resultsChannel, sessionMap, vucontext, vulog, playbook)
 }
 
 // NewHTTPAction creates a new HTTP Action
