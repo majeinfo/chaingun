@@ -60,6 +60,8 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		249059934,1249300000,HTTP,Page SSL,200,8083,163870870,https://www.delamarche.com:443/
 	*/
 	colUniqTitle := make(map[string]bool)
+	uniqTitleCount := make(map[string]int)
+	uniqTitleLatency := make(map[string]int)
 	colUniqStatus := make(map[int]bool)
 	measures := make([]measure, 0, DFLT_CAP)
 	internalVus := make(map[int]int)
@@ -105,6 +107,8 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 			measures = append(measures, m)
 
 			colUniqTitle[record[3]] = true
+			uniqTitleCount[record[3]]++
+			uniqTitleLatency[record[3]] += m.latency
 			colUniqStatus[int(curStatus)] = true
 			idx++
 		} else {
@@ -293,6 +297,24 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		"#err",
 		err_series)
 
+	// Output the average response time per page
+	firstRow = true
+	row := ""
+	for title, count := range uniqTitleCount {
+		log.Debugf("Page %s has %d count and %d total latency", title, count, uniqTitleLatency[title])
+		if firstRow {
+			firstRow = false
+			row = "<tr><th>Page Title</th><th>#Req</th><th>Avg Response Time (in ms)</th></tr>"
+			fmt.Fprintf(output, "$('#avg_resp_by_page > thead').append('"+row+"');\n")
+		}
+
+		row = "<tr><td>" + title + "</td>"
+		row += "<td>" + strconv.Itoa(count) + "</td>"
+		row += "<td>" + strconv.Itoa(uniqTitleLatency[title]/count) + "</td>"
+		row += "</tr>"
+		fmt.Fprintf(output, "$('#avg_resp_by_page > tbody:last-child').append('"+row+"');\n")
+	}
+
 	// Output the HTTP Code array
 	// First sort the HTTP codes (keys of the colUniqStatus map)
 	var keys []int
@@ -302,12 +324,11 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	sort.Ints(keys)
 
 	firstRow = true
-	row := ""
 	for title, errs := range errorsByPage {
 		log.Debugf("errors for page %s: %v", title, errs)
 		if firstRow {
 			firstRow = false
-			row = "<tr><th></th>"
+			row = "<tr><th>Page Title</th>"
 			for _, err := range keys {
 				row += "<th>" + strconv.Itoa(err) + "</th>"
 			}
