@@ -1,0 +1,496 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/chaingun.css">
+	<title>Chaingun</title>
+</head>
+<body>
+    <div class="container" id="chaingunApp">
+      <p>&nbsp;</p>
+      <form id="chaingunScript" @submit="checkForm" action="" method="post" novalidate="true">
+
+        <div class="row">
+          <div class="col-3">
+            <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+              <a class="nav-link active" id="v-pills-gp-tab" data-toggle="pill" href="#v-pills-gp" role="tab" aria-controls="v-pills-home" aria-selected="true">Global Parameters</a>
+              <a class="nav-link" id="v-pills-var-tab" data-toggle="pill" href="#v-pills-var" role="tab" aria-controls="v-pills-variables" aria-selected="false">Variables</a>
+              <a class="nav-link" id="v-pills-dflt-values-tab" data-toggle="pill" href="#v-pills-dv" role="tab" aria-controls="v-pills-dflt-values" aria-selected="false">Default Values</a>
+              <a class="nav-link" id="v-pills-feeder-tab" data-toggle="pill" href="#v-pills-fd" role="tab" aria-controls="v-pills-feeder" aria-selected="false">Data Feeder</a>
+              <a class="nav-link" id="v-pills-al-tab" data-toggle="pill" href="#v-pills-al" role="tab" aria-controls="v-pills-profile" aria-selected="false">Action List</a>
+              <a class="nav-link" id="v-pills-yaml-tab" data-toggle="pill" href="#v-pills-gy" role="tab" aria-controls="v-pills-settings" aria-selected="false">Generate YAML</a>
+            </div>
+          </div>
+          <div class="col-9">
+            <div class="tab-content border" id="v-pills-tabContent">
+              <!-- Global Parameters -->
+              <div class="tab-pane fade show active m-2" id="v-pills-gp" role="tabpanel" aria-labelledby="v-pills-gp-tab">
+			<div class="form-group row">
+				<label for="iterationsCount" class="col-sm-4 col-form-label">Iteration Count</label>
+				<input type="number" class="col-sm-1 form-control" id="iterationsCount" v-model.number="scriptParms.iterations" placeholder="Enter the number of iterations (-1 for infinite)">
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) indicates how many times each VU must play the script. If value is -1, the script is played until the value of Test Duration parameter is reached">
+			</div>
+			<div class="form-group row">
+				<label for="testDuration" class="col-sm-4 col-form-label">Test Duration (in seconds)</label>
+				<input type="number" class="col-sm-1 form-control" id="testDuration" v-model.number="scriptParms.duration" placeholder="Enter the test duration (in seconds)">
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory if Iteration Count equals -1) gives the duration of the script playing in seconds">
+			</div>
+			<div class="form-group row">
+				<label for="testDuration" class="col-sm-4 col-form-label">Rampup Period (in seconds)</label>
+				<input type="number" class="col-sm-1 form-control" id="rampupPeriod" v-model.number="scriptParms.rampup" placeholder="Enter the rampup period (in seconds)">
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) gives the time in seconds that is use to launch the VU. New VUs are equally launched during this period">
+			</div>
+			<div class="form-group row">
+				<label for="testDuration" class="col-sm-4 col-form-label">Number of VU</label>
+				<input type="number" class="col-sm-1 form-control" id="totalUsers" v-model.number="scriptParms.users" placeholder="Enter the number of VU">
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) number of VUs to launch during the rampup period. For example, if users value equals 100 and rampup equals 20, 5 new VUs will be launched every new seconds (because 20*5 = 100)">
+			</div>
+			<!-- Advanced Options -->
+			<div>
+				<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseADVGP" aria-expanded="false" aria-controls="collapseADVGP">
+					Advanced Parameters
+				</button>
+				<div class="collapse" id="collapseADVGP">
+					<div class="card card-body">
+						<div class="form-group row">
+							<label for="timeout" class="col-sm-4 col-form-label">Timeout (in seconds)</label>
+							<input type="number" class="col-sm-2 form-control" id="timeout" v-model.number="scriptParms.timeout" placeholder="Enter the timeout value (in seconds)">
+							&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(default=10) number of seconds before a network timeout occurs">
+						</div>
+						<div class="form-group row">
+							<label for="on_error" class="col-sm-4 col-form-label">On Error</label>
+							<select id="onError" class="col-sm-2 form-control" v-model="scriptParms.on_error" placeholder="OnError">
+								<option selected>continue</option>
+								<option>stop_iteration</option>
+								<option>stop_vu</option>
+								<option>stop_test</option>
+							</select>
+							&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(default=continue,stop_iteration,stop_vu,stop_test) define the behaviour for error handling: just display the error and continue (default), or abort the current iteration, or stop the current VU, or abort the whole test">
+						</div>
+						<div class="form-group row">
+							<label for="http_error_code" class="col-sm-4 col-form-label">HTTP Error Code</label>
+							<input type="text" class="col-sm-3 form-control" id="http_error_code" v-model="scriptParms.http_error_code" placeholder="Enter the list of HTTP error codes">
+							&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(no default value) define the list of what is considered a HTTP error code. For example, http_error_code: 404,403,500. This is only used by HTTP Actions">
+						</div>
+						<div class="form-group row">
+							<label for="persistent_connections" class="col-sm-4 col-form-label">Persistent Connections</label>
+							<select id="persistentConnections" class="col-sm-2 form-control" v-model="scriptParms.persistent_connections" placeholder="PeristentConnections">
+								<option selected>false</option>
+								<option>true</option>
+							</select>
+							&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(false) if true, each VU uses the same connection for a script iteration. Note: only work for MongoDB and SQL. Also implies that the script uses only one protocol">
+						</div>
+					</div>
+				</div>
+			</div>
+              </div>
+
+              <!-- Variable Definitions -->
+              <div class="tab-pane fade m-2" id="v-pills-var" role="tabpanel" aria-labelledby="v-pills-var-tab">
+			<div class="form-group row">
+				<label for="http_response" class="col-sm-3 col-form-label">HTTP_Response</label>
+				<input disabled type="text" class="col-sm-8 form-control" id="http_response" placeholder="Contains the last returned HTTP Code">
+			</div>
+			<div class="form-group row">
+				<label for="mongodb_id" class="col-sm-3 col-form-label">MONGODB_Last_Insert_ID</label>
+				<input disabled type="text" class="col-sm-8 form-control" id="mongodb_id" placeholder="(string) contains the value of the _id field of the last inserted document">
+			</div>
+			<div class="form-group row">
+				<label for="sql_row_count" class="col-sm-3 col-form-label">SQL_Row_Count</label>
+				<input disabled type="text" class="col-sm-8 form-control" id="mongodb_id" placeholder="contains the count of rows selected, updated or deleted">
+			</div>
+			<hr/>
+			<div class="form-group row">
+				<label for="variables" class="col-sm-3 col-form-label control-label">User defined Variables</label>
+				<div>
+					<button type="button" class="btn btn-sm btn-primary" data-toggle="modal" xdata-target="#newVariable" onClick="chaingunScript.variableShow()">Add a new Variable</button>
+					&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="Actions can define expressions that may contain variables. Some variables are created by chaingun but you can define and use your own variables">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label for="variables" class="col-sm-3 col-form-label control-label"></label>
+				<div class="col-sm-9">
+					<div class="row mb-1" v-for="(variable, index) in action.variables">
+						<div class="col">
+							<input disabled type="text" class="form-control form-inline" id="varName" v-model="variable[0]" placeholder="Enter the Variable Name">
+						</div>
+						<div class="col">
+							<input disabled type="text" class="form-control form-inline" id="varValue" v-model="variable[1]" placeholder="Enter the Expression">
+						</div>
+						<div class="col">
+							<img src="img/pencil.svg" height=20 width=20 v-bind:onclick="'chaingunScript.displayForEditVariable(' + parseInt(index, 10) + '); return false'"/>&nbsp;
+							<img src="img/circle-x.svg" height=20 width=20 v-bind:onclick="'chaingunScript.deleteVariable(' + parseInt(index, 10) + '); return false'"/>
+						</div>
+					</div>
+				</div>
+			</div>
+              </div>
+
+              <!-- Default action values -->
+              <div class="tab-pane fade m-2" id="v-pills-dv" role="tabpanel" aria-labelledby="v-pills-dv-tab">
+			<div class="form-group row">
+				<label for="server" class="col-sm-3 col-form-label">Default Server</label>
+				<input type="text" class="col-sm-4 form-control" id="dfltServer" v-model="scriptParms.default.server" placeholder="Enter the default server name">
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="name of remoter server - may also specify a port, for SQL this a DSN (examples: www.google.com:80 or www.bing.com or mongodb://localhost:27017)">
+			</div>
+			<div class="form-group row">
+				<label for="protocol" class="col-sm-3 col-form-label">Default Protocol</label>
+				<select id="protocol" class="col-sm-2 form-control" v-model="scriptParms.default.protocol" placeholder="Protocol">
+					<option selected>http</option>
+					<option>https</option>
+				</select>
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="protocol to be used (http or https)">
+			</div>
+			<div class="form-group row">
+				<label for="protocol" class="col-sm-3 col-form-label">Default Method</label>
+				<select id="method" class="col-sm-2 form-control" v-model="scriptParms.default.method" placeholder="Method">
+					<option></option>
+					<option>GET</option>
+					<option>POST</option>
+					<option>PUT</option>
+					<option>HEAD</option>
+					<option>DELETE</option>
+				</select>
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="HTTP method to use">
+			</div>
+			<div class="form-group row">
+				<label for="database" class="col-sm-3 col-form-label">Default Database</label>
+				<input type="text" class="col-sm-4 form-control" id="dfltDatabase" v-model="scriptParms.default.database" placeholder="Enter the default DB Name">
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="default database for MongoDB and SQL">
+			</div>
+			<div class="form-group row">
+				<label for="collection" class="col-sm-3 col-form-label">Default Collection</label>
+				<input type="text" class="col-sm-4 form-control" id="dfltCollection" v-model="scriptParms.default.collection" placeholder="Enter the default DB Name">
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="default collection for MongoDB">
+			</div>
+			<div class="form-group row">
+				<label for="db_driver" class="col-sm-3 col-form-label">Default DB Driver</label>
+				<input type="text" class="col-sm-4 form-control" id="dfltDBDriver" v-model="scriptParms.default.db_driver" placeholder="Enter the default DB Driver">
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="default SQL Driver - only 'mysql' is supported yet">
+			</div>
+              </div>
+
+              <!-- Data Feeder -->
+	      <form-feeder 
+			v-bind:feeder_type="scriptParms.feeder.type" 
+			v-bind:filename="scriptParms.feeder.filename" 
+			v-bind:separator="scriptParms.feeder.separator">
+	      </form-feeder>
+              <!-- </div> -->
+
+              <!-- Action List -->
+              <div class="tab-pane fade m-2" id="v-pills-al" role="tabpanel" aria-labelledby="v-pills-al-tab">
+                <table class="table table-bordered" ref="action_list">
+                  <thead class="thead-dark">
+                    <tr><th scope="col">#</th><th>Action Description</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(action, index) in scriptParms.actions" @dragstart="dragActionStart(index, $event)" @dragend="dragActionEnd($event)" draggable="true" @drop="dragActionFinish(index, $event)" ondragover="window.allowDrop(event)">
+			<td>{{ index+1 }}</td>
+			<td>{{ getDisplayAction(action) }}</td>
+			<td>
+                          <button class="btn btn-success" v-bind:onclick="'chaingunScript.displayForEditAction(' + parseInt(index, 10) + '); return false'">Edit</button>
+                          <button class="btn btn-danger" v-bind:onclick="'confirmBox(chaingunScript.deleteAction,' + parseInt(index, 10) + '); return false'">Delete</button>
+			  &nbsp;&nbsp;
+                          <button v-if="'when' in action" class="btn btn-success btn-sm" v-bind:onclick="'chaingunScript.displayForWhen(' + parseInt(index, 10) + '); return false'">Edit 'when'</button>
+                          <button v-if="'when' in action" class="btn btn-danger btn-sm" v-bind:onclick="'confirmBox(chaingunScript.deleteWhen,' + parseInt(index, 10) + '); return false'">Delete 'when'</button>
+                          <button v-if="!('when' in action)" class="btn btn-primary btn-sm" v-bind:onclick="'chaingunScript.whenShow(' + parseInt(index, 10) + '); return false'">Add 'when'</button>
+                        </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <hr/>
+			<div class="form-group form-inline row">
+				<label for="actionType" class="col-sm-3 col-form-label">Action Type</label>
+				<div>
+					<select id="actionType" class="form-control" v-model="action.type" placeholder="Action Type">
+						<option v-for="type in actionTypes">{{ type }}</option>
+					</select>
+				</div>
+				<!-- &nbsp;<span class="badge badge-primary" data-toggle="tooltip" title="">Info</span> -->
+				&nbsp;<button type="button" class="btn btn-primary" data-toggle="modal" xdata-target="#newAction" onClick="chaingunScript.actionShow()">Add a new Action</button>
+			</div>
+              </div>
+
+              <!-- Generate YAML -->
+              <div class="tab-pane fade m-2" id="v-pills-gy" role="tabpanel" aria-labelledby="v-pills-yaml-tab">
+		      <p v-if="errors.length">
+			<!-- <div v-if="errors.length != 0" class="alert alert-danger alert-dismissible fade show" role="alert">Please correct the following error(s):</div> -->
+			<div v-for="error in errors" class="alert alert-danger alert-dismissible fade show" role="alert">
+			  {{ error }}
+			  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+			    <span aria-hidden="true">&times;</span>
+			  </button>
+			</div>
+		      </p>
+		<button type="submit" onclick="chaingunScript.checkForm(); return false;" class="btn btn-primary btn-block text-left" data-toggle="modal" data-target="#staticBackdrop">Generate YAML</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </form>
+
+	<!-- Modal that displays the YAML script -->
+	<div class="modal fade" id="staticBackdrop" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+	    <div class="modal-content">
+	      <div class="modal-header">
+		<h5 class="modal-title" id="staticBackdropLabel">Your YAML Script</h5>
+		<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		  <span aria-hidden="true">&times;</span>
+		</button>
+	      </div>
+	      <div class="modal-body">
+		<samp v-html="yamlScript">{{ yamlScript }}</samp>
+	      </div>
+	      <div class="modal-footer">
+		<!--
+		<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+		<button type="button" class="btn btn-primary">Understood</button>
+		-->
+		<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+	<!-- Modal that displays the form for a new HTTP action -->
+        <div class="modal overflow-auto" tabindex="-1" role="dialog" id="new_http">
+                <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                                <div class="modal-header">
+                                        <h5 class="modal-title">{{ edit_action_mode }} HTTP Action</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                </div>
+				<div class="modal-body">
+				      <p v-if="errors.length">
+					<div v-for="error in errors" class="alert alert-danger alert-dismissible fade show" role="alert">
+					  {{ error }}
+					  <!--
+					  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+					    <span aria-hidden="true">&times;</span>
+					  </button>
+					  -->
+					</div>
+				      </p>
+					<div class="form-group required row">
+						<label for="actionTitle" class="col-sm-3 col-form-label control-label">Title</label>
+						<input type="text" class="col-sm-8 form-control" id="actionTitle" v-model="action.title" placeholder="Enter the Title" required>
+						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) string that qualifies the action - used for the result output and logging">
+					</div>
+					<div class="form-group required row">
+						<label for="actionURL" class="col-sm-3 col-form-label control-label">URL</label>
+						<input type="text" class="col-sm-8 form-control" id="actionUrl" v-model="action.url" placeholder="Enter the URL" required>
+						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) If the string does not contain a server specification, use the value given by the server key in the default section">
+					</div>
+					<div class="form-group row">
+						<label for="actionMethod" class="col-sm-3 col-form-label control-label">Method</label>
+						<select id="actionMethod" class="col-sm-3 form-control" v-model="action.method" placeholder="Method">
+							<option></option>
+							<option>GET</option>
+							<option>POST</option>
+							<option>PUT</option>
+							<option>HEAD</option>
+							<option>DELETE</option>
+						</select>
+						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="GET, PUT, POST, HEAD, DELETE. If absent use the value given by the method key in the default section">
+					</div>
+					<div class="form-group row">
+						<label for="actionCookie" class="col-sm-3 col-form-label control-label">Store Cookie</label>
+						<input type="text" class="col-sm-8 form-control" id="actionCookie" v-model="action.store_cookie" placeholder="Enter the Cookie Name">
+						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="if set, indicates which cookies must be stored in the VU session. The predefined value __all__ implies the capture of all possible cookies">
+					</div>
+					<div class="form-group row">
+						<label for="actionBody" class="col-sm-3 col-form-label control-label">Body</label>
+						<input type="text" class="col-sm-8 form-control" id="actionBody" v-model="action.body" placeholder="Enter the Body">
+						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="value of HTTP body (works for any HTTP method) (one of body or template is mandatory)">
+					</div>
+					<div class="form-group row">
+						<label for="actionTemplate" class="col-sm-3 col-form-label control-label">Template Filename</label>
+						<input type="text" class="col-sm-8 form-control" id="actionTemplate" v-model="action.template" placeholder="Enter the Template Filename">
+						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="a filename which contents will be interpolated and will be used as the request body (one of body or template is mandatory)">
+					</div>
+					<div class="form-group row">
+						<label for="actionUploadFile" class="col-sm-3 col-form-label control-label">Filename to upload</label>
+						<input type="text" class="col-sm-8 form-control" id="actionUploadFile" v-model="action.upload_file" placeholder="Enter the Filename to upload">
+						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="when used with the POST or PUT methods, indicates a file which contents will be sent to the server as-is">
+					</div>
+					<div class="form-group row">
+						<label for="actionMethod" class="col-sm-3 col-form-label control-label">Use HTTP/2</label>
+						<select id="actionMethod" class="col-sm-3 form-control" v-model="action.use_http2" placeholder="Use HTTP/2">
+							<option></option>
+							<option>false</option>
+							<option>true</option>
+						</select>
+						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="set to true if you want to use HTTP/2 protocol (default value is false)">
+					</div>
+
+					<!-- Headers -->
+					<div class="form-group row">
+						<label for="headers" class="col-sm-3 col-form-label control-label">HTTP Headers</label>
+						<div>
+							<button type="button" class="btn btn-sm btn-primary" data-toggle="modal" xdata-target="#newHeader" onClick="chaingunScript.headerShow()">Add a new Header</button>
+							&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="additional HTTP headers to transmit. Each header has the form header_name: value. In case of a POST method, the body is sent with the HTTP Header content-type: application/x-www-form-urlencoded">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label for="headers" class="col-sm-3 col-form-label control-label"></label>
+						<div class="col-sm-9">
+							<div class="row mb-1" v-for="(header, index) in action.headers">
+								<div class="col">
+									<input disabled type="text" class="form-control form-inline" id="actionHTTPHeaderKey" v-model="header[0]" placeholder="Enter the HTTP Header Name">
+								</div>
+								<div class="col">
+									<input disabled type="text" class="form-control form-inline" id="actionHTTPHeaderValue" v-model="header[1]" placeholder="Enter the HTTP Header Value">
+								</div>
+								<div class="col">
+									<img src="img/pencil.svg" height=20 width=20 v-bind:onclick="'chaingunScript.displayForEditHeader(' + parseInt(index, 10) + '); return false'"/>&nbsp;
+									<img src="img/circle-x.svg" height=20 width=20 v-bind:onclick="'chaingunScript.deleteHeader(' + parseInt(index, 10) + '); return false'"/>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+                                <div class="modal-footer">
+					<input type="hidden" v-model:value="action_index">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal" v-on:click="clearAction">Close</button>
+                                        <button type="button" class="btn btn-primary" v-on:click="newAction">Save changes</button>
+                                </div>
+                        </div>
+                </div>
+        </div>
+
+	<!-- Log Action -->
+	<action-log 
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:message="action.message">
+	</action-log>
+	
+	<!-- Sleep Action -->
+	<action-sleep
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:duration="action.duration">
+	</action-sleep>
+
+	<!-- Assert Action -->
+	<action-assert
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:expression="action.expression">
+	</action-assert>
+
+	<!-- Setvar Action -->
+	<action-setvar
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:variable="action.variable"
+		v-bind:expression="action.expression">
+	</action-setvar>
+
+	<!-- Modal that displays the New Variable -->
+	<form-variable
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:variable="action.variable"
+		v-bind:expression="action.expression">
+	</form-variable>
+
+	<!-- Modal that displays the HTTP Header for Action -->
+        <div class="modal" tabindex="-1" role="dialog" id="new_header">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                                <div class="modal-header">
+                                        <h5 class="modal-title">{{ edit_header_mode }} HTTP Header</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                </div>
+				<div class="modal-body">
+				        <p v-if="errors2.length">
+					  <div v-for="error in errors2" class="alert alert-danger alert-dismissible fade show" role="alert">
+					    {{ error }}
+				  	  </div>
+				      	</p>
+					<div class="form-group row required">
+						<label for="HTTPHeader" class="col-sm-4 col-form-label control-label">HTTP Header Name</label>
+						<input type="text" class="col-sm-6 form-control" id="httpHeader" v-model="action.header_name" placeholder="Enter the HTTP Header Name">
+						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) Enter the HTTP Header full name (like Content-Type)">
+					</div>
+					<div class="form-group row required">
+						<label for="HTTPHeaderValue" class="col-sm-4 col-form-label control-label">HTTP Header Value</label>
+						<input type="text" class="col-sm-6 form-control" id="httpHeader" v-model="action.header_value" placeholder="Enter the HTTP Header Value">
+						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) Enter the HTTP Header value (like application/json)">
+					</div>
+				</div>
+                                <div class="modal-footer">
+					<input type="hidden" v-model:value="action_index">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal" v-on:click="clearHeader">Close</button>
+                                        <button type="button" class="btn btn-primary" v-on:click="newHeader">Save changes</button>
+                                </div>
+                        </div>
+                </div>
+        </div>
+
+	<!-- Modal that displays the WHEN clause in Action -->
+        <div class="modal" tabindex="-1" role="dialog" id="new_when">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                                <div class="modal-header">
+                                        <h5 class="modal-title">{{ edit_when_mode }} 'when' clause</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                </div>
+				<div class="modal-body">
+				        <p v-if="errors.length">
+					  <div v-for="error in errors" class="alert alert-danger alert-dismissible fade show" role="alert">
+					    {{ error }}
+				  	  </div>
+				      	</p>
+					<div class="form-group row required">
+						<label for="whenExpr" class="col-sm-4 col-form-label control-label">Expression</label>
+						<input type="text" class="col-sm-6 form-control" id="whenExpr" v-model="action.when_clause" placeholder="Enter the 'when' Expression">
+						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) expression that must be evaluated to True to trigger the Action">
+					</div>
+				</div>
+                                <div class="modal-footer">
+					<input type="hidden" v-model:value="action_index">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal" v-on:click="clearWhen">Close</button>
+                                        <button type="button" class="btn btn-primary" v-on:click="newWhen">Save changes</button>
+                                </div>
+                        </div>
+                </div>
+        </div>
+
+    </div> <!-- chaingunApp -->
+
+	<script src="js/vue.js"></script>
+	<script src="js/jquery-3.4.1.slim.min.js"></script>
+	<script src="js/bootstrap.bundle.min.js"></script>
+	<script src="js/components/feeder.js"></script>
+	<script src="js/components/variable.js"></script>
+	<script src="js/components/action_log.js"></script>
+	<script src="js/components/action_sleep.js"></script>
+	<script src="js/components/action_assert.js"></script>
+	<script src="js/components/action_setvar.js"></script>
+	<script src="js/main.js"></script>
+	<script src="js/js-yaml.min.js"></script>
+
+	<script>
+		$(document).ready(function(){
+			$('[data-toggle="tooltip"]').tooltip()
+		});
+		function confirmBox(callback, data) {
+			if (confirm("Do you confirm ?")) {
+				callback(data);
+			}
+			return false;
+		}
+	</script>
+</body>
+</html>
