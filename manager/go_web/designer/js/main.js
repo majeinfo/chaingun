@@ -92,6 +92,24 @@ var chaingunScript = new Vue({
 		this.$on('change_feeder_separator', function(value) {
 			this.scriptParms.feeder.separator = value;
 		});
+		this.$on('change_default_server', function(value) {
+			this.scriptParms.default.server = value;
+		});
+		this.$on('change_default_protocol', function(value) {
+			this.scriptParms.default.protocol = value;
+		});
+		this.$on('change_default_method', function(value) {
+			this.scriptParms.default.method = value;
+		});
+		this.$on('change_default_database', function(value) {
+			this.scriptParms.default.database = value;
+		});
+		this.$on('change_default_collection', function(value) {
+			this.scriptParms.default.collection = value;
+		});
+		this.$on('change_default_db_driver', function(value) {
+			this.scriptParms.default.db_driver = value;
+		});
 		this.$on('change_log_message', function(value) {
 			this.action.message = value;
 		});
@@ -104,6 +122,15 @@ var chaingunScript = new Vue({
 		this.$on('change_expression', function(value) {
 			this.action.expression = value;
 		});
+		this.$on('change_http_header_name', function(value) {
+			this.action.header_name = value;
+		});
+		this.$on('change_http_header_value', function(value) {
+			this.action.header_value = value;
+		});
+		this.$on('change_when_clause', function(value) {
+			this.action.when_clause = value;
+		});
 		this.$on('clear_action', function(value) {
 			this.clearAction();
 		});
@@ -115,6 +142,18 @@ var chaingunScript = new Vue({
 		});
 		this.$on('new_variable', function(value) {
 			this.newVariable();
+		});
+		this.$on('clear_header', function(value) {
+			this.clearHeader();
+		});
+		this.$on('new_header', function(value) {
+			this.newHeader();
+		});
+		this.$on('clear_when', function(value) {
+			this.clearWhen();
+		});
+		this.$on('new_when', function(value) {
+			this.newWhen();
 		});
 	},
 
@@ -295,6 +334,7 @@ var chaingunScript = new Vue({
 			} else {
 				this.scriptParms.actions[this.action_index]['when'] = this.action.when_clause;
 				$('#new_when').modal('hide');
+				this.action.when_clause = '';
 			}
 			this.update();
 		},

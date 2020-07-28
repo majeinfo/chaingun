@@ -128,48 +128,14 @@
               </div>
 
               <!-- Default action values -->
-              <div class="tab-pane fade m-2" id="v-pills-dv" role="tabpanel" aria-labelledby="v-pills-dv-tab">
-			<div class="form-group row">
-				<label for="server" class="col-sm-3 col-form-label">Default Server</label>
-				<input type="text" class="col-sm-4 form-control" id="dfltServer" v-model="scriptParms.default.server" placeholder="Enter the default server name">
-				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="name of remoter server - may also specify a port, for SQL this a DSN (examples: www.google.com:80 or www.bing.com or mongodb://localhost:27017)">
-			</div>
-			<div class="form-group row">
-				<label for="protocol" class="col-sm-3 col-form-label">Default Protocol</label>
-				<select id="protocol" class="col-sm-2 form-control" v-model="scriptParms.default.protocol" placeholder="Protocol">
-					<option selected>http</option>
-					<option>https</option>
-				</select>
-				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="protocol to be used (http or https)">
-			</div>
-			<div class="form-group row">
-				<label for="protocol" class="col-sm-3 col-form-label">Default Method</label>
-				<select id="method" class="col-sm-2 form-control" v-model="scriptParms.default.method" placeholder="Method">
-					<option></option>
-					<option>GET</option>
-					<option>POST</option>
-					<option>PUT</option>
-					<option>HEAD</option>
-					<option>DELETE</option>
-				</select>
-				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="HTTP method to use">
-			</div>
-			<div class="form-group row">
-				<label for="database" class="col-sm-3 col-form-label">Default Database</label>
-				<input type="text" class="col-sm-4 form-control" id="dfltDatabase" v-model="scriptParms.default.database" placeholder="Enter the default DB Name">
-				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="default database for MongoDB and SQL">
-			</div>
-			<div class="form-group row">
-				<label for="collection" class="col-sm-3 col-form-label">Default Collection</label>
-				<input type="text" class="col-sm-4 form-control" id="dfltCollection" v-model="scriptParms.default.collection" placeholder="Enter the default DB Name">
-				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="default collection for MongoDB">
-			</div>
-			<div class="form-group row">
-				<label for="db_driver" class="col-sm-3 col-form-label">Default DB Driver</label>
-				<input type="text" class="col-sm-4 form-control" id="dfltDBDriver" v-model="scriptParms.default.db_driver" placeholder="Enter the default DB Driver">
-				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="default SQL Driver - only 'mysql' is supported yet">
-			</div>
-              </div>
+	      <form-dflt-values
+			v-bind:server="scriptParms.default.server" 
+			v-bind:protocol="scriptParms.default.protocol" 
+			v-bind:method="scriptParms.default.method"
+			v-bind:database="scriptParms.default.database"
+			v-bind:collection="scriptParms.default.collection"
+			v-bind:db_driver="scriptParms.default.db_driver">
+	      </form-dflt-values>
 
               <!-- Data Feeder -->
 	      <form-feeder 
@@ -177,7 +143,6 @@
 			v-bind:filename="scriptParms.feeder.filename" 
 			v-bind:separator="scriptParms.feeder.separator">
 	      </form-feeder>
-              <!-- </div> -->
 
               <!-- Action List -->
               <div class="tab-pane fade m-2" id="v-pills-al" role="tabpanel" aria-labelledby="v-pills-al-tab">
@@ -405,67 +370,21 @@
 	</form-variable>
 
 	<!-- Modal that displays the HTTP Header for Action -->
-        <div class="modal" tabindex="-1" role="dialog" id="new_header">
-                <div class="modal-dialog modal-dialog-centered" role="document">
-                        <div class="modal-content">
-                                <div class="modal-header">
-                                        <h5 class="modal-title">{{ edit_header_mode }} HTTP Header</h5>
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                </div>
-				<div class="modal-body">
-				        <p v-if="errors2.length">
-					  <div v-for="error in errors2" class="alert alert-danger alert-dismissible fade show" role="alert">
-					    {{ error }}
-				  	  </div>
-				      	</p>
-					<div class="form-group row required">
-						<label for="HTTPHeader" class="col-sm-4 col-form-label control-label">HTTP Header Name</label>
-						<input type="text" class="col-sm-6 form-control" id="httpHeader" v-model="action.header_name" placeholder="Enter the HTTP Header Name">
-						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) Enter the HTTP Header full name (like Content-Type)">
-					</div>
-					<div class="form-group row required">
-						<label for="HTTPHeaderValue" class="col-sm-4 col-form-label control-label">HTTP Header Value</label>
-						<input type="text" class="col-sm-6 form-control" id="httpHeader" v-model="action.header_value" placeholder="Enter the HTTP Header Value">
-						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) Enter the HTTP Header value (like application/json)">
-					</div>
-				</div>
-                                <div class="modal-footer">
-					<input type="hidden" v-model:value="action_index">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal" v-on:click="clearHeader">Close</button>
-                                        <button type="button" class="btn btn-primary" v-on:click="newHeader">Save changes</button>
-                                </div>
-                        </div>
-                </div>
-        </div>
+	<action-http-header
+		v-bind:action="edit_header_mode"
+		v-bind:errors="errors2"
+		v-bind:action_index="action_index"
+		v-bind:header_name="action.header_name"
+		v-bind:header_value="action.header_value">
+	</action-http-header>
 
 	<!-- Modal that displays the WHEN clause in Action -->
-        <div class="modal" tabindex="-1" role="dialog" id="new_when">
-                <div class="modal-dialog modal-dialog-centered" role="document">
-                        <div class="modal-content">
-                                <div class="modal-header">
-                                        <h5 class="modal-title">{{ edit_when_mode }} 'when' clause</h5>
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                </div>
-				<div class="modal-body">
-				        <p v-if="errors.length">
-					  <div v-for="error in errors" class="alert alert-danger alert-dismissible fade show" role="alert">
-					    {{ error }}
-				  	  </div>
-				      	</p>
-					<div class="form-group row required">
-						<label for="whenExpr" class="col-sm-4 col-form-label control-label">Expression</label>
-						<input type="text" class="col-sm-6 form-control" id="whenExpr" v-model="action.when_clause" placeholder="Enter the 'when' Expression">
-						&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) expression that must be evaluated to True to trigger the Action">
-					</div>
-				</div>
-                                <div class="modal-footer">
-					<input type="hidden" v-model:value="action_index">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal" v-on:click="clearWhen">Close</button>
-                                        <button type="button" class="btn btn-primary" v-on:click="newWhen">Save changes</button>
-                                </div>
-                        </div>
-                </div>
-        </div>
+	<when-clause
+		v-bind:action="edit_when_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:when_clause="action.when_clause">
+	</when-clause>
 
     </div> <!-- chaingunApp -->
 
@@ -473,11 +392,14 @@
 	<script src="js/jquery-3.4.1.slim.min.js"></script>
 	<script src="js/bootstrap.bundle.min.js"></script>
 	<script src="js/components/feeder.js"></script>
+	<script src="js/components/default_values.js"></script>
 	<script src="js/components/variable.js"></script>
+	<script src="js/components/when.js"></script>
 	<script src="js/components/action_log.js"></script>
 	<script src="js/components/action_sleep.js"></script>
 	<script src="js/components/action_assert.js"></script>
 	<script src="js/components/action_setvar.js"></script>
+	<script src="js/components/action_http_header.js"></script>
 	<script src="js/main.js"></script>
 	<script src="js/js-yaml.min.js"></script>
 
