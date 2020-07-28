@@ -79,7 +79,7 @@ func ValidateTestDefinition(t *TestDef) bool {
 		log.Error("Rampup not defined. must be > -1")
 		valid = false
 	}
-	if t.Users == 0 {
+	if t.Users <= 0 {
 		log.Error("Users must be > 0")
 		valid = false
 	}
