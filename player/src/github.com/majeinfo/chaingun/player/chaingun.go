@@ -128,6 +128,11 @@ func playManagerMode() {
 	manager.Start(gp_manager_addr, gp_repositorydir, gp_injectors)
 }
 
+func playDesignerMode() {
+	log.Infof("Start designer mode on this address: %s", *gp_listen_addr)
+	startDesignerMode(gp_listen_addr)
+}
+
 func playBatchMode() {
 	log.Debug("Batch mode started")
 	manager.StartBatch(gp_manager_addr, gp_repositorydir, gp_injectors, gp_scriptfile)

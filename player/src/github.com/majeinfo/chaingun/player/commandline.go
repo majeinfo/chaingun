@@ -10,8 +10,8 @@ import (
 
 // Analyze the command line
 func command_line() {
-	mode := flag.String("mode", "standalone", "standalone|daemon|manager|batch|graph-only")
-	gp_listen_addr = flag.String("listen-addr", "127.0.0.1:12345", "Address and port to listen to (in daemon mode)")
+	mode := flag.String("mode", "standalone", "standalone|daemon|manager|batch|graph-only|designer")
+	gp_listen_addr = flag.String("listen-addr", "127.0.0.1:12345", "Address and port to listen to (in daemon or designer mode)")
 	gp_manager_addr = flag.String("manager-listen-addr", "127.0.0.1:8000", "Address and port to listen to (for the web interface in manager mode)")
 	gp_repositorydir = flag.String("repository-dir", ".", "directory where to store results (in manager|batch mode)")
 	gp_connect_to = flag.String("connect-to", "", "Address and port to connect to - in daemon mode (not supported yet)")
@@ -45,7 +45,7 @@ func command_line() {
 	var ok bool
 	gp_mode, ok = modeTypeMap[*mode]
 	if !ok {
-		log.Fatalf("Unknown mode value: %s (allowed values are: standalone, daemon, manager, batch or graph-only)", *mode)
+		log.Fatalf("Unknown mode value: %s (allowed values are: standalone, daemon, manager, batch, designer or graph-only)", *mode)
 	}
 	log.Debugf("Player mode is %s", *mode)
 

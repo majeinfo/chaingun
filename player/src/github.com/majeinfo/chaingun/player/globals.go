@@ -14,6 +14,7 @@ const (
 	managerMode
 	batchMode
 	graphOnlyMode
+	designerMode
 )
 
 type playerFunc func()
@@ -29,6 +30,7 @@ var (
 		"manager":    {managerMode, playManagerMode},
 		"batch":      {batchMode, playBatchMode},
 		"graph-only": {graphOnlyMode, playGraphOnlyMode},
+		"designer":   {designerMode, playDesignerMode},
 	}
 )
 
