@@ -327,6 +327,43 @@
                 </div>
         </div>
 
+	<!-- TCP Action -->
+	<action-tcp 
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:title="action.title"
+		v-bind:address="action.address"
+		v-bind:payload="action.payload">
+	</action-tcp>
+
+	<!-- UDP Action -->
+	<action-udp 
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:title="action.title"
+		v-bind:address="action.address"
+		v-bind:payload="action.payload">
+	</action-udp>
+
+	<!-- MQTT Action -->
+	<action-mqtt 
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:title="action.title"
+		v-bind:url="action.url"
+		v-bind:certificatepath="action.certificatepath"
+		v-bind:privatekeypath="action.privatekeypath"
+		v-bind:username="action.username"
+		v-bind:password="action.password"
+		v-bind:clientid="action.clientid"
+		v-bind:payload="action.payload"
+		v-bind:topic="action.topic"
+		v-bind:qos="action.qos">
+	</action-mqtt>
+
 	<!-- Log Action -->
 	<action-log 
 		v-bind:action="edit_action_mode"
@@ -396,6 +433,9 @@
 	<script src="js/components/variable.js"></script>
 	<script src="js/components/when.js"></script>
 	<script src="js/components/action_log.js"></script>
+	<script src="js/components/action_tcp.js"></script>
+	<script src="js/components/action_udp.js"></script>
+	<script src="js/components/action_mqtt.js"></script>
 	<script src="js/components/action_sleep.js"></script>
 	<script src="js/components/action_assert.js"></script>
 	<script src="js/components/action_setvar.js"></script>

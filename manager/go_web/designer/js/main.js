@@ -67,7 +67,7 @@ var chaingunScript = new Vue({
 		yamlScript: "",
 		errors: [],
 		errors2: [],
-		actionTypes: ["assert", "http", "log", "setvar", "sleep"],
+		actionTypes: ["assert", "http", "log", "mqtt", "setvar", "sleep", "tcp", "udp"],
 		cur_action: '',
 		edit_action_mode: '',
 		edit_header_mode: '',
@@ -110,6 +110,15 @@ var chaingunScript = new Vue({
 		this.$on('change_default_db_driver', function(value) {
 			this.scriptParms.default.db_driver = value;
 		});
+		this.$on('change_title', function(value) {
+			this.action.title = value;
+		});
+		this.$on('change_address', function(value) {
+			this.action.address = value;
+		});
+		this.$on('change_payload', function(value) {
+			this.action.payload = value;
+		});
 		this.$on('change_log_message', function(value) {
 			this.action.message = value;
 		});
@@ -121,6 +130,30 @@ var chaingunScript = new Vue({
 		});
 		this.$on('change_expression', function(value) {
 			this.action.expression = value;
+		});
+		this.$on('change_url', function(value) {
+			this.action.url = value;
+		});
+		this.$on('change_certificatepath', function(value) {
+			this.action.certificatepath = value;
+		});
+		this.$on('change_privatekeypath', function(value) {
+			this.action.privatekeypath = value;
+		});
+		this.$on('change_username', function(value) {
+			this.action.username = value;
+		});
+		this.$on('change_password', function(value) {
+			this.action.password = value;
+		});
+		this.$on('change_clientid', function(value) {
+			this.action.clientid = value;
+		});
+		this.$on('change_topic', function(value) {
+			this.action.topic = value;
+		});
+		this.$on('change_qos', function(value) {
+			this.action.qos = parseInt(value, 10);
 		});
 		this.$on('change_http_header_name', function(value) {
 			this.action.header_name = value;
@@ -168,6 +201,8 @@ var chaingunScript = new Vue({
 			this.edit_action_mode = 'New';
 			this.action.title = '';
 			this.action.url = '';
+			this.action.address = '';
+			this.action.payload = '';
 			this.action.headers = [];
 			this.action.variable = '';
 			this.action.expression = '';
@@ -410,6 +445,38 @@ function _buildNewAction(action, dflt, errors) {
 		newAction['setvar'].variable = action.variable;
 		newAction['setvar'].expression = action.expression;
 		break
+	case 'tcp':
+		if (action.title == '') { errors.push("TCP Title cannot be null"); }
+		if (action.address == '') { errors.push("TCP Address cannot be null"); }
+		if (action.payload == '') { errors.push("TCP Payload cannot be null"); }
+		newAction['tcp'].title = action.title;
+		newAction['tcp'].address = action.address;
+		newAction['tcp'].payload = action.payload;
+		break
+	case 'udp':
+		if (action.title == '') { errors.push("UDP Title cannot be null"); }
+		if (action.address == '') { errors.push("UDP Address cannot be null"); }
+		if (action.payload == '') { errors.push("UDP Payload cannot be null"); }
+		newAction['udp'].title = action.title;
+		newAction['udp'].address = action.address;
+		newAction['udp'].payload = action.payload;
+		break
+	case 'mqtt':
+		if (action.title == '') { errors.push("MQTT Title cannot be null"); }
+		if (action.url == '') { errors.push("MQTT URL cannot be null"); }
+		if (action.topic == '') { errors.push("MQTT Topic cannot be null"); }
+		if (action.payload == '') { errors.push("MQTT Payload cannot be null"); }
+		newAction['mqtt'].title = action.title;
+		newAction['mqtt'].url = action.url;
+		newAction['mqtt'].certificatepath = action.certificatepath;
+		newAction['mqtt'].privatekeypath = action.privatekeypath;
+		newAction['mqtt'].username = action.username;
+		newAction['mqtt'].password = action.password;
+		newAction['mqtt'].clientid = action.clientid;
+		newAction['mqtt'].topic = action.topic;
+		newAction['mqtt'].payload = action.payload;
+		newAction['mqtt'].qos = action.qos;
+		break
 	}
 	
 	return newAction;
@@ -450,6 +517,31 @@ function _prepareEditAction(target, action) {
 		target.expression = action.setvar.expression;
 		return 'setvar';
 	}
+	else if ('tcp' in action) {
+		target.title = action.tcp.title;
+		target.address = action.tcp.address;
+		target.payload = action.tcp.payload;
+		return 'tcp';
+	}
+	else if ('udp' in action) {
+		target.title = action.udp.title;
+		target.address = action.udp.address;
+		target.payload = action.udp.payload;
+		return 'udp';
+	}
+	else if ('mqtt' in action) {
+		target.title = action.mqtt.title;
+		target.url = action.mqtt.url;
+		target.certificatepath = action.mqtt.certificatepath;
+		target.privatekeypath = action.mqtt.privatekeypath;
+		target.username = action.mqtt.username;
+		target.password = action.mqtt.password;
+		target.clientid = action.mqtt.clientid;
+		target.topic = action.mqtt.topic;
+		target.payload = action.mqtt.payload;
+		target.qos = action.mqtt.qos;
+		return 'mqtt';
+	}
 
 	alert('Action has unknown Type !');
 }
@@ -468,7 +560,16 @@ function _getDisplayAction(action, dflt) {
 		return 'ASSERT "' + action.assert.expression + '"';
 	}
 	else if ('setvar' in action) {
-		return 'SETVAR"' + action.setvar.variable + '"';
+		return 'SETVAR "' + action.setvar.variable + '"';
+	}
+	else if ('tcp' in action) {
+		return 'TCP "' + action.tcp.title + '"';
+	}
+	else if ('udp' in action) {
+		return 'UDP "' + action.udp.title + '"';
+	}
+	else if ('mqtt' in action) {
+		return 'MQTT "' + action.mqtt.title + '"';
 	}
 
 	alert('Action has unknown Type !');
