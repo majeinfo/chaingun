@@ -32,6 +32,7 @@ An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 - Variables can be fed from an external CSV file
 - Embeds a Web server to manage remote injectors but also supports a "batch mode"
 - Uses a YAML syntax to describe the stress scenarii
+- Embeds a Web Designer to help build the YAML scripts !
 
 # Building
 
@@ -50,7 +51,7 @@ An efficient Load Testing Tool for HTTP/MQTT/WS Servers, written in Go Language.
 
 Chaingun is made of a single binary (named "player") that can serve multi purpose.
 
-The "player" can be started in 3 different ways:
+The "player" can be started in 5 different ways:
 
 - the standalone mode (which is the default mode): this is the easiest way to proceed and may be
 sufficient when the expected test load can be applied by only one Player
@@ -60,6 +61,11 @@ you launch different Players (on different hosts !) in "daemon mode"
 
 - the manager mode: the Player creates a Web interface that lets you manage other remote Players. 
 The results will be aggregated by the Web interface.
+
+- the batch mode: like the Manager mode, but you provide the list of the remote Injectors and a script to play.
+Everyting is executed from the command line in "batch mode" !
+
+- the designer mode: the "player" offers a Web interface which helps you to create the YAML file !
 
 Note for the daemon mode:
 	- Data for feeder can be sent to the Players after sending them the Playbook script.
@@ -129,6 +135,11 @@ d) run in Batch mode (need remote injectors) :
 		for batch mode.
 	--repository-dir gives the location of results (default ".")
 
+e) run in Designer mode (the Web Interface for creating YAML files) :
+
+	$ cd player/bin
+	$ ./player --mode designer --listen-addr 127.0.0.1:12345
+
 ### Run from container image
 
 a) run a Player in standalone mode :
@@ -177,8 +188,6 @@ $ ./test_standalone_player.sh
 ```
 
 # TODO
-- add a web interface to create/import/export Playbooks
-- enhance support of database protocols like SQL and MongoDB
 
 # License
 Licensed under the MIT license.
