@@ -18,7 +18,8 @@
               <a class="nav-link" id="v-pills-var-tab" data-toggle="pill" href="#v-pills-var" role="tab" aria-controls="v-pills-variables" aria-selected="false">Variables</a>
               <a class="nav-link" id="v-pills-dflt-values-tab" data-toggle="pill" href="#v-pills-dv" role="tab" aria-controls="v-pills-dflt-values" aria-selected="false">Default Values</a>
               <a class="nav-link" id="v-pills-feeder-tab" data-toggle="pill" href="#v-pills-fd" role="tab" aria-controls="v-pills-feeder" aria-selected="false">Data Feeder</a>
-              <a class="nav-link" id="v-pills-al-tab" data-toggle="pill" href="#v-pills-al" role="tab" aria-controls="v-pills-profile" aria-selected="false">Actions</a>
+              <a class="nav-link" id="v-pills-pal-tab" data-toggle="pill" href="#v-pills-pal" role="tab" aria-controls="v-pills-preact" aria-selected="false">Pre-Actions</a>
+              <a class="nav-link" id="v-pills-al-tab" data-toggle="pill" href="#v-pills-al" role="tab" aria-controls="v-pills-actions" aria-selected="false">Actions</a>
               <a class="nav-link" id="v-pills-yaml-tab" data-toggle="pill" href="#v-pills-gy" role="tab" aria-controls="v-pills-yaml" aria-selected="false">Generate YAML</a>
               <a class="nav-link" id="v-pills-fulldoc-tab" data-toggle="pill" href="#v-pills-doc" role="tab" aria-controls="v-pills-fulldoc" aria-selected="false">Full Documentation</a>
             </div>
@@ -145,23 +146,23 @@
 			v-bind:separator="scriptParms.feeder.separator">
 	      </form-feeder>
 
-              <!-- Action List -->
-              <div class="tab-pane fade m-2" id="v-pills-al" role="tabpanel" aria-labelledby="v-pills-al-tab">
-                <table class="table table-bordered" ref="action_list">
+              <!-- Pre-Action List -->
+              <div class="tab-pane fade m-2" id="v-pills-pal" role="tabpanel" aria-labelledby="v-pills-pal-tab">
+                <table class="table table-bordered" ref="pre_action_list">
                   <thead class="thead-dark">
                     <tr><th scope="col">#</th><th>Action Description</th><th></th></tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(action, index) in scriptParms.actions" @dragstart="dragActionStart(index, $event)" @dragend="dragActionEnd($event)" draggable="true" @drop="dragActionFinish(index, $event)" ondragover="window.allowDrop(event)">
+                    <tr v-for="(action, index) in scriptParms.pre_actions" @dragstart="dragActionStart(index, $event)" @dragend="dragActionEnd($event)" draggable="true" @drop="dragActionFinish(index, $event, true)" ondragover="window.allowDrop(event)">
 			<td>{{ index+1 }}</td>
 			<td>{{ getDisplayAction(action) }}</td>
 			<td>
-                          <button class="btn btn-success" v-bind:onclick="'chaingunScript.displayForEditAction(' + parseInt(index, 10) + '); return false'">Edit</button>
-                          <button class="btn btn-danger" v-bind:onclick="'confirmBox(chaingunScript.deleteAction,' + parseInt(index, 10) + '); return false'">Delete</button>
+                          <button class="btn btn-success" v-bind:onclick="'chaingunScript.displayForEditAction(' + parseInt(index, 10) + ', true); return false'">Edit</button>
+                          <button class="btn btn-danger" v-bind:onclick="'confirmBox(chaingunScript.deleteAction,' + parseInt(index, 10) + ', true); return false'">Delete</button>
 			  &nbsp;&nbsp;
-                          <button v-if="'when' in action" class="btn btn-success btn-sm" v-bind:onclick="'chaingunScript.displayForWhen(' + parseInt(index, 10) + '); return false'">Edit 'when'</button>
-                          <button v-if="'when' in action" class="btn btn-danger btn-sm" v-bind:onclick="'confirmBox(chaingunScript.deleteWhen,' + parseInt(index, 10) + '); return false'">Delete 'when'</button>
-                          <button v-if="!('when' in action)" class="btn btn-primary btn-sm" v-bind:onclick="'chaingunScript.whenShow(' + parseInt(index, 10) + '); return false'">Add 'when'</button>
+                          <button v-if="'when' in action" class="btn btn-success btn-sm" v-bind:onclick="'chaingunScript.displayForWhen(' + parseInt(index, 10) + ', true); return false'">Edit 'when'</button>
+                          <button v-if="'when' in action" class="btn btn-danger btn-sm" v-bind:onclick="'confirmBox(chaingunScript.deleteWhen,' + parseInt(index, 10) + ', true); return false'">Delete 'when'</button>
+                          <button v-if="!('when' in action)" class="btn btn-primary btn-sm" v-bind:onclick="'chaingunScript.whenShow(' + parseInt(index, 10) + ', true); return false'">Add 'when'</button>
                         </td>
                     </tr>
                   </tbody>
@@ -175,7 +176,41 @@
 					</select>
 				</div>
 				<!-- &nbsp;<span class="badge badge-primary" data-toggle="tooltip" title="">Info</span> -->
-				&nbsp;<button type="button" class="btn btn-primary" data-toggle="modal" xdata-target="#newAction" onClick="chaingunScript.actionShow()">Add a new Action</button>
+				&nbsp;<button type="button" class="btn btn-primary" data-toggle="modal" xdata-target="#newAction" onClick="chaingunScript.actionShow(true)">Add a new pre-Action</button>
+			</div>
+              </div>
+
+              <!-- Action List -->
+              <div class="tab-pane fade m-2" id="v-pills-al" role="tabpanel" aria-labelledby="v-pills-al-tab">
+                <table class="table table-bordered" ref="action_list">
+                  <thead class="thead-dark">
+                    <tr><th scope="col">#</th><th>Action Description</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(action, index) in scriptParms.actions" @dragstart="dragActionStart(index, $event)" @dragend="dragActionEnd($event)" draggable="true" @drop="dragActionFinish(index, $event, false)" ondragover="window.allowDrop(event)">
+			<td>{{ index+1 }}</td>
+			<td>{{ getDisplayAction(action) }}</td>
+			<td>
+                          <button class="btn btn-success" v-bind:onclick="'chaingunScript.displayForEditAction(' + parseInt(index, 10) + ', false); return false'">Edit</button>
+                          <button class="btn btn-danger" v-bind:onclick="'confirmBox(chaingunScript.deleteAction,' + parseInt(index, 10) + ', false); return false'">Delete</button>
+			  &nbsp;&nbsp;
+                          <button v-if="'when' in action" class="btn btn-success btn-sm" v-bind:onclick="'chaingunScript.displayForWhen(' + parseInt(index, 10) + ', false); return false'">Edit 'when'</button>
+                          <button v-if="'when' in action" class="btn btn-danger btn-sm" v-bind:onclick="'confirmBox(chaingunScript.deleteWhen,' + parseInt(index, 10) + ', false); return false'">Delete 'when'</button>
+                          <button v-if="!('when' in action)" class="btn btn-primary btn-sm" v-bind:onclick="'chaingunScript.whenShow(' + parseInt(index, 10) + ', false); return false'">Add 'when'</button>
+                        </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <hr/>
+			<div class="form-group form-inline row">
+				<label for="actionType" class="col-sm-3 col-form-label">Action Type</label>
+				<div>
+					<select id="actionType" class="form-control" v-model="action.type" placeholder="Action Type">
+						<option v-for="type in actionTypes">{{ type }}</option>
+					</select>
+				</div>
+				<!-- &nbsp;<span class="badge badge-primary" data-toggle="tooltip" title="">Info</span> -->
+				&nbsp;<button type="button" class="btn btn-primary" data-toggle="modal" xdata-target="#newAction" onClick="chaingunScript.actionShow(false)">Add a new Action</button>
 			</div>
               </div>
 

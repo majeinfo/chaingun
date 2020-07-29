@@ -25,6 +25,7 @@ var chaingunScript = new Vue({
 				filename: '',
 				separator: ',',
 			},
+			pre_actions: [],
 			actions: [],
 		},
 		action: {
@@ -84,6 +85,7 @@ var chaingunScript = new Vue({
 		variable_index: 0,
 		header_index: 0,
 		moving_action: null,
+		is_pre_action: false,
 	},
 
 	mounted: function() {
@@ -278,8 +280,9 @@ var chaingunScript = new Vue({
 			this.$forceUpdate();
 		},
 		// ACTION
-                actionShow: function() {
+                actionShow: function(pre_action) {
 			console.log('actionShow: ' + this.action.type);
+			this.is_pre_action = pre_action;
 			this.cur_action = this.action.type;
 			this.edit_action_mode = 'New';
 			this.action.title = '';
@@ -309,24 +312,40 @@ var chaingunScript = new Vue({
 			if (this.errors.length == 0) {
 				if (this.edit_action_mode == 'New') {
 					console.log('This a new action');
-					this.scriptParms.actions.push(newAction);
+					if (this.is_pre_action) {
+						this.scriptParms.pre_actions.push(newAction);
+					} else {
+						this.scriptParms.actions.push(newAction);
+					}
 				} else {
 					console.log('Should update action ' + parseInt(this.action_index, 10));
-					this.scriptParms.actions[this.action_index] = newAction;
+					if (this.is_pre_action) {
+						this.scriptParms.pre_actions[this.action_index] = newAction;
+					} else {
+						this.scriptParms.actions[this.action_index] = newAction;
+					}
 				}
 				$('#new_' + this.cur_action).modal('hide');
 			}
                 },
-		displayForEditAction: function(idx) {
+		displayForEditAction: function(idx, pre_action) {
 			console.log('displayForEditAction: ' + parseInt(idx, 10));
-			var action_type = _prepareEditAction(this.action, this.scriptParms.actions[idx]);
+			if (pre_action) {
+				action_type = _prepareEditAction(this.action, this.scriptParms.pre_actions[idx]);
+			} else {
+				action_type = _prepareEditAction(this.action, this.scriptParms.actions[idx]);
+			}
 			this.edit_action_mode = 'Edit';
 			this.action_index = idx;
 			$('#new_' + action_type).modal('show');
 		},
-		deleteAction: function(idx) {
+		deleteAction: function(idx, pre_action) {
 			console.log('deleteAction' + parseInt(idx, 10));
-			this.scriptParms.actions.splice(idx, 1);
+			if (pre_action) {
+				this.scriptParms.pre_actions.splice(idx, 1);
+			} else {
+				this.scriptParms.actions.splice(idx, 1);
+			}
 		},
 		dragActionStart: function(idx, evt) {
 			console.log('dragActionStart: ' + parseInt(idx, 10));
@@ -339,15 +358,21 @@ var chaingunScript = new Vue({
 			evt.target.style.opacity = 1;
 			this.moving_action = null;
 		},
-                dragActionFinish: function(index, evt) {
+                dragActionFinish: function(index, evt, pre_action) {
                         console.log('dragFinish');
 			var data = event.dataTransfer.getData('text/plain');
 			event.preventDefault();
 			console.log('exchange actions ' + parseInt(this.moving_action, 10) + ' with ' + parseInt(index, 10));
 			if (index != this.moving_action) {
-				var save_action = this.scriptParms.actions[this.moving_action];
-				this.scriptParms.actions[this.moving_action] = this.scriptParms.actions[index];
-				this.scriptParms.actions[index] = save_action;
+				if (pre_action) {
+					var save_action = this.scriptParms.pre_actions[this.moving_action];
+					this.scriptParms.pre_actions[this.moving_action] = this.scriptParms.pre_actions[index];
+					this.scriptParms.pre_actions[index] = save_action;
+				} else {
+					var save_action = this.scriptParms.actions[this.moving_action];
+					this.scriptParms.actions[this.moving_action] = this.scriptParms.actions[index];
+					this.scriptParms.actions[index] = save_action;
+				}
 			}
 			this.moving_action = null;
 			this.update();
@@ -504,10 +529,11 @@ var chaingunScript = new Vue({
 			this.update();
 		},
 		// WHEN
-		whenShow: function(idx) {
+		whenShow: function(idx, pre_action) {
 			console.log('whenShow: ' + parseInt(idx));
 			this.edit_when_mode = 'New';
 			this.action_index = idx;
+			this.is_pre_action = pre_action;
 			$('#new_when').modal('show');
 		},
  		clearWhen: function() {
@@ -518,22 +544,34 @@ var chaingunScript = new Vue({
 			if (this.action.when_clause == '') {
 				this.errors.push("Expression must not be empty"); 
 			} else {
-				this.scriptParms.actions[this.action_index]['when'] = this.action.when_clause;
+				if (this.is_pre_action) {
+					this.scriptParms.pre_actions[this.action_index]['when'] = this.action.when_clause;
+				} else {
+					this.scriptParms.actions[this.action_index]['when'] = this.action.when_clause;
+				}
 				$('#new_when').modal('hide');
 				this.action.when_clause = '';
 			}
 			this.update();
 		},
-		displayForWhen: function(idx) {
+		displayForWhen: function(idx, pre_action) {
 			console.log('displayForWhen: ' + parseInt(idx));
 			this.edit_when_mode = 'Edit';
 			this.action_index = idx;
-			this.action.when_clause = this.scriptParms.actions[idx]['when'];
+			if (pre_action) {
+				this.action.when_clause = this.scriptParms.pre_actions[idx]['when'];
+			} else {
+				this.action.when_clause = this.scriptParms.actions[idx]['when'];
+			}
 			$('#new_when').modal('show');
 		},
-		deleteWhen: function(idx) {
+		deleteWhen: function(idx, pre_action) {
 			console.log('deleteWhen: ' + parseInt(idx));
-			delete this.scriptParms.actions[idx]['when'];
+			if (pre_action) {
+				delete this.scriptParms.pre_actions[idx]['when'];
+			} else {
+				delete this.scriptParms.actions[idx]['when'];
+			}
 			this.update();
 		},
 		// FINAL
