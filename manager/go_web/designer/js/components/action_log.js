@@ -6,7 +6,7 @@ Vue.component('action-log', {
   props: ['message', 'mode', "errors", "action_index"],
   template: ` 
         <div class="modal" tabindex="-1" role="dialog" id="new_log">
-                <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                         <div class="modal-content">
                                 <div class="modal-header">
                                         <h5 class="modal-title">{{ mode }} LOG Action</h5>

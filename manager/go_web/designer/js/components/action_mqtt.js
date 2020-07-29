@@ -6,7 +6,7 @@ Vue.component('action-mqtt', {
   props: ['title', 'url', 'certificatepath', 'privatekeypath', 'username', 'password', 'clientid', 'topic', 'payload', 'qos', 'mode', "errors", "action_index"],
   template: ` 
         <div class="modal" tabindex="-1" role="dialog" id="new_mqtt">
-                <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                         <div class="modal-content">
                                 <div class="modal-header">
                                         <h5 class="modal-title">{{ mode }} MQTT Action</h5>

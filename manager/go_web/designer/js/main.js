@@ -40,14 +40,20 @@ var chaingunScript = new Vue({
 			headers: [],
 			header_name: '',
 			header_value: '',
-			responses: '',
+			responses: [],
+			from_header: '',
+			regex: '',
+			jsonpath: '',
+			xmlpath: '',
+			index: '',
+			default_value: '',
 			server: '',
 			database: '',
 			collection: '',
 			command: '',
 			filter: '',
 			document: '',
-			db_driver: '',
+			db_driver: 'mysql',
 			statement: '',
 			certificatepath: '',
 			privatekeypath: '',
@@ -67,11 +73,13 @@ var chaingunScript = new Vue({
 		yamlScript: "",
 		errors: [],
 		errors2: [],
-		actionTypes: ["assert", "http", "log", "mqtt", "setvar", "sleep", "tcp", "udp"],
+		actionTypes: ["assert", "http", "log", "mongodb", "mqtt", "setvar", "sleep", "sql", "tcp", "udp", "ws"],
 		cur_action: '',
 		edit_action_mode: '',
 		edit_header_mode: '',
 		edit_when_mode: '',
+                edit_response_mode: '',
+		response_index: 0,
 		action_index: 0,
 		variable_index: 0,
 		header_index: 0,
@@ -134,6 +142,12 @@ var chaingunScript = new Vue({
 		this.$on('change_url', function(value) {
 			this.action.url = value;
 		});
+		this.$on('change_method', function(value) {
+			this.action.method = value;
+		});
+		this.$on('change_use_http2', function(value) {
+			this.action.use_http2 = value;
+		});
 		this.$on('change_certificatepath', function(value) {
 			this.action.certificatepath = value;
 		});
@@ -154,6 +168,69 @@ var chaingunScript = new Vue({
 		});
 		this.$on('change_qos', function(value) {
 			this.action.qos = parseInt(value, 10);
+		});
+		this.$on('change_database', function(value) {
+			this.action.database = value;
+		});
+		this.$on('change_db_driver', function(value) {
+			this.action.db_driver = value;
+		});
+		this.$on('change_statement', function(value) {
+			this.action.statement = value;
+		});
+		this.$on('change_server', function(value) {
+			this.action.server = value;
+		});
+		this.$on('change_store_cookie', function(value) {
+			this.action.store_cookie = value;
+		});
+		this.$on('change_body', function(value) {
+			this.action.body = value;
+		});
+		this.$on('change_template', function(value) {
+			this.action.template = value;
+		});
+		this.$on('change_upload_file', function(value) {
+			this.action.upload_file = value;
+		});
+		this.$on('change_responses', function(value) {
+			this.action.responses = value;
+		});
+		this.$on('change_headers', function(value) {
+			this.action.headers = value;
+		});
+		this.$on('change_from_header', function(value) {
+			this.action.from_header = value;
+		});
+		this.$on('change_regex', function(value) {
+			this.action.regex = value;
+		});
+		this.$on('change_jsonpath', function(value) {
+			this.action.jsonpath = value;
+		});
+		this.$on('change_xmlpath', function(value) {
+			this.action.xmlpath = value;
+		});
+		this.$on('change_index', function(value) {
+			this.action.index = value;
+		});
+		this.$on('change_default_value', function(value) {
+			this.action.default_value = value;
+		});
+		this.$on('change_from_header', function(value) {
+			this.action.from_header = value;
+		});
+		this.$on('change_collection', function(value) {
+			this.action.collection = value;
+		});
+		this.$on('change_filter', function(value) {
+			this.action.filter = value;
+		});
+		this.$on('change_document', function(value) {
+			this.action.document = value;
+		});
+		this.$on('change_command', function(value) {
+			this.action.command = value;
 		});
 		this.$on('change_http_header_name', function(value) {
 			this.action.header_name = value;
@@ -182,6 +259,12 @@ var chaingunScript = new Vue({
 		this.$on('new_header', function(value) {
 			this.newHeader();
 		});
+		this.$on('clear_response', function(value) {
+			this.clearResponse();
+		});
+		this.$on('new_response', function(value) {
+			this.newResponse();
+		});
 		this.$on('clear_when', function(value) {
 			this.clearWhen();
 		});
@@ -204,8 +287,15 @@ var chaingunScript = new Vue({
 			this.action.address = '';
 			this.action.payload = '';
 			this.action.headers = [];
+			this.action.responses = [];
 			this.action.variable = '';
 			this.action.expression = '';
+			this.action.message = '';
+			this.action.body = '';
+			this.action.template = '';
+			this.action.upload_file = '';
+			this.action.store_cookie = '';
+			this.action.method = '';
 			this.action.message = '';
 			$('#new_' + this.cur_action).modal('show');
                 },
@@ -304,6 +394,67 @@ var chaingunScript = new Vue({
 		},
 		deleteHeader: function(idx) {
 			this.action.headers.splice(idx, 1);
+		},
+		// RESPONSE
+		responseShow: function() {
+			this.edit_response_mode = 'New';
+			this.action.from_header = '';
+			this.action.regex = '';
+			this.action.jsonpath = '';
+			this.action.xmlpath = '';
+			this.action.index = '';
+			this.action.variable = '';
+			this.action.default_value = '';
+			$('#new_response').modal('show');
+		},
+ 		clearResponse: function() {
+			this.errors2 = [];
+		},
+                newResponse: function() {
+			console.log('newResponse');
+			this.errors2 = [];
+
+			if (this.action.regex == '' && this.action.jsonpath == '' && this.action.xmlpath == '') {
+				this.errors2.push("A regex or jsonpath or xmlpath must be specified"); 
+			} 
+			if (this.action.variable == '') {
+				this.errors2.push("The Variable Name must not be empty"); 
+			} 
+			if (this.errors2.length == 0) {
+				var response = { 
+					variable: this.action.variable
+				};
+				if (this.action.from_header != '') { response['from_header'] = this.action.from_header; }
+				if (this.action.regex != '') { response['regex'] = this.action.regex; }
+				if (this.action.jsonpath != '') { response['jsonpath'] = this.action.jsonpath; }
+				if (this.action.xmlpath != '') { response['xmlpath'] = this.action.xmlpath; }
+				if (this.action.default_value != '') { response['default_value'] = this.action.default_value; }
+				if (this.action.index != '') { response['index'] = this.action.index; }
+				if (this.edit_response_mode == 'New') {
+					this.action.responses.push(response);
+				} else {
+					this.action.responses[this.response_index] = response;
+				}
+				$('#new_response').modal('hide');
+			}
+			console.log('length of action.responses=' + parseInt(this.action.responses.length, 10));
+			this.update();
+                },
+		displayForEditResponse: function(idx) {
+			console.log('displayForEditResponse: ' + parseInt(idx, 10));
+			this.edit_response_mode = 'Edit';
+			this.response_index = idx;
+			this.action.from_header = this.action.responses[idx]['from_header'];
+			this.action.regex = this.action.responses[idx]['regex'];
+			this.action.jsonpath = this.action.responses[idx]['jsonpath'];
+			this.action.xmlpath = this.action.responses[idx]['xmlpath'];
+			this.action.index = this.action.responses[idx]['index'];
+			this.action.variable = this.action.responses[idx]['variable'];
+			this.action.default_value = this.action.responses[idx]['default_value'];
+			$('#new_response').modal('show');
+		},
+		deleteResponse: function(idx) {
+			this.action.responses.splice(idx, 1);
 		},
 		// VARIABLE
                 variableShow: function() {
@@ -426,13 +577,14 @@ function _buildNewAction(action, dflt, errors) {
 				newAction['http']['headers'][action.headers[idx][0]] = action.headers[idx][1];
 			}
 		}
+		newAction['http'].responses = action.responses;
 		break;
 	case 'log':
-		if (action.message == '') { errors.push("Log Message cannot be null"); }
+		if (action.message == '') { errors.push("Message cannot be null"); }
 		newAction['log'].message = action.message;
 		break
 	case 'assert':
-		if (action.expression == '') { errors.push("Assert Expression cannot be null"); }
+		if (action.expression == '') { errors.push("Expression cannot be null"); }
 		newAction['assert'].expression = action.expression;
 		break
 	case 'sleep':
@@ -440,32 +592,72 @@ function _buildNewAction(action, dflt, errors) {
 		newAction['sleep'].duration = action.duration;
 		break;
 	case 'setvar':
-		if (action.variable == '') { errors.push("Setvar Variable Name cannot be null"); }
-		if (action.expression == '') { errors.push("Setvar Expression cannot be null"); }
+		if (action.variable == '') { errors.push("Variable Name cannot be null"); }
+		if (action.expression == '') { errors.push("Expression cannot be null"); }
 		newAction['setvar'].variable = action.variable;
 		newAction['setvar'].expression = action.expression;
 		break
 	case 'tcp':
-		if (action.title == '') { errors.push("TCP Title cannot be null"); }
-		if (action.address == '') { errors.push("TCP Address cannot be null"); }
-		if (action.payload == '') { errors.push("TCP Payload cannot be null"); }
+		if (action.title == '') { errors.push("Title cannot be null"); }
+		if (action.address == '') { errors.push("Address cannot be null"); }
+		if (action.payload == '') { errors.push("Payload cannot be null"); }
 		newAction['tcp'].title = action.title;
 		newAction['tcp'].address = action.address;
 		newAction['tcp'].payload = action.payload;
 		break
 	case 'udp':
-		if (action.title == '') { errors.push("UDP Title cannot be null"); }
-		if (action.address == '') { errors.push("UDP Address cannot be null"); }
-		if (action.payload == '') { errors.push("UDP Payload cannot be null"); }
+		if (action.title == '') { errors.push("Title cannot be null"); }
+		if (action.address == '') { errors.push("Address cannot be null"); }
+		if (action.payload == '') { errors.push("Payload cannot be null"); }
 		newAction['udp'].title = action.title;
 		newAction['udp'].address = action.address;
 		newAction['udp'].payload = action.payload;
 		break
+	case 'sql':
+		if (action.title == '') { errors.push("Title cannot be null"); }
+		if (action.statement == '') { errors.push("Statement cannot be null"); }
+		if (action.server == '' && dflt.server == '') { errors.push("Server field or default Server cannot be null"); }
+		if (action.database == '' && dflt.database == '') { errors.push("Database field or default Database cannot be null"); }
+		if (action.db_driver == '' && dflt.db_driver == '') { errors.push("DB Driver field or default DB Driver cannot be null"); }
+		newAction['sql'].title = action.title;
+		newAction['sql'].statement = action.statement;
+		if (action.db_driver != '') { newAction['sql'].db_driver = action.db_driver; }
+		if (action.database != '') { newAction['sql'].database = action.database; }
+		if (action.server != '') { newAction['sql'].server = action.server; }
+		break
+	case 'mongodb':
+		if (action.title == '') { errors.push("Title cannot be null"); }
+		if (action.server == '' && dflt.server == '') { errors.push("Server field or default Server cannot be null"); }
+		if (action.database == '' && dflt.database == '') { errors.push("Database field or default Database cannot be null"); }
+		if (action.collection == '' && dflt.collection == '') { errors.push("Collection field or default Collection cannot be null"); }
+		if (action.command == '') { errors.push("Command cannot be empty (must be findone, insertone or drop)"); }
+		if (action.filter != '' && action.command != 'findone') { errors.push("Filter can be applied only with 'findone' command"); }
+		if (action.document == '' && action.command == 'insertone') { errors.push("With the 'insertone' command, you need to specify a JSON document"); }
+
+		newAction['mongodb'].title = action.title;
+		if (action.server != '') { newAction['mongodb'].server = action.server; }
+		if (action.database != '') { newAction['mongodb'].database = action.database; }
+		if (action.collection != '') { newAction['mongodb'].collection = action.collection; }
+		newAction['mongodb'].command = action.command;
+		if (action.filter != '') { newAction['mongodb'].filter = action.filter; }
+		if (action.document != '') { newAction['mongodb'].document = action.document; }
+		newAction['mongodb'].responses = action.responses;
+		break
+	case 'ws':
+		if (action.title == '') { errors.push("Title cannot be null"); }
+		if (action.url == '' && dflt.server == '') { errors.push("URL field or default Server cannot be null"); }
+		newAction['ws'].title = action.title;
+		newAction['ws'].url = action.url;
+		if (action.store_cookie != '') { newAction['ws'].store_cookie = action.store_cookie; }
+		if (action.body != '') { newAction['ws'].body = action.body; }
+		newAction['ws'].responses = action.responses;
+		//if (action.url == '') { newAction['ws'].url = dflt.server; }
+		break
 	case 'mqtt':
-		if (action.title == '') { errors.push("MQTT Title cannot be null"); }
-		if (action.url == '') { errors.push("MQTT URL cannot be null"); }
-		if (action.topic == '') { errors.push("MQTT Topic cannot be null"); }
-		if (action.payload == '') { errors.push("MQTT Payload cannot be null"); }
+		if (action.title == '') { errors.push("Title cannot be null"); }
+		if (action.url == '') { errors.push("URL cannot be null"); }
+		if (action.topic == '') { errors.push("Topic cannot be null"); }
+		if (action.payload == '') { errors.push("Payload cannot be null"); }
 		newAction['mqtt'].title = action.title;
 		newAction['mqtt'].url = action.url;
 		newAction['mqtt'].certificatepath = action.certificatepath;
@@ -498,6 +690,7 @@ function _prepareEditAction(target, action) {
 				target.headers.push([entry, action.http.headers[entry]]);
 			}
 		}
+		target.responses = action.http.responses;
 		return 'http';
 	}
 	else if ('log' in action) {
@@ -542,6 +735,33 @@ function _prepareEditAction(target, action) {
 		target.qos = action.mqtt.qos;
 		return 'mqtt';
 	}
+	else if ('sql' in action) {
+		target.title = action.sql.title;
+		target.server = action.sql.server;
+		target.db_driver = action.sql.db_driver;
+		target.database = action.sql.database;
+		target.statement = action.sql.statement;
+		return 'sql';
+	}
+	else if ('ws' in action) {
+		target.title = action.ws.title;
+		target.url = action.ws.url;
+		target.store_cookie = action.ws.store_cookie;
+		target.body = action.ws.body;
+		target.responses = action.ws.responses;
+		return 'ws';
+	}
+	else if ('mongodb' in action) {
+		target.title = action.mongodb.title;
+		target.server = action.mongodb.server;
+		target.database = action.mongodb.database;
+		target.collection = action.mongodb.collection;
+		target.command = action.mongodb.command;
+		target.filter = action.mongodb.filter;
+		target.document = action.mongodb.document;
+		target.responses = action.mongodb.responses;
+		return 'mongodb';
+	}
 
 	alert('Action has unknown Type !');
 }
@@ -570,6 +790,15 @@ function _getDisplayAction(action, dflt) {
 	}
 	else if ('mqtt' in action) {
 		return 'MQTT "' + action.mqtt.title + '"';
+	}
+	else if ('sql' in action) {
+		return 'SQL "' + action.sql.statement + '"';
+	}
+	else if ('ws' in action) {
+		return 'WS "' + action.ws.title + '"';
+	}
+	else if ('mongodb' in action) {
+		return 'MONGODB "' + action.mongodb.title + '"';
 	}
 
 	alert('Action has unknown Type !');
