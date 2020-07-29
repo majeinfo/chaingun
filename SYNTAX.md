@@ -110,7 +110,7 @@ Here is the list and the description of the implemented Actions :
 | `method` | GET, PUT, POST, HEAD, DELETE. If absent use the value given by the `method` key in the default section |
 | `use_http2` | set to true if you want to use HTTP/2 protocol (default value is false) |
 | `url` | mandatory. If the string does not contain a server specification, use the value given by the `server` key in the default section |
-| `storeCookie` | if set, indicates which cookies must be stored in the VU session. The predefined value __all__ implies the capture of all possible cookies |
+| `store_cookie` | if set, indicates which cookies must be stored in the VU session. The predefined value __all__ implies the capture of all possible cookies |
 | `body` | value of HTTP body (works for any HTTP method) (one of `body` or `template` is mandatory) |
 | `formdata` | list of key/value pairs used to send data in multipart form (see below) |
 | `template` | a filename which contents will be interpolated and will be used as the request body (one of `body` or `template` is mandatory) |
@@ -126,7 +126,7 @@ Examples:
     method: GET				# MAND for http action (GET/POST/PUT/HEAD/DELETE)
     url: http://server/page1.php	# MAND for http action
     # name of Cookie to store. __all__ catches all cookies !
-    storeCookie: __all__
+    store_cookie: __all__
 
 # POST with application/x-www-form-urlencoded by default
 # Extracts value from response using regexp
@@ -272,7 +272,7 @@ Examples:
 | :--- | :--- |
 | `title` | mandatory string that qualifies the request - used for the result output and logging |
 | `url` | mandatory. If the string does not contain a server specification, use the value given by the `server` key in the default section |
-| `storeCookie` | if set, indicates which cookies must be stored in the VU session. The predefined value __all__ implies the capture of all possible cookies |
+| `store_cookie` | if set, indicates which cookies must be stored in the VU session. The predefined value __all__ implies the capture of all possible cookies |
 | `body` | value of body to send |
 | `responses` | data can be extracted from server responses. The extraction can use the body or a HTTP Header. regex, jsonpath or xmlpath can be used to collect the substrings |
 
@@ -551,7 +551,7 @@ actions:
       method: GET			# MAND for http action (GET/POST/PUT/HEAD/DELETE)
       url: http://server/page1.php	# MAND for http action
       # name of Cookie to store. __all__ catches all cookies !
-      storeCookie: __all__
+      store_cookie: __all__
 
   # Wait 
   - sleep:

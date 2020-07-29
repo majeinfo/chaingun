@@ -12,7 +12,7 @@ type WSAction struct {
     URL              string            `yaml:"url"`
     Body             string            `yaml:"body"`
     Title            string            `yaml:"title"`
-    StoreCookie      string            `yaml:"storeCookie"`
+    StoreCookie      string            `yaml:"store_cookie"`
     ResponseHandlers []ResponseHandler `yaml:"responses"`
 }
 

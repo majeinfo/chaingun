@@ -11,7 +11,7 @@ actions:
       title: Page 1
       method: GET
       url: http://www.delamarche.com/chaingun/page1.php
-      storeCookie: __all__
+      store_cookie: __all__
   - http:
       title: Page 2
       method: GET

@@ -21,7 +21,7 @@ type HTTPAction struct {
 	Headers          map[string]string `yaml:"headers"`
 	Title            string            `yaml:"title"`
 	UploadFile       []byte            `yaml:"upload_file"`
-	StoreCookie      string            `yaml:"storeCookie"`
+	StoreCookie      string            `yaml:"store_cookie"`
 	ResponseHandlers []ResponseHandler `yaml:"responses"`
 }
 
