@@ -273,6 +273,7 @@
 		v-bind:template="action.template"
 		v-bind:upload_file="action.upload_file"
 		v-bind:headers="action.headers"
+		v-bind:formdatas="action.formdatas"
 		v-bind:responses="action.responses"
 		v-bind:method="action.method"
 		v-bind:url="action.url"
@@ -407,6 +408,16 @@
 		v-bind:header_value="action.header_value">
 	</action-http-header>
 
+	<!-- Modal that displays the Formdata for Action -->
+	<action-http-formdata
+		v-bind:action="edit_formdata_mode"
+		v-bind:errors="errors2"
+		v-bind:action_index="action_index"
+		v-bind:formdata_name="action.formdata_name"
+		v-bind:formdata_type="action.formdata_type"
+		v-bind:formdata_value="action.formdata_value">
+	</action-http-formdata>
+
 	<!-- Modal that displays the WHEN clause in Action -->
 	<when-clause
 		v-bind:action="edit_when_mode"
@@ -452,6 +463,7 @@
 	<script src="js/components/action_http.js"></script>
 	<script src="js/components/action_ws.js"></script>
 	<script src="js/components/action_http_header.js"></script>
+	<script src="js/components/action_http_formdata.js"></script>
 	<script src="js/main.js"></script>
 	<script src="js/js-yaml.min.js"></script>
 

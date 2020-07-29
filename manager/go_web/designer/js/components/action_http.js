@@ -3,7 +3,7 @@ Vue.component('action-http', {
     return {
     }
   },
-  props: ['title', "url", "method", "use_http2", "store_cookie", "body", "template", "upload_file", "headers", "responses", "errors", "errors2", "action_index", "mode"],
+  props: ['title', "url", "method", "use_http2", "store_cookie", "body", "template", "upload_file", "formdatas", "headers", "responses", "errors", "errors2", "action_index", "mode"],
   template: ` 
         <div class="modal overflow-auto" tabindex="-1" role="dialog" id="new_http">
                 <div class="modal-dialog modal-lg" role="document">
@@ -73,6 +73,35 @@ Vue.component('action-http', {
                                                         <option>true</option>
                                                 </select>
                                                 &nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="set to true if you want to use HTTP/2 protocol (default value is false)">
+                                        </div>
+
+					<!-- Formdata -->
+                                        <div class="form-group row">
+                                                <label for="formdatas" class="col-sm-3 col-form-label control-label">Formdatas</label>
+                                                <div>
+                                                        <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" xdata-target="#newFormdata" onClick="chaingunScript.formdataShow()">Add a new Formdata</button>
+                                                        &nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="additional Formdata to transmit. Each Formdata has a name and value attributes. If the value is a filename, you must specify 'type: file' as a 3rd attribute. The data are sent with 'Content-type: multipart/form-data">
+                                                </div>
+                                        </div>
+                                        <div class="form-group row">
+                                                <label for="headers" class="col-sm-3 col-form-label control-label"></label>
+                                                <div class="col-sm-9">
+                                                        <div class="row mb-1" v-for="(formdata, index) in formdatas">
+                                                                <div class="col">
+                                                                        <input disabled type="text" class="form-control form-inline" id="formdataName" v-model="formdata.name" placeholder="Enter the Data Name">
+                                                                </div>
+                                                                <div class="col">
+                                                                        <input disabled type="text" class="form-control form-inline" id="formdataValue" v-model="formdata.value" placeholder="Enter the Data Value">
+                                                                </div>
+                                                                <div class="col">
+                                                                        <input disabled type="text" class="form-control form-inline" id="formdataType" v-model="formdata.type" placeholder="Enter the Data Type (must be 'file' for a File !)">
+                                                                </div>
+                                                                <div class="col">
+                                                                        <img src="img/pencil.svg" height=20 width=20 v-bind:onclick="'chaingunScript.displayForEditFormdata(' + parseInt(index, 10) + '); return false'"/>&nbsp;
+                                                                        <img src="img/circle-x.svg" height=20 width=20 v-bind:onclick="'chaingunScript.deleteFormdata(' + parseInt(index, 10) + '); return false'"/>
+                                                                </div>
+                                                        </div>
+                                                </div>
                                         </div>
 
                                         <!-- Headers -->

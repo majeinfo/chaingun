@@ -41,6 +41,10 @@ var chaingunScript = new Vue({
 			headers: [],
 			header_name: '',
 			header_value: '',
+			formdatas: [],
+			formdata_name: '',
+			formdata_value: '',
+			formdata_type: '',
 			responses: [],
 			from_header: '',
 			regex: '',
@@ -80,10 +84,12 @@ var chaingunScript = new Vue({
 		edit_header_mode: '',
 		edit_when_mode: '',
                 edit_response_mode: '',
+		edit_formdata_mode: '',
 		response_index: 0,
 		action_index: 0,
 		variable_index: 0,
 		header_index: 0,
+		formdata_index: 0,
 		moving_action: null,
 		is_pre_action: false,
 	},
@@ -240,6 +246,15 @@ var chaingunScript = new Vue({
 		this.$on('change_http_header_value', function(value) {
 			this.action.header_value = value;
 		});
+		this.$on('change_http_formdata_name', function(value) {
+			this.action.formdata_name = value;
+		});
+		this.$on('change_http_formdata_value', function(value) {
+			this.action.formdata_value = value;
+		});
+		this.$on('change_http_formdata_type', function(value) {
+			this.action.formdata_type = value;
+		});
 		this.$on('change_when_clause', function(value) {
 			this.action.when_clause = value;
 		});
@@ -260,6 +275,12 @@ var chaingunScript = new Vue({
 		});
 		this.$on('new_header', function(value) {
 			this.newHeader();
+		});
+		this.$on('clear_formdata', function(value) {
+			this.clearFormdata();
+		});
+		this.$on('new_formdata', function(value) {
+			this.newFormdata();
 		});
 		this.$on('clear_response', function(value) {
 			this.clearResponse();
@@ -290,6 +311,7 @@ var chaingunScript = new Vue({
 			this.action.address = '';
 			this.action.payload = '';
 			this.action.headers = [];
+			this.action.formdatas = [];
 			this.action.responses = [];
 			this.action.variable = '';
 			this.action.expression = '';
@@ -377,6 +399,55 @@ var chaingunScript = new Vue({
 			this.moving_action = null;
 			this.update();
                 },   
+		// FORMDATA
+		formdataShow: function() {
+			console.log('formdataShow');
+			this.edit_formdata_mode = 'New';
+			this.action.formdata_name = '';
+			this.action.formdata_value = '';
+			this.action.formdata_type = '';
+			$('#new_formdata').modal('show');
+		},
+ 		clearFormdata: function() {
+			this.errors2 = [];
+		},
+                newFormdata: function() {
+			console.log('newFormdata');
+			this.errors2 = [];
+
+			if (this.action.formdata_name == '') {
+				this.errors2.push("The Header name must not be empty"); 
+			} 
+			if (this.action.formdata_value == '') {
+				this.errors2.push("The HTTP Header value must not be empty"); 
+			} 
+			if (this.errors2.length == 0) {
+				var data = {
+					name: this.action.formdata_name,
+					value: this.action.formdata_value,
+				};
+				if (this.action.formdata_type != '') { data['type'] = this.action.formdata_type; }
+				if (this.edit_formdata_mode == 'New') {
+					// Vue.js v2 cannot iterate on map, so we build an array
+					this.action.formdatas.push(data);
+				} else {
+					this.action.formdatas[this.formdata_index] = data;
+				}
+				$('#new_formdata').modal('hide');
+			}
+			this.update();
+                },
+		displayForEditFormdata: function(idx) {
+			this.edit_formdata_mode = 'Edit';
+			this.formdata_index = idx;
+			this.action.formdata_name = this.action.formdatas[idx].name;
+			this.action.formdata_value = this.action.formdatas[idx].value;
+			this.action.formdata_type = this.action.formdatas[idx].type;
+			$('#new_formdata').modal('show');
+		},
+		deleteFormdata: function(idx) {
+			this.action.formdatas.splice(idx, 1);
+		},
 		// HEADER
 		headerShow: function() {
 			this.edit_header_mode = 'New';
@@ -615,7 +686,8 @@ function _buildNewAction(action, dflt, errors) {
 				newAction['http']['headers'][action.headers[idx][0]] = action.headers[idx][1];
 			}
 		}
-		newAction['http'].responses = action.responses;
+		if (action.responses && action.responses.length > 0) { newAction['http'].responses = action.responses; }
+		if (action.formdatas && action.formdatas.length > 0) { newAction['http'].formdatas = action.formdatas; }
 		break;
 	case 'log':
 		if (action.message == '') { errors.push("Message cannot be null"); }
@@ -729,6 +801,7 @@ function _prepareEditAction(target, action) {
 			}
 		}
 		target.responses = action.http.responses;
+		target.formdatas = action.http.formdatas;
 		return 'http';
 	}
 	else if ('log' in action) {
@@ -875,19 +948,22 @@ function buildYAML(data, variables) {
 
 	var copy = JSON.parse(JSON.stringify(data));
 	
-	//if (!data.variables.size) { delete copy.variables; }
+	if (!variables.length) { delete copy.variables; }
 	if (copy.http_error_code == '') { delete copy['http_error_code']; }
 	if (copy.on_error == 'continue') { delete copy['on_error']; }
 	if (copy.timeout == 10 ) { delete copy['timeout']; }
 	if (!copy.persistent_connections) { delete copy['persistent_connections']; }
-	if (copy.default.server == '') { delete copy.default['server']; }
-	if (copy.default.protocol == '') { delete copy.default['protocol']; }
-	if (copy.default.method == '') { delete copy.default['method']; }
-	if (copy.default.database == '') { delete copy.default['database']; }
-	if (copy.default.collection == '') { delete copy.default['collection']; }
-	if (copy.default.db_driver == '') { delete copy.default['db_driver']; }
+	var counter = 6;
+	if (copy.default.server == '') { delete copy.default['server']; counter--; }
+	if (copy.default.protocol == '') { delete copy.default['protocol']; counter--; }
+	if (copy.default.method == '') { delete copy.default['method']; counter--; }
+	if (copy.default.database == '') { delete copy.default['database']; counter--; }
+	if (copy.default.collection == '') { delete copy.default['collection']; counter--; }
+	if (copy.default.db_driver == '') { delete copy.default['db_driver']; counter--; }
 	if (copy.feeder.filename == '') { delete copy.feeder; }
-	//if (!data.default.size) { delete copy.default; }
+	if (!counter) { delete copy.default; }
+	if (copy.pre_actions.length == 0) { delete copy.pre_actions; }
+	if (copy.actions.length == 0) { delete copy.actions; }
 
 	var text = jsyaml.dump(copy);
 	text = text.replace(/\n/g, "<br/>");
