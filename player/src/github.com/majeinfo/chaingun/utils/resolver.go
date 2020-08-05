@@ -10,8 +10,10 @@ import (
 )
 
 var (
-	addrCache = make(map[string][]string, 50)
-	cacheLock sync.Mutex
+	addrCache       = make(map[string][]string, 50)
+	addrCacheSynced sync.Map
+	cacheLock       sync.Mutex
+	use_map_synced  = true
 )
 
 // GetServerAddress fills and manages a cache on host/IP address
@@ -22,23 +24,41 @@ func GetServerAddress(serverName string) (string, bool) {
 	host := parts[0]
 
 	// Check if address is already in cache, otherwise try to fill the cache
-	cacheLock.Lock()
-	defer cacheLock.Unlock()
-
-	if values, err := addrCache[host]; err == true {
-		return appendPort(getAddr(values), parts), true
-	}
-
-	if addrs, err := net.LookupHost(host); err == nil {
-		// Remove IPv6 addresses
-		addrs4 := make([]string, 0)
-		for _, addr := range addrs {
-			if strings.Count(addr, ":") == 0 {
-				addrs4 = append(addrs4, addr)
-			}
+	if use_map_synced {
+		if values, ok := addrCacheSynced.Load(host); ok == true {
+			return appendPort(getAddr(values.([]string)), parts), true
 		}
-		addrCache[host] = addrs4
-		return appendPort(getAddr(addrs4), parts), true
+
+		if addrs, err := net.LookupHost(host); err == nil {
+			// Remove IPv6 addresses
+			addrs4 := make([]string, 0)
+			for _, addr := range addrs {
+				if strings.Count(addr, ":") == 0 {
+					addrs4 = append(addrs4, addr)
+				}
+			}
+			addrCacheSynced.Store(host, addrs4)
+			return appendPort(getAddr(addrs4), parts), true
+		}
+	} else {
+		cacheLock.Lock()
+		defer cacheLock.Unlock()
+
+		if values, err := addrCache[host]; err == true {
+			return appendPort(getAddr(values), parts), true
+		}
+
+		if addrs, err := net.LookupHost(host); err == nil {
+			// Remove IPv6 addresses
+			addrs4 := make([]string, 0)
+			for _, addr := range addrs {
+				if strings.Count(addr, ":") == 0 {
+					addrs4 = append(addrs4, addr)
+				}
+			}
+			addrCache[host] = addrs4
+			return appendPort(getAddr(addrs4), parts), true
+		}
 	}
 
 	log.Errorf("Could not resolve the Server Name: %s", host)
