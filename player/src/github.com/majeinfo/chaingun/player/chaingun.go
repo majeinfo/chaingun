@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"runtime/pprof"
 	"runtime/trace"
 	"time"
 
@@ -20,7 +21,40 @@ import (
 // Program starts here
 func main() {
 	command_line()
+
+	//runtime.SetMutexProfileFraction(1)
+	//runtime.SetBlockProfileRate(1)
+
+	if *gp_cpu_profile != "" {
+		f, err := os.Create(*gp_cpu_profile)
+		if err != nil {
+			log.Fatal("Could not create CPU profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("Could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
 	gp_mode.f()
+
+	if *gp_mem_profile != "" {
+		f, err := os.Create(*gp_mem_profile)
+		if err != nil {
+			log.Fatal("Could not create memory profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		runtime.GC()    // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("Could not write memory profile: ", err)
+		}
+		/*
+			if err := pprof.Lookup("block").WriteTo(f, 0); err != nil {
+				log.Fatal("Could not write memory profile: ", err)
+			}
+		*/
+	}
 }
 
 func playStandaloneMode() {

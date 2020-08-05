@@ -59,5 +59,8 @@ var (
 	gp_pre_actions []action.FullAction
 	gp_actions     []action.FullAction
 
-	GitCommit string = "1.1.4"
+	GitCommit string = "1.1.5"
+
+	gp_cpu_profile *string
+	gp_mem_profile *string
 )
