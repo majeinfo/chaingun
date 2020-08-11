@@ -365,7 +365,7 @@ func graph(w *os.File, totalTime int, name, title, xtitle, ytitle string, series
 	for idx := 0; idx < totalTime; idx++ {
 		fmt.Fprintf(w, "%d, ", idx)
 	}
-	fmt.Fprintf(w, "], title: { text: '%s' }, },\n", title)
+	fmt.Fprintf(w, "], title: { text: '%s' }, },\n", xtitle)
 	if _, ok := series["#VU"]; ok {
 		fmt.Fprintf(w, "yAxis: [{ title: { text: '%s' }, }, { title: { text: '#VU' }, opposite: true }],\n", ytitle)
 	} else {
