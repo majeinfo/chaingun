@@ -271,7 +271,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 			"#Appl Errors":    errors,
 			"#Net Errors":     netErrors,
 			"#Rcv Bytes":      rcvBytes,
-		})
+		}, false)
 
 	series := make(map[string][]int, len(colUniqTitle))
 	for title, _ := range colUniqTitle {
@@ -280,10 +280,11 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	graph(output,
 		total_elapsed_time,
 		"stats_per_req",
-		"Latency per Request (in ms)",
+		"Latency per Request",
 		"Elapsed Time (seconds)",
 		"time(ms)",
-		series)
+		series,
+		false)
 
 	err_series := make(map[string][]int)
 	for errCode, _ := range errorsPerSeconds {
@@ -295,7 +296,40 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		"Returned codes per second",
 		"Elapsed Time (seconds)",
 		"#err",
-		err_series)
+		err_series,
+		false)
+
+	// Compute stats with  #VU as x-values
+	// Find the higher #VU and stops once it is reached
+	max_idx := 0
+	max_vus := vus[0]
+	for second, value := range vus {
+		if value > max_vus {
+			max_vus = value
+			max_idx = second
+		}
+	}
+	log.Debugf("Maximum number of VU found is %d on second #%d", max_vus, max_idx)
+
+	// Now we can build the new series
+	latency_per_vu_series := make(map[string][]int, len(colUniqTitle))
+	for title, _ := range colUniqTitle {
+		latency_per_vu_series[title] = make([]int, max_vus+1)
+		for second, vu := range vus {
+			if second > max_idx {
+				break
+			}
+			latency_per_vu_series[title][vu] = meanTimePerReq[title][second]
+		}
+	}
+	graph(output,
+		total_elapsed_time,
+		"latency_per_vu",
+		"Latency per VU",
+		"#VU",
+		"time(ms)",
+		latency_per_vu_series,
+		true) // compute regression
 
 	// Output the average response time per page
 	firstRow = true
@@ -356,9 +390,50 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	return nil
 }
 
-func graph(w *os.File, totalTime int, name, title, xtitle, ytitle string, series map[string][]int) {
+func graph(w *os.File, totalTime int, name, title, xtitle, ytitle string, series map[string][]int, regress bool) {
 	fmt.Fprintf(w, "%s_options = {\n", name)
-	fmt.Fprintf(w, "chart: { zoomType: 'x', panning: true, panKey: 'shift', renderTo: '%s' },\n", name)
+	fmt.Fprintf(w, "chart: {\n")
+	if regress {
+		fmt.Fprint(w, `events: {
+			load: function() { 
+				var theChart = this;
+				var theSeries = this.series;
+				for (var key in theSeries) {
+					var low_idx = 0;
+					var high_idx = -1;
+					var aSeries = theSeries[key];
+					var data = [];
+
+					for (var idx in aSeries.data) {
+						idx = parseInt(idx, 10);
+						if (idx > high_idx) {
+							for (var idx2 in aSeries.data) {
+								idx2 = parseInt(idx2, 10);
+								if (idx2 < idx) { continue; }
+								if (aSeries.data[idx2].y != 0) {
+									high_idx = idx2;
+									break;
+								}
+							}
+						}
+						if (aSeries.data[idx].y == 0) {
+							var y1 = aSeries.data[low_idx].y;
+							var y2 = aSeries.data[high_idx].y;
+							var x1 = low_idx;
+							var x2 = high_idx;
+							aSeries.points[idx].y = y1 + ((y2 - y1) / (x2 - x1)) * (idx - x1);
+							data.push(aSeries.points[idx].y);
+						} else {
+							low_idx = idx;
+							data.push(aSeries.data[idx].y);
+						}
+					}
+					this.series[key].update({data: data}, true);
+				}
+			},
+		},`)
+	}
+	fmt.Fprintf(w, "\nzoomType: 'x', panning: true, panKey: 'shift', renderTo: '%s' },\n", name)
 	fmt.Fprintf(w, "title: { text: '%s'	},\n", title)
 	fmt.Fprintf(w, "legend: { layout: 'horizontal',	align: 'center', verticalAlign: 'bottom', borderWidth: 0 },\n")
 	fmt.Fprintf(w, "xAxis: { categories: [")
