@@ -71,7 +71,7 @@ default:
 The supported parameter_name(s) are:
 
 | Name | Description | Example values |
-| :--- | :---:       | :--- |
+| :--- | :---        | :--- |
 | `server`   | name of remoter server - may also specify a port, for SQL this a DSN | www.google.com:80 or www.bing.com or mongodb://localhost:27017 |
 | `protocol` | protocol to be used | http or https |
 | `method`   | HTTP method to use | GET or POST |
@@ -96,6 +96,7 @@ actions:
 
 Pre-Actions are played only once before starting the VUs.
 Actions are played by the VUs.
+A typical usage of pre-action would be to clean a database table before injecting data.
 In "batch" mode, only the first injector given on the command line will play the pre-actions.
 Pre-actions are also handled in "manager" mode (i.e using the embedded Web Interface).
 
@@ -449,7 +450,7 @@ Example:
   when: "delay > 2"
 ```
 
-## How to import data from the outside
+## How to import external data
 
 The `feeder` global section can be used to define an single source of external data. The following keys are mandatory :
 
