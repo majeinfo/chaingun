@@ -45,6 +45,10 @@ rakyll
 js-yaml.min.js
 go-delve
 profile
+player/src/github.com/golang/
+player/src/google.golang.org/
+player/src/github.com/jhump/
+player/src/github.com/gogo/
 player/src/statik/
 MakeNowJust
 go.mongodb.org/

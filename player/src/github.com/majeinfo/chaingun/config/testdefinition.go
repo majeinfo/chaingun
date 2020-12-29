@@ -103,7 +103,6 @@ func ValidateTestDefinition(t *TestDef) bool {
 		valid = false
 	}
 
-	// TODO: if grpc_proto is defined, default value for the server is mandatory
 	if t.GrpcProto != "" && t.DfltValues.Server == "" {
 		log.Error("The Default Server name (and Port) is mandatory if grpc_proto is specified")
 		valid = false
