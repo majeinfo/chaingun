@@ -2,6 +2,7 @@
 *.o
 *.a
 *.so
+*.out
 setup.sh
 
 # Folders
@@ -13,6 +14,7 @@ bin
 out
 pkg
 py36
+py38
 data
 eclipse
 golang.org

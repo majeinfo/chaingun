@@ -60,6 +60,8 @@ func _buildActionList(playbook *config.TestDef, playbook_actions []map[string]in
 					action, valid = NewSleepAction(actionMap)
 				case "http":
 					action, valid = NewHTTPAction(actionMap, playbook.DfltValues, playbook)
+				case "grpc":
+					action, valid = NewGRPCAction(actionMap, playbook.DfltValues, playbook)
 				case "mqtt":
 					action, valid = NewMQTTAction(actionMap, playbook.DfltValues)
 				case "ws":

@@ -30,6 +30,7 @@ type TestDef struct {
 	PersistentConn bool						`yaml:"persistent_connections"`	// (default is false)
 	OnError        string                   `yaml:"on_error"` // continue (default) | stop_vu | stop_test
 	HttpErrorCodes string                   `yaml:"http_error_codes"`
+	GrpcProto	   string	                `yaml:"grpc_proto"`
 	Timeout        int                      `yaml:"timeout"` // default is 10s
 	DfltValues     Default                  `yaml:"default"`
 	Variables      map[string]string        `yaml:"variables"`
@@ -93,12 +94,18 @@ func ValidateTestDefinition(t *TestDef) bool {
 	}
 
 	if t.DfltValues.Method != "" && !IsValidHTTPMethod(t.DfltValues.Method) {
-		log.Error("Default Http Action must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: %s", t.DfltValues.Method)
+		log.Errorf("Default Http Action must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: %s", t.DfltValues.Method)
 		valid = false
 	}
 
 	if t.DfltValues.DBDriver != "" && !IsValidDBDriver(t.DfltValues.DBDriver) {
-		log.Error("Default DB Driver must specify a valid driver: mysql: %s", t.DfltValues.DBDriver)
+		log.Errorf("Default DB Driver must specify a valid driver (mysql): %s", t.DfltValues.DBDriver)
+		valid = false
+	}
+
+	// TODO: if grpc_proto is defined, default value for the server is mandatory
+	if t.GrpcProto != "" && t.DfltValues.Server == "" {
+		log.Error("The Default Server name (and Port) is mandatory if grpc_proto is specified")
 		valid = false
 	}
 

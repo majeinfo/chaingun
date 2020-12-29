@@ -41,7 +41,7 @@ func NewSQLAction(a map[interface{}]interface{}, dflt config.Default, playbook *
 		}
 	} else {
 		if !config.IsValidDBDriver(a["db_driver"].(string)) {
-			log.Error("DB Driver must specify a valid driver (mysql)")
+			log.Errorf("DB Driver must specify a valid driver (mysql): %s", a["db_driver"].(string))
 			valid = false
 		}
 	}
