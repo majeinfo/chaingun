@@ -1,0 +1,23 @@
+---
+iterations: -1
+duration: 20
+users: 100
+rampup: 20
+timeout: 3
+default:
+  server: localhost:9000
+grpc_proto: playbooks/chat.proto
+variables:
+  name: bob
+actions:
+  - grpc:
+      title: Message 1
+      call: chat.ChatService.SayHello
+      data: '{"body": "hello ${name}"}'
+      responses:
+        - jsonpath: $.body+
+          variable: upper_name
+          index: first
+          default_value: alice
+  - log:
+      message: "returned uppercase name is ${upper_name}"

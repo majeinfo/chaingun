@@ -14,9 +14,27 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 
 3.[Default values for Actions](#default-value-for-actions)
 
-4.[Actions](#actions)
+4.[Actions](#actions-and-pre-actions)
+4.1.[HTTP/S](#http--https-request)
+4.2.[MongoDB](#mongodb-mongodb-request)
+4.3.[SQL](#sql-sql-request)
+4.4.[WebSocket](#ws-websocket-request)
+4.5.[MQTT](#mqtt--mqtt-request)
+4.6.[gRPC](#grpc--grpc-request-beta)
+4.7.[TCP & UDP](#tcp-or-udp--simple-tcp-or-udp-request)
+4.8.[setvar](#setvar--creates-and-set-variable-values)
+4.9.[sleep](#sleep--wait-action)
+4.10.[log](#log--log-output-action)
+4.11.[assert](#assert--creates-assertion)
 
 5.[Advanced Topics](#advanced-topics)
+5.1.[Variables usage](#variables-usage)
+5.2.[Expressions](#expressions)
+5.3.[Session variables and Cookies](#session-variables-and-cookies)
+5.4.[The 'when' clause](#the-when-clause-to-trigger-actions)
+5.5.[Import external data](#how-to-import-external-data)
+5.6.[Submit form with multipart/form-data syntax](#submit-form-using-multipartform-data-syntax)
+5.7.[Handle Basic HTTP authentication](#handle-basic-authentication)
 
 6.[Full Sample](#full-sample)
 
@@ -32,6 +50,7 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 | `on_error`   | string  | (default=continue,stop_iteration,stop_vu,stop_test) define the behaviour for error handling: just display the error and continue (default), or abort the current iteration, or stop the current VU, or abort the whole test |
 | `http_error_code` | list | (no default value) define the list of what is considered a HTTP error code. For example, `http_error_code: 404,403,500`. This is only used by HTTP Actions |
 | `persistent_connections` | bool | (false) if true, each VU uses the same connection for a script iteration. Note: only work for MongoDB and SQL. Also implies that the script uses only one protocol |
+| `grpc_proto` | string | (no default value) if specified, must indicate the path to a ".proto" file. The path to the file is relative to the directory where the player is executed from. This option implies the definition of a default server |
 
 Note : the injector does not support the notion of "keepalive". Connections to the remote servers are opened and closed for each action.
 
@@ -72,7 +91,7 @@ The supported parameter_name(s) are:
 
 | Name | Description | Example values |
 | :--- | :---        | :--- |
-| `server`   | name of remoter server - may also specify a port, for SQL this a DSN | www.google.com:80 or www.bing.com or mongodb://localhost:27017 |
+| `server`   | name of remoter server - may also specify a port, for SQL this a DSN. Mandatory if grpc_proto has been specified| www.google.com:80 or www.bing.com or mongodb://localhost:27017 |
 | `protocol` | protocol to be used | http or https |
 | `method`   | HTTP method to use | GET or POST |
 | `database` | default database for MongoDB and SQL | my_database |
@@ -198,7 +217,7 @@ Examples:
     upload_file: /path/to/file        # no variable interpolation
 ```
 
-## mongodb: MongoDB Request
+## mongodb : MongoDB Request
 
 | Parameter Name | Description |
 | :--- | :--- |
@@ -236,7 +255,7 @@ Examples:
     message: "found name is ${the_name}"
 ```
 
-## sql: SQL Request
+## sql : SQL Request
 
 | Parameter Name | Description |
 | :--- | :--- |
@@ -267,7 +286,7 @@ Examples:
     message: "Row count=${SQL_Row_Count}"
 ```
 
-## ws: WebSocket Request
+## ws : WebSocket Request
 
 | Parameter Name | Description |
 | :--- | :--- |
@@ -319,7 +338,33 @@ Example:
 					# url, payload and topic
 ```
 
-## tcp or udp: simple TCP or UDP Request
+## grpc : gRPC Request (beta)
+
+Note : streaming requests and/or responses are not yet supported.
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `title` | mandatory string that qualifies the request - used for the result output and logging |
+| `call` | mandatory string that indicates the function to call (ex: package.service.function) |
+| `data` | mandatory JSON string to send as the payload |
+| `responses` | data can be extracted from server responses. The response is considered as a JSON document, so you must use jsonpath |
+
+Variable interpolation applies to requests and responses.
+
+Example:
+```
+- grpc:
+    title: Hello
+    call: chat.ChatSerice.SayHello
+    data: '{"body": "hello !"}'
+    responses:
+      - jsonpath: $.body+
+        variable: name
+        index: first
+        default_value: alice
+```
+
+## tcp or udp : simple TCP or UDP Request
 
 | Parameter Name | Description |
 | :--- | :--- |
@@ -490,7 +535,7 @@ your form embeds a field of type `file`.
       - name: submit
 ```
 
-## Handle Basic authentication
+## Handle HTTP Basic authentication
 
 This method should not be used on unencrypted channel (HTTP)... If the web server requires a basic authentication
 you just have to specify the username and the password in the URL.

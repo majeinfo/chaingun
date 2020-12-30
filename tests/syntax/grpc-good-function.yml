@@ -1,0 +1,13 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+timeout: 3
+default:
+  server: www.google.com
+grpc_proto: syntax/chat.proto
+actions:
+  - grpc:
+      title: Page 1
+      call: chat.ChatService.SayHello 
+      data: "none"

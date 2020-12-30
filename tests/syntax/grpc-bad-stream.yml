@@ -1,0 +1,13 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+timeout: 3
+default:
+  server: localhost:9000
+grpc_proto: syntax/chat.proto
+actions:
+  - grpc:
+      title: Message 1
+      call: chat.ChatServiceClientStream.SayHello
+      data: '{"body": "hello"}'

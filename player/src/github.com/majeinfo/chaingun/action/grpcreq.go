@@ -8,22 +8,22 @@ import (
 	//"google.golang.org/grpc/encoding/gzip"   # pour la compression
 	"google.golang.org/grpc/metadata"
 	"math"
+	"net/http"
 	_ "strconv"
 	"strings"
-	_ "strings"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/jhump/protoreflect/desc"
+	"github.com/jhump/protoreflect/dynamic"
+	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
 	"github.com/majeinfo/chaingun/utils"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/jhump/protoreflect/desc"
-	"github.com/jhump/protoreflect/dynamic"
-	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"google.golang.org/grpc/keepalive"
-	"github.com/gogo/protobuf/proto"
 )
 
 const (
@@ -43,17 +43,12 @@ type GRPCRequest struct {
 func DoGRPCRequest(grpcAction GRPCAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	var trace_req string
 	sampleReqResult := buildSampleResult(REPORTER_GRPC, sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, grpcAction.Title, "")
-
-	req, err := buildGRPCRequest(grpcAction, sessionMap, vulog)
-	if err != nil {
-		vulog.Error(err)
-		return false
-	}
+	data := SubstParams(sessionMap, string([]byte(grpcAction.Data)), vulog)
 
 	if must_trace_request {
-		trace_req = fmt.Sprintf("%s %s", req.Call, req.Data)
+		trace_req = fmt.Sprintf("%s %s", grpcAction.Call, data)
 	} else {
-		vulog.Debugf("New Request: Call: %s, Data: %s", req.Call, req.Data)
+		vulog.Debugf("New Request: Call: %s, Data: %s", grpcAction.Call, data)
 	}
 
 	// Try to substitute the server name by an IP address
@@ -77,7 +72,7 @@ func DoGRPCRequest(grpcAction GRPCAction, resultsChannel chan reporter.SampleReq
 
 	b.handlers = append(b.handlers, sh)
 	opts = append(opts, grpc.WithStatsHandler(sh))
-	 */
+	*/
 
 	opts = append(opts, grpc.WithKeepaliveParams(keepalive.ClientParameters{
 		Time:    time.Duration(playbook.Timeout) * time.Second,
@@ -112,90 +107,61 @@ func DoGRPCRequest(grpcAction GRPCAction, resultsChannel chan reporter.SampleReq
 		return false
 	}
 
-	req.Stub = grpcdynamic.NewStub(conn)
+	req := &GRPCRequest{
+		Title: grpcAction.Title,
+		Stub: grpcdynamic.NewStub(conn),
+		Call: grpcAction.Call,
+		Data: data,
+		Func: grpcAction.Func,
+	}
 
 	// Unary request
 	var inputs []*dynamic.Message
-	if inputs, err = getMessages(req, []byte(req.Data)); err != nil {
+	if inputs, err = getMessages(req, data); err != nil {
 		vulog.Error(err)
 		return false
 	}
-	_ = makeUnaryRequest(&ctx, req, nil, inputs[0], vulog)
+	resp, err := makeUnaryRequest(&ctx, req, nil, inputs[0], vulog)
 
 	elapsed := time.Since(start)
-	/*
-	sessionMap[config.HTTP_RESPONSE] = strconv.Itoa(resp.StatusCode)
-	elapsed := time.Since(start)
-	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
 		if must_trace_request {
 			vulog.Infof("%s: FAILED (%s)", trace_req, err)
 		}
-		vulog.Printf("Reading HTTP response failed: %s", err)
-		buildHTTPSampleResult(&sampleReqResult, 0, resp.StatusCode, elapsed.Nanoseconds(), req.URL.String())
+		vulog.Printf("Reading GRPC response failed: %s", err)
+		buildGRPCSampleResult(&sampleReqResult, len(resp.String()), 1, elapsed.Nanoseconds(), req.Call)
 		resultsChannel <- sampleReqResult
 		return false
 	}
 
 	if must_trace_request {
-		vulog.Infof("%s; RetCode=%d; RcvdBytes=%d", trace_req, resp.StatusCode, len(responseBody))
+		vulog.Infof("%s; RetCode=%d; RcvdBytes=%d", trace_req, 0, len(resp.String()))
 	}
 	if must_display_srv_resp {
-		vulog.Debugf("[GRPC Response=%d] Received data: %s", resp.StatusCode, responseBody)
+		vulog.Debugf("[GRPC Response=%d] Received data: %s", 0, resp.String())
 	}
-	*/
+
 	valid := true
 
-	/*
-	// If the HTTP response code is listed in "http_error_codes" (404, 403, 500...),
-	// the result is not processed and a false value is returned
-	if strings.Contains(playbook.HttpErrorCodes, strconv.FormatInt(int64(resp.StatusCode), 10)) {
-		vulog.Errorf("HTTP response code is considered as an error: %d", resp.StatusCode)
-		valid = false
-	}
-
 	// if action specifies response action, parse using regexp/jsonpath
-	if valid && !processResult(grpcAction.ResponseHandlers, sessionMap, vulog, responseBody, resp.Header) {
+	var empty_http_header http.Header
+	dynResp := resp.(*dynamic.Message)
+	jsonData, err := dynResp.MarshalJSON()
+	if !processResult(grpcAction.ResponseHandlers, sessionMap, vulog, jsonData, empty_http_header) {
 		valid = false
 	}
-	 */
 
-	//buildHTTPSampleResult(&sampleReqResult, len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), req.Call)
-	buildHTTPSampleResult(&sampleReqResult, 9999, 999, elapsed.Nanoseconds(), req.Call)
+	buildGRPCSampleResult(&sampleReqResult, len(resp.String()), 0, elapsed.Nanoseconds(), req.Call)
 	resultsChannel <- sampleReqResult
 
 	return valid
 }
 
-func buildGRPCRequest(grpcAction GRPCAction, sessionMap map[string]string, vulog *log.Entry) (*GRPCRequest, error) {
-	req := &GRPCRequest{
-		Title: grpcAction.Title,
-		//Stub: nil,
-		Call: grpcAction.Call,
-		Data: grpcAction.Data,
-		Func: grpcAction.Func,
-	}
-	//var err error
-	vulog.Debug("buildGRPCRequest")
-
-	/*
-	// Hack: the Path has been concatened with EscapedPath() (from net/url.go)
-	// We must re-convert strings like $%7Bxyz%7D into ${xyz} to make variable substitution work !
-	unescapedURL := RedecodeEscapedPath(httpAction.URL)
-
-	if err != nil {
-		err := fmt.Errorf("http.newRequest failed in buildHttpRequest: %s", err)
-		return nil, err
-	}
-*/
-	return req, nil
-}
-
-func getMessages(req *GRPCRequest, inputData []byte) ([]*dynamic.Message, error) {
+func getMessages(req *GRPCRequest, data string) ([]*dynamic.Message, error) {
 	var inputs []*dynamic.Message
 
-	inputs, err := createPayloadsFromJSON(string(inputData), req.Func)
+	inputs, err := createPayloadsFromJSON(data, req.Func)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +225,7 @@ func messageFromMap(input *dynamic.Message, data *map[string]interface{}) error 
 	return nil
 }
 
-func makeUnaryRequest(ctx *context.Context, req *GRPCRequest, reqMD *metadata.MD, input *dynamic.Message, vulog *log.Entry) error {
+func makeUnaryRequest(ctx *context.Context, req *GRPCRequest, reqMD *metadata.MD, input *dynamic.Message, vulog *log.Entry) (proto.Message, error) {
 	var res proto.Message
 	var resErr error
 	var callOptions = []grpc.CallOption{}
@@ -269,6 +235,7 @@ func makeUnaryRequest(ctx *context.Context, req *GRPCRequest, reqMD *metadata.MD
 		callOptions = append(callOptions, grpc.UseCompressor(gzip.Name))
 	}
 	*/
+	/* TODO: handle metadata */
 
 	res, resErr = req.Stub.InvokeRpc(*ctx, req.Func, input, callOptions...)
 
@@ -277,7 +244,7 @@ func makeUnaryRequest(ctx *context.Context, req *GRPCRequest, reqMD *metadata.MD
 		", input", input, "metadata", reqMD,
 		", response", res, "error", resErr)
 
-	return resErr
+	return res, resErr
 }
 
 func buildGRPCSampleResult(sample *reporter.SampleReqResult, contentLength int, status int, elapsed int64, fullreq string) {

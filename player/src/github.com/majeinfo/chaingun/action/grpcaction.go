@@ -25,6 +25,7 @@ type GRPCAction struct {
 	Title string `yaml:"title"`
 	Call  string `yaml:"call"`
 	Data  string `yaml:"data,omitempty"`
+	ResponseHandlers []ResponseHandler `yaml:"responses"`
 	Func  *desc.MethodDescriptor
 }
 
@@ -59,10 +60,17 @@ func NewGRPCAction(a map[interface{}]interface{}, dflt config.Default, playbook 
 		if err != nil {
 			log.Error(err)
 			valid = false
+		} else {
+			if meth_desc.IsClientStreaming() || meth_desc.IsServerStreaming() {
+				log.Errorf("GrpcAction %s cannot be a stream", a["call"].(string))
+				valid = false
+			}
 		}
 	}
 
-	if !valid  {
+	responseHandlers, validResp := NewResponseHandlers(a)
+
+	if !valid || !validResp {
 		log.Errorf("Your YAML Playbook contains an invalid GRPCAction, see errors listed above.")
 		valid = false
 	}
@@ -72,6 +80,7 @@ func NewGRPCAction(a map[interface{}]interface{}, dflt config.Default, playbook 
 		Call:  a["call"].(string),
 		Data:  a["data"].(string),
 		Func:  meth_desc,
+		ResponseHandlers: responseHandlers,
 	}
 
 	log.Debugf("GRPCAction: %v", grpcAction)

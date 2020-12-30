@@ -120,6 +120,7 @@ Req_Error requests/1VU-http-timeout.yml 'HTTP request failed: net/http: timeout 
 # Test GRPC
 Req_Error syntax/grpc-bad-proto-file.yml 'open unknown.proto: no such file or directory'
 Req_Error syntax/grpc-bad-function.yml 'method name must be package.Service.Method or package.Service/Method: "function"'
+Req_Error syntax/grpc-bad-stream 'GrpcAction chat.ChatServiceClientStream.SayHello cannot be a stream'
 
 # Test a pre-action
 Req_OK requests/pre_actions1.yml

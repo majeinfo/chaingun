@@ -1,0 +1,22 @@
+syntax = "proto3";
+package chat;
+
+message Message {
+  string body = 1;
+}
+
+service ChatService {
+  rpc SayHello(Message) returns (Message) {}
+}
+
+service ChatServiceClientStream {
+  rpc SayHello(stream Message) returns (Message) {}
+}
+
+service ChatServiceServerStream {
+  rpc SayHello(Message) returns (stream Message) {}
+}
+
+service ChatServiceBidiStream {
+  rpc SayHello(stream Message) returns (stream Message) {}
+}
