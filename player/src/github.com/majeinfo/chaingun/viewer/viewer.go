@@ -11,6 +11,7 @@ import (
 	"github.com/rakyll/statik/fs"
 	log "github.com/sirupsen/logrus"
 	_ "statik"
+	"github.com/bmizerany/perks/quantile"
 )
 
 const (
@@ -65,6 +66,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	colUniqStatus := make(map[int]bool)
 	measures := make([]measure, 0, DFLT_CAP)
 	internalVus := make(map[int]int)
+	quantilesByPage := make(map[string]*quantile.Stream)
 
 	idx := 0
 	firstRow := true
@@ -96,20 +98,25 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		curLatency, _ := strconv.ParseFloat(record[6], 64)
 
 		if curType != "GLOBAL" {
+			title := record[3]
 			m := measure{
 				timestamp: int(curTime) / 1000000000,
 				vid:       curVid,
-				title:     record[3],
+				title:     title,
 				status:    int(curStatus),
 				recvBytes: int(curRecvBytes),
 				latency:   int(curLatency) / 1000000,
 			}
 			measures = append(measures, m)
 
-			colUniqTitle[record[3]] = true
-			uniqTitleCount[record[3]]++
-			uniqTitleLatency[record[3]] += m.latency
+			colUniqTitle[title] = true
+			uniqTitleCount[title]++
+			uniqTitleLatency[title] += m.latency
 			colUniqStatus[int(curStatus)] = true
+			if quantilesByPage[title] == nil {
+				quantilesByPage[title] = quantile.NewTargeted(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.99)
+			}
+			quantilesByPage[title].Insert(float64(m.latency))
 			idx++
 		} else {
 			// The count of internal VU is stored in the Size field
@@ -234,6 +241,21 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		errorsByPage[measures[idx].title][measures[idx].status]++
 	}
 
+	// Display the Quantile
+	for title, _ := range quantilesByPage {
+		log.Debug("quantiles for ", title)
+		log.Debug("10% ", quantilesByPage[title].Query(0.1))
+		log.Debug("20% ", quantilesByPage[title].Query(0.2))
+		log.Debug("30% ", quantilesByPage[title].Query(0.3))
+		log.Debug("40% ", quantilesByPage[title].Query(0.4))
+		log.Debug("50% ", quantilesByPage[title].Query(0.5))
+		log.Debug("60% ", quantilesByPage[title].Query(0.6))
+		log.Debug("70% ", quantilesByPage[title].Query(0.7))
+		log.Debug("80% ", quantilesByPage[title].Query(0.8))
+		log.Debug("90% ", quantilesByPage[title].Query(0.9))
+		log.Debug("99% ", quantilesByPage[title].Query(0.99))
+	}
+
 	// Create the result file (data.js)
 	outputfilename := outputdir + "/data.js"
 	output, err := os.Create(outputfilename)
@@ -330,6 +352,12 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		"time(ms)",
 		latency_per_vu_series,
 		true) // compute regression
+
+	// Output the quantile by page with bar graph
+	bar_graph(output,
+		"quantiles_per_page",
+		"Deciles by Page",
+		quantilesByPage)
 
 	// Output the average response time per page
 	firstRow = true
@@ -455,6 +483,29 @@ func graph(w *os.File, totalTime int, name, title, xtitle, ytitle string, series
 		}
 		for idx := 0; idx < len(v); idx++ {
 			fmt.Fprintf(w, "%d, ", v[idx])
+		}
+		fmt.Fprintf(w, "]},\n")
+	}
+	fmt.Fprintf(w, "]\n")
+	fmt.Fprintf(w, "};\n")
+	fmt.Fprintf(w, "var %s = new Highcharts.chart(%s_options);\n", name, name)
+}
+
+func bar_graph(w *os.File, name, title string, quantiles map[string]*quantile.Stream) {
+	fmt.Fprintf(w, "%s_options = {\n", name)
+	fmt.Fprintf(w, "chart: {\n")
+		fmt.Fprintf(w, "\ntype: 'bar', renderTo: '%s' },\n", name)
+	fmt.Fprintf(w, "title: { text: '%s'	},\n", title)
+	fmt.Fprintf(w, "legend: { layout: 'vertical', align: 'right', verticalAlign: 'top', borderWidth: 1, floating: true, shadow: true, x: -40, y: 80 },\n")
+	fmt.Fprintf(w, "xAxis: { categories: [ '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '0.99'], title: {text: null }, },\n")
+	fmt.Fprintf(w, "yAxis: { min: 0, title: { text: 'Latency in ms', aligne: 'high' }, labels: {overflow: 'justify'}},\n")
+
+	fmt.Fprintf(w, "series: [\n")
+	quant := []float64{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.99}
+	for k, v := range quantiles {
+		fmt.Fprintf(w, "{ name: '%s', data: [", k)
+		for _, qt := range quant {
+			fmt.Fprintf(w, "%f, ", v.Query(qt))
 		}
 		fmt.Fprintf(w, "]},\n")
 	}
