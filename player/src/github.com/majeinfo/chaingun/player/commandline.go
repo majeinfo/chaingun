@@ -18,7 +18,7 @@ func command_line() {
 	verbose := flag.Bool("verbose", false, "Set verbose mode")
 	version := flag.Bool("version", false, "Displays the Version")
 	gp_scriptfile = flag.String("script", "", "Set the Script")
-	gp_outputdir = flag.String("output-dir", "", "Set the output directory (standalone|graph-only mode)")
+	gp_outputdir = flag.String("output-dir", "", "Set the output directory (only for standalone|graph-only mode, default directory is ./results)")
 	gp_outputtype = flag.String("output-type", "csv", "Set the output type in file (csv|json)")
 	gp_no_log = flag.Bool("no-log", false, "Disable the 'log' actions from the Script")
 	gp_display_srv_resp = flag.Bool("display-response", false, "Used with verbose mode to display the Server Responses")
