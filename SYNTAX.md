@@ -14,7 +14,7 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 
 3.[Default values for Actions](#default-value-for-actions)
 
-4.[Actions](#actions-and-pre-actions)  
+4.[Actions and Pre-actions](#actions-and-pre-actions)  
 4.1.[HTTP/S](#http--https-request)  
 4.2.[MongoDB](#mongodb-mongodb-request)  
 4.3.[SQL](#sql-sql-request)  
@@ -101,7 +101,7 @@ The supported parameter_name(s) are:
 
 # Actions and Pre-Actions
 
-Actions and pre-actions are defined as a list under the `actions` and `pre_actions` key :
+Actions and pre-actions are defined as a list under the `actions` and `pre_actions` keys :
 
 ```
 pre_actions:
