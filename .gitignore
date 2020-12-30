@@ -49,6 +49,7 @@ player/src/github.com/golang/
 player/src/google.golang.org/
 player/src/github.com/jhump/
 player/src/github.com/gogo/
+player/src/github.com/bmizerany/
 player/src/statik/
 MakeNowJust
 go.mongodb.org/
