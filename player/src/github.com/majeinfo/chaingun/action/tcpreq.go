@@ -17,9 +17,14 @@ const (
 
 // DoTCPRequest accepts a TcpAction and a one-way channel to write the results to.
 func DoTCPRequest(tcpAction TCPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry) {
+	var payload string
 
 	address := SubstParams(sessionMap, tcpAction.Address, vulog)
-	payload := SubstParams(sessionMap, tcpAction.Payload, vulog)
+	if len(tcpAction.Payload_bytes) == 0 {
+		payload = SubstParams(sessionMap, tcpAction.Payload, vulog)
+	} else {
+		payload = string(tcpAction.Payload_bytes)
+	}
 
 	conn, err := net.Dial("tcp", address)
 	if err != nil {

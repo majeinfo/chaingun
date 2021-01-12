@@ -1,0 +1,12 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+timeout: 3
+actions:
+  - tcp:
+      title: test
+      address: localhost:8000
+      # GET / HTTP/1.1\r\n\r\n
+      payload64: R0VUIC8gSFRUUC8xLjENCg0KCg==
+

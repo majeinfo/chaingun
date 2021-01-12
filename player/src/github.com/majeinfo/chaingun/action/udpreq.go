@@ -17,9 +17,14 @@ const (
 
 // DoUDPRequest accepts a UdpAction and a one-way channel to write the results to.
 func DoUDPRequest(udpAction UDPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry) {
+	var payload string
 
 	address := SubstParams(sessionMap, udpAction.Address, vulog)
-	payload := SubstParams(sessionMap, udpAction.Payload, vulog)
+	if len(udpAction.Payload_bytes) == 0 {
+		payload = SubstParams(sessionMap, udpAction.Payload, vulog)
+	} else {
+		payload = string(udpAction.Payload_bytes)
+	}
 
 	conn, err := net.Dial("udp", address)
 	if err != nil {

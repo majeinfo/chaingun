@@ -371,8 +371,9 @@ Example:
 | `title` | mandatory string that qualifies the request - used for the result output and logging |
 | `address` | mandatory string that indicates the server address and the port to connect to |
 | `payload` | mandatory string to send as the payload. If you want to specify special characters (like \n), do not forget to enclose the string in double-quotes |
+| `payload64` | mandatory base64-encoded string to send as the payload. Use it to send binary data. One of either payload either payload64 can be declared |
 
-Variable interpolation applies to url and payload.
+Variable interpolation applies to url and payload, not to payload64.
 
 Example:
 ```

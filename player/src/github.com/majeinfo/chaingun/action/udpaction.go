@@ -1,6 +1,7 @@
 package action
 
 import (
+	"encoding/base64"
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
 	log "github.com/sirupsen/logrus"
@@ -10,6 +11,8 @@ import (
 type UDPAction struct {
 	Address string `yaml:"address"`
 	Payload string `yaml:"payload"`
+	//Payload64 string `yaml:"payload64"`
+	Payload_bytes []byte
 	Title   string `yaml:"title"`
 }
 
@@ -33,13 +36,32 @@ func NewUDPAction(a map[interface{}]interface{}) (UDPAction, bool) {
 		a["address"] = ""
 		valid = false
 	}
+	if a["payload"] != nil && a["payload64"] != nil {
+		log.Error("Either payload or payload64 can be defined in a UDPAction.")
+		a["payload"] = ""
+		a["payload_bytes"] = []byte{}
+		valid = false
+	}
 	if a["payload"] == nil {
 		a["payload"] = ""
+	}
+	if a["payload64"] == nil {
+		a["payload_bytes"] = []byte{}
+	} else {
+		data, err := base64.StdEncoding.DecodeString(a["payload64"].(string))
+		if err != nil {
+			log.Errorf("Error while decoding payload64 value: %s (%s)", a["payload64"], err.Error())
+			a["payload_bytes"] = []byte{}
+			valid = false
+		} else {
+			a["payload_bytes"] = data
+		}
 	}
 
 	udpAction := UDPAction{
 		Address: a["address"].(string),
 		Payload: a["payload"].(string),
+		Payload_bytes: a["payload_bytes"].([]byte),
 		Title:   a["title"].(string),
 	}
 

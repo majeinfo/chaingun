@@ -1,0 +1,12 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+timeout: 3
+actions:
+  - tcp:
+      title: test
+      address: dummy
+      payload: test
+      payload64: test64
+

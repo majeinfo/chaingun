@@ -117,6 +117,12 @@ Req_OK requests/2VU-extract-from-header.yml
 Req_Error requests/1VU-http-timeout.yml 'HTTP request failed: net/http: timeout awaiting response headers'
 # TODO: test timeout with ws
 
+# Test TCP request
+Req_Error syntax/tcp-2-payloads.yml 'Either payload or payload64 can be defined'
+Req_Error syntax/tcp-bad-payload64.yml 'Error while decoding payload64 value'
+Req_OK requests/tcp-good-payload.yml
+Req_OK requests/tcp-good-payload64.yml
+
 # Test GRPC
 Req_Error syntax/grpc-bad-proto-file.yml 'open unknown.proto: no such file or directory'
 Req_Error syntax/grpc-bad-function.yml 'method name must be package.Service.Method or package.Service/Method'
