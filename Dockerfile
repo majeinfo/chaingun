@@ -1,5 +1,5 @@
 # BUILDER Image
-FROM debian:buster as builder
+FROM debian:bullseye as builder
 RUN apt-get clean && apt-get update -y
 RUN apt-get install -y git golang
 
@@ -10,14 +10,15 @@ RUN export GOPATH=/appli/chaingun/player && \
 	cd /appli/chaingun && \
 	go get github.com/rakyll/statik && \
 	cd player && \
-	go install github.com/rakyll/statik && \
+	go install github.com/rakyll/statik; \
 	cd src && \
 	../bin/statik -f -src=../../manager/go_web && \
 	cd ../.. && \
 	go get ./... ; exit 0
 RUN export GOPATH=/appli/chaingun/player && \
-	cd /appli/chaingun/player && \
-	go install github.com/majeinfo/chaingun/player
+	cd player/src && \
+	../bin/statik -f -src=../../manager/go_web && \
+	go install github.com/majeinfo/chaingun/player 
 
 
 # CHAINGUN Image
