@@ -40,7 +40,7 @@ type GRPCRequest struct {
 }
 
 // DoGRPCRequest accepts a GRPCAction and a one-way channel to write the results to.
-func DoGRPCRequest(grpcAction GRPCAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
+func DoGRPCRequest(grpcAction GRPCAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, _ *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	var trace_req string
 	sampleReqResult := buildSampleResult(REPORTER_GRPC, sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, grpcAction.Title, "")
 	data := SubstParams(sessionMap, string([]byte(grpcAction.Data)), vulog)
@@ -63,22 +63,21 @@ func DoGRPCRequest(grpcAction GRPCAction, resultsChannel chan reporter.SampleReq
 	opts = append(opts, grpc.WithInsecure())
 
 	/*
-	sh := &statsHandler{
-		id:      len(b.handlers),
-		results: b.results,
-		hasLog:  b.config.hasLog,
-		log:     b.config.log,
-	}
+		sh := &statsHandler{
+			id:      len(b.handlers),
+			results: b.results,
+			hasLog:  b.config.hasLog,
+			log:     b.config.log,
+		}
 
-	b.handlers = append(b.handlers, sh)
-	opts = append(opts, grpc.WithStatsHandler(sh))
+		b.handlers = append(b.handlers, sh)
+		opts = append(opts, grpc.WithStatsHandler(sh))
 	*/
 
 	opts = append(opts, grpc.WithKeepaliveParams(keepalive.ClientParameters{
 		Time:    time.Duration(playbook.Timeout) * time.Second,
 		Timeout: time.Duration(playbook.Timeout) * time.Second,
 	}))
-
 
 	// increase max receive and send message sizes
 	opts = append(opts,
@@ -88,7 +87,7 @@ func DoGRPCRequest(grpcAction GRPCAction, resultsChannel chan reporter.SampleReq
 		))
 
 	ctx := context.Background()
-	ctx, _ = context.WithTimeout(ctx, time.Duration(playbook.Timeout) * time.Second)
+	ctx, _ = context.WithTimeout(ctx, time.Duration(playbook.Timeout)*time.Second)
 	// cancel is ignored here as connection.Close() is used.
 	// See https://godoc.org/google.golang.org/grpc#DialContext
 
@@ -109,10 +108,10 @@ func DoGRPCRequest(grpcAction GRPCAction, resultsChannel chan reporter.SampleReq
 
 	req := &GRPCRequest{
 		Title: grpcAction.Title,
-		Stub: grpcdynamic.NewStub(conn),
-		Call: grpcAction.Call,
-		Data: data,
-		Func: grpcAction.Func,
+		Stub:  grpcdynamic.NewStub(conn),
+		Call:  grpcAction.Call,
+		Data:  data,
+		Func:  grpcAction.Func,
 	}
 
 	// Unary request

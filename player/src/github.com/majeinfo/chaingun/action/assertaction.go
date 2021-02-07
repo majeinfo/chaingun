@@ -15,7 +15,7 @@ type AssertAction struct {
 }
 
 // Execute an assert Action
-func (s AssertAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
+func (s AssertAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, _ *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	result, err := utils.Evaluate(sessionMap, vulog, s.CompiledExpr, s.Expression)
 	success := false
 

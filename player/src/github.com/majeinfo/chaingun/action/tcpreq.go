@@ -16,7 +16,7 @@ const (
 )
 
 // DoTCPRequest accepts a TcpAction and a one-way channel to write the results to.
-func DoTCPRequest(tcpAction TCPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry) {
+func DoTCPRequest(tcpAction TCPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, _ *config.VUContext, vulog *log.Entry) {
 	var payload string
 
 	address := SubstParams(sessionMap, tcpAction.Address, vulog)
