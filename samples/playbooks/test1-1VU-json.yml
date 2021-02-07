@@ -6,12 +6,12 @@ actions:
   - http:
       title: Page 1
       method: GET
-      url: http://www.delamarche.com/chaingun/page1.php
+      url: https://www.delamarche.com/chaingun/page1.php
       store_cookie: __all__
   - http:
       title: Page 2
       method: GET
-      url: http://www.delamarche.com/chaingun/page2-json.php
+      url: https://www.delamarche.com/chaingun/page2-json.php
       responses:
         - jsonpath: $.NOM+
           variable: nom
@@ -24,4 +24,4 @@ actions:
   - http:
       title: Page 3
       method: GET
-      url: http://www.delamarche.com/chaingun/page3.php?nom=${nom}&age=${age}
+      url: https://www.delamarche.com/chaingun/page3.php?nom=${nom}&age=${age}

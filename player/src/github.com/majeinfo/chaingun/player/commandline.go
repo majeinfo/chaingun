@@ -22,6 +22,7 @@ func command_line() {
 	gp_outputtype = flag.String("output-type", "csv", "Set the output type in file (csv|json)")
 	gp_no_log = flag.Bool("no-log", false, "Disable the 'log' actions from the Script")
 	gp_display_srv_resp = flag.Bool("display-response", false, "Used with verbose mode to display the Server Responses")
+	gp_store_srv_resp_dir = flag.String("store-srv-response-dir", "", "Set the directory where to store the whole server response (often HTML) (only for standalone mode)")
 	gp_trace = flag.Bool("trace", false, "Generate a trace.out file useable by 'go tool trace' command (in standalone mode)")
 	gp_syntax_check_only = flag.Bool("syntax-check-only", false, "Only validate the syntax of the Script")
 	gp_disable_dns_cache = flag.Bool("disable-dns-cache", false, "Disable the embedded DNS cache which reduces the number of DNS requests")
@@ -53,7 +54,7 @@ func command_line() {
 
 	action.DisableLogAction(*gp_no_log)
 	action.DisableDNSCache(*gp_disable_dns_cache)
-	action.SetContext(gp_mode.mode == daemonMode, *gp_listen_addr, *gp_display_srv_resp, *gp_trace_requests)
+	action.SetContext(gp_mode.mode == daemonMode, *gp_listen_addr, *gp_display_srv_resp, *gp_trace_requests, *gp_store_srv_resp_dir)
 
 	// Do some command line consistency tests
 	if gp_mode.mode == standaloneMode {

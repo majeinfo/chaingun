@@ -6,24 +6,27 @@ feeder:
   type: csv
   filename: data1.csv
   separator: ","
+default:
+  server: www.delamarche.com
+  protocol: https
 actions:
   - http:
       title: Page 1
       method: GET
-      url: http://www.delamarche.com/chaingun/page1.php
+      url: /chaingun/page1.php
       store_cookie: __all__
   - http:
       title: Page 2
       method: GET
-      url: http://www.delamarche.com/chaingun/page2.php
+      url: /chaingun/page2.php
   - http:
       title: Page 3
       method: GET
-      url: http://www.delamarche.com/chaingun/page3.php?nom=${nom}
+      url: /chaingun/page3.php?nom=${nom}
   - http:
       title: Page 4
       method: POST
-      url: http://www.delamarche.com/chaingun/page4.php
+      url: /chaingun/page4.php
       body: nom=${nom}&age=${age}
       responses:
         - regex: "is: (.*)<br>"
@@ -32,11 +35,11 @@ actions:
   - http:
       title: Page 5
       method: GET
-      url: http://www.delamarche.com/chaingun/page5.php?address=${address}
+      url: /chaingun/page5.php?address=${address}
   - http:
       title: Page 4bis
       method: POST
-      url: http://www.delamarche.com/chaingun/page4.php
+      url: /chaingun/page4.php
       body: nom=${nom}&age=${age}
       responses:
         - regex: "is: (.*), (.*)<br>"
@@ -45,4 +48,4 @@ actions:
   - http:
       title: Page 5bis
       method: GET
-      url: http://www.delamarche.com/chaingun/page5.php?address=${address}
+      url: /chaingun/page5.php?address=${address}

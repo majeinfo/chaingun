@@ -118,6 +118,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	if must_display_srv_resp {
 		vulog.Debugf("[HTTP Response=%d] Received data: %s", resp.StatusCode, responseBody)
 	}
+	store_srv_resp(httpAction.Title, sessionMap["UID"], vulog.Data["iter"].(int), responseBody)
 
 	if httpAction.StoreCookie != "" {
 		for _, cookie := range resp.Cookies() {
