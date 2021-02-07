@@ -8,10 +8,10 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/bmizerany/perks/quantile"
 	"github.com/rakyll/statik/fs"
 	log "github.com/sirupsen/logrus"
 	_ "statik"
-	"github.com/bmizerany/perks/quantile"
 )
 
 const (
@@ -35,7 +35,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		if err := os.MkdirAll(outputdir, 0755); err != nil {
 			return fmt.Errorf("Cannot create Output Directory %s: %s", outputdir, err.Error())
 		}
-	} else if stat.Mode().IsRegular() {
+	} else if !stat.Mode().IsDir() {
 		return fmt.Errorf("Output Directory %s already exists as a file !", outputdir)
 	}
 
@@ -494,7 +494,7 @@ func graph(w *os.File, totalTime int, name, title, xtitle, ytitle string, series
 func bar_graph(w *os.File, name, title string, quantiles map[string]*quantile.Stream) {
 	fmt.Fprintf(w, "%s_options = {\n", name)
 	fmt.Fprintf(w, "chart: {\n")
-		fmt.Fprintf(w, "\ntype: 'bar', renderTo: '%s' },\n", name)
+	fmt.Fprintf(w, "\ntype: 'bar', renderTo: '%s' },\n", name)
 	fmt.Fprintf(w, "title: { text: '%s'	},\n", title)
 	fmt.Fprintf(w, "legend: { layout: 'vertical', align: 'right', verticalAlign: 'top', borderWidth: 1, floating: true, shadow: true, x: -40, y: 80 },\n")
 	fmt.Fprintf(w, "xAxis: { categories: [ '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '0.99'], title: {text: null }, },\n")
