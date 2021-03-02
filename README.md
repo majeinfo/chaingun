@@ -90,7 +90,7 @@ a) run a Player in standalone mode :
 	--syntax-check-only is used to only check the syntax of the script
 	--disable-dns-cache can be used to disable the internal DNS cache that reduces the number of DNS Requests
 	--trace-requests displays all the HTTP/S requests and their return code
-        --store-srv-response-dir indicates where the responses from the servers (mainly HTML files ?) must be stored
+	--store-srv-response-dir indicates where the responses from the servers (mainly HTML files ?) must be stored
 
 b) run a Player in daemon mode :
 
@@ -136,7 +136,7 @@ d) run in Batch mode (need remote injectors) :
 		the Web Interface will try to automatically add these injectors and connect to them. This is handy
 		for batch mode.
 	--repository-dir gives the location of results (default ".")
-        --store-srv-response-dir indicates where the responses from the servers (mainly HTML files ?) must be stored
+	--store-srv-response-dir indicates where the responses from the servers (mainly HTML files ?) must be stored
 
 e) run in Designer mode (the Web Interface for creating YAML files) :
 
