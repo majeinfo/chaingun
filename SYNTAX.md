@@ -48,7 +48,7 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 | `users`      | integer | (mandatory) number of VUs to launch during the `rampup` period. For example, if `users` value equals 100 and `rampup` equals 20, 5 new VUs will be launched every new seconds (because 20*5 = 100) |
 | `timeout`    | integer | (default=10) number of seconds before a network timeout occurs |
 | `on_error`   | string  | (default=continue,stop_iteration,stop_vu,stop_test) define the behaviour for error handling: just display the error and continue (default), or abort the current iteration, or stop the current VU, or abort the whole test |
-| `http_error_code` | list | (no default value) define the list of what is considered a HTTP error code. For example, `http_error_code: 404,403,500`. This is only used by HTTP Actions |
+| `http_error_codes` | list | (no default value) define the list of what is considered a HTTP error code. For example, `http_error_codes: 404,403,500`. This is only used by HTTP Actions |
 | `persistent_connections` | bool | (false) if true, each VU uses the same connection for a script iteration. Note: only work for MongoDB and SQL. Also implies that the script uses only one protocol |
 | `grpc_proto` | string | (no default value) if specified, must indicate the path to a ".proto" file. The path to the file is relative to the directory where the player is executed from. This option implies the definition of a default server |
 
@@ -63,9 +63,11 @@ You define your custom variables like this:
 
 | Parameter Name | Description |
 | :--- | :--- |
+| `UID` | integer value which represents the virtual user ID |
 | `HTTP_Response` | contains the HTTP returned code |
 | `MONGODB_Last_Insert_ID` | contains the value of the "_id" field of the last inserted document (string) |
 | `SQL_Row_Count` | contains the count of rows selected, updated or deleted |
+| `\__cookie__name` | if the option `store_cookie` has been set for `http` actions, Cookies returned by the server can be referenced as variable by prefixing their name with the `\__cookie__` string |
 
 ## User defined Variables
 
@@ -130,7 +132,7 @@ Here is the list and the description of the implemented Actions :
 | `method` | GET, PUT, POST, HEAD, DELETE. If absent use the value given by the `method` key in the default section |
 | `use_http2` | set to true if you want to use HTTP/2 protocol (default value is false) |
 | `url` | mandatory. If the string does not contain a server specification, use the value given by the `server` key in the default section |
-| `store_cookie` | if set, indicates which cookies must be stored in the VU session. The predefined value __all__ implies the capture of all possible cookies |
+| `store_cookie` | if set, indicates which cookies must be stored in the VU session. The predefined value \__all__ implies the capture of all possible cookies |
 | `body` | value of HTTP body (works for any HTTP method) (one of `body` or `template` is mandatory) |
 | `formdata` | list of key/value pairs used to send data in multipart form (see below) |
 | `template` | a filename which contents will be interpolated and will be used as the request body (one of `body` or `template` is mandatory) |
@@ -145,8 +147,8 @@ Examples:
     title: Page 1			# MAND for http action
     method: GET				# MAND for http action (GET/POST/PUT/HEAD/DELETE)
     url: http://server/page1.php	# MAND for http action
-    # name of Cookie to store. __all__ catches all cookies !
-    store_cookie: __all__
+    # name of Cookie to store. \__all__ catches all cookies !
+    store_cookie: \__all__
 
 # POST with application/x-www-form-urlencoded by default
 # Extracts value from response using regexp
@@ -292,7 +294,7 @@ Examples:
 | :--- | :--- |
 | `title` | mandatory string that qualifies the request - used for the result output and logging |
 | `url` | mandatory. If the string does not contain a server specification, use the value given by the `server` key in the default section |
-| `store_cookie` | if set, indicates which cookies must be stored in the VU session. The predefined value __all__ implies the capture of all possible cookies |
+| `store_cookie` | if set, indicates which cookies must be stored in the VU session. The predefined value \__all__ implies the capture of all possible cookies |
 | `body` | value of body to send |
 | `responses` | data can be extracted from server responses. The extraction can use the body or a HTTP Header. regex, jsonpath or xmlpath can be used to collect the substrings |
 
@@ -469,6 +471,22 @@ The evaluation of the expression must return an int, a string or a bool (floats 
 The supported operators are described here:
    https://github.com/Knetic/govaluate/blob/master/MANUAL.md
 
+Summary:
+ - allowed types are: `flaot64`, `int`, `bool`, `string` and arrays
+ - strings that matches date format are converted into a `float64`
+ - __+__ operator can be used with numbers and `string` (concatenation)
+ - __-__, __*__, __/__, __**__ and __%__ only work with numbers
+ - __>>__, __<<__, __|__, __&__ and __^__ use `int64` (`float64` will be converted)
+ - __-__ as unary operator works with number
+ - __!__ works with `bool`
+ - __~__ (bitwise not) works with numbers
+ - __||__, __&&__ work with `bool`
+ - __?__ (ternary true) uses a `bool`, any type and returns the 3rd op or nil
+ - __:__ (ternary false) uses any type, any type and returns the 3rd op or nil
+ - __??__ (null coalescence) returns the left-sie if non-nil otherwise returns the right-side
+ - __>__, __<__, __>=__, __<=__ are comparators, both ops must have the same type (number or `string`)
+ - __=~__, __!~__ are used for regexp matching, both ops are `string`s
+
 The supported functions are:
  - strlen(string)
  - substr(string, start, end)
@@ -597,8 +615,8 @@ actions:
       title: Page 1			# MAND for http action
       method: GET			# MAND for http action (GET/POST/PUT/HEAD/DELETE)
       url: http://server/page1.php	# MAND for http action
-      # name of Cookie to store. __all__ catches all cookies !
-      store_cookie: __all__
+      # name of Cookie to store. \__all__ catches all cookies !
+      store_cookie: \__all__
 
   # Wait 
   - sleep:
