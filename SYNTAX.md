@@ -147,8 +147,8 @@ Examples:
     title: Page 1			# MAND for http action
     method: GET				# MAND for http action (GET/POST/PUT/HEAD/DELETE)
     url: http://server/page1.php	# MAND for http action
-    # name of Cookie to store. \__all__ catches all cookies !
-    store_cookie: \__all__
+    # name of Cookie to store. __all__ catches all cookies !
+    store_cookie: __all__
 
 # POST with application/x-www-form-urlencoded by default
 # Extracts value from response using regexp
@@ -615,8 +615,8 @@ actions:
       title: Page 1			# MAND for http action
       method: GET			# MAND for http action (GET/POST/PUT/HEAD/DELETE)
       url: http://server/page1.php	# MAND for http action
-      # name of Cookie to store. \__all__ catches all cookies !
-      store_cookie: \__all__
+      # name of Cookie to store. __all__ catches all cookies !
+      store_cookie: __all__
 
   # Wait 
   - sleep:
