@@ -118,8 +118,8 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default, playbook 
 	}
 
 	var storeCookie string
-	if a["storeCookie"] != nil && a["storeCookie"].(string) != "" {
-		storeCookie = a["storeCookie"].(string)
+	if a["store_cookie"] != nil && a["store_cookie"].(string) != "" {
+		storeCookie = a["store_cookie"].(string)
 	}
 
 	headers := make(map[string]string, 20)

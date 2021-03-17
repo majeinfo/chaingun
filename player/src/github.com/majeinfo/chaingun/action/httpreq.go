@@ -120,6 +120,13 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	}
 	store_srv_resp(httpAction.Title, sessionMap["UID"], vulog.Data["iter"].(int), responseBody)
 
+	/*
+	for _, cookie := range resp.Cookies() {
+		vulog.Debugf("Cookie name: %s, cookie value: %s", cookie.Name, cookie.Value)
+	}
+	vulog.Debugf("StoreCookie=%s", httpAction.StoreCookie)
+	 */
+
 	if httpAction.StoreCookie != "" {
 		for _, cookie := range resp.Cookies() {
 			if cookie.Name == httpAction.StoreCookie || httpAction.StoreCookie == "__all__" {
@@ -219,6 +226,7 @@ func buildHTTPRequest(httpAction HTTPAction, sessionMap map[string]string, vulog
 
 	// Add cookies stored by subsequent requests in the sessionMap having the kludgy __cookie__ prefix
 	for key, value := range sessionMap {
+		//vulog.Debugf("in sessionMap: key=%s", key)
 		if strings.HasPrefix(key, cookiePrefix) {
 			cookie := http.Cookie{
 				Name:  key[cookiePrefixLength:len(key)],
