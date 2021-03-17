@@ -67,7 +67,7 @@ You define your custom variables like this:
 | `HTTP_Response` | contains the HTTP returned code |
 | `MONGODB_Last_Insert_ID` | contains the value of the "_id" field of the last inserted document (string) |
 | `SQL_Row_Count` | contains the count of rows selected, updated or deleted |
-| `\__cookie__name` | if the option `store_cookie` has been set for `http` actions, Cookies returned by the server can be referenced as variable by prefixing their name with the `\__cookie__` string |
+| `__cookie__name` | if the option `store_cookie` has been set for `http` actions, Cookies returned by the server can be referenced as variable by prefixing their name with the `__cookie__` string |
 
 ## User defined Variables
 
