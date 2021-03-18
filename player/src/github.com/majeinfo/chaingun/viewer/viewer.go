@@ -63,6 +63,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	colUniqTitle := make(map[string]bool)
 	uniqTitleCount := make(map[string]int)
 	uniqTitleLatency := make(map[string]int)
+	uniqTitleRcvBytes := make(map[string]int)
 	colUniqStatus := make(map[int]bool)
 	measures := make([]measure, 0, DFLT_CAP)
 	internalVus := make(map[int]int)
@@ -112,6 +113,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 			colUniqTitle[title] = true
 			uniqTitleCount[title]++
 			uniqTitleLatency[title] += m.latency
+			uniqTitleRcvBytes[title] += m.recvBytes
 			colUniqStatus[int(curStatus)] = true
 			if quantilesByPage[title] == nil {
 				quantilesByPage[title] = quantile.NewTargeted(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.99)
@@ -366,13 +368,14 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		log.Debugf("Page %s has %d count and %d total latency", title, count, uniqTitleLatency[title])
 		if firstRow {
 			firstRow = false
-			row = "<tr><th>Page Title</th><th>#Req</th><th>Avg Response Time (in ms)</th></tr>"
+			row = "<tr><th>Page Title</th><th>#Req</th><th>Avg Response Time (in ms)</th><th>Avg Response Size (in Bytes)</th></tr>"
 			fmt.Fprintf(output, "$('#avg_resp_by_page > thead').append('"+row+"');\n")
 		}
 
 		row = "<tr><td>" + title + "</td>"
 		row += "<td>" + strconv.Itoa(count) + "</td>"
 		row += "<td>" + strconv.Itoa(uniqTitleLatency[title]/count) + "</td>"
+		row += "<td>" + IntComma(int(uniqTitleRcvBytes[title]/count)) + "</td>"
 		row += "</tr>"
 		fmt.Fprintf(output, "$('#avg_resp_by_page > tbody:last-child').append('"+row+"');\n")
 	}
@@ -554,4 +557,15 @@ func copyTemplates(outputdir string) error {
 	})
 
 	return nil
+}
+
+// Add commas to integer representation
+func IntComma(i int) string {
+	if (i < 0) {
+		return "-" + IntComma(-i)
+	}
+	if (i < 1000) {
+		return fmt.Sprintf("%d", i)
+	}
+	return IntComma(i / 1000) + "," + fmt.Sprintf("%03d", i % 1000)
 }
