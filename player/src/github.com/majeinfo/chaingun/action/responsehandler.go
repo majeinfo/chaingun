@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -104,15 +105,21 @@ func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) 
 	if a["default_value"] == nil {
 		a["default_value"] = ""
 	}
+	switch v := a["default_value"].(type) {
+	case string:
+		responseHandler.Defaultvalue = v
+	case int:
+		responseHandler.Defaultvalue = strconv.Itoa(v)
+	default:
+		log.Errorf("Unsupported type for default_value %v", v)
+		valid = false
+	}
 
 	if a["variable"] != nil {
 		responseHandler.Variable = a["variable"].(string)
 	}
 	if a["index"] != nil {
 		responseHandler.Index = a["index"].(string)
-	}
-	if a["default_value"] != nil {
-		responseHandler.Defaultvalue = a["default_value"].(string)
 	}
 	if a["from_header"] != nil {
 		responseHandler.FromHeader = a["from_header"].(string)
