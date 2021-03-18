@@ -166,7 +166,7 @@ Examples:
       - regex: "is: (.*)<br>"		# MAND must be one of regex/jsonpath/xmlpath
         index: first			# OPT must be one of first (default)/last/random
         variable: address		# MAND
-        default_value: bob		# used when the regex failed
+        default_value: bob		# used when the regex failed (can be a string or an int)
       - from_header: Via		# OPT HTTP Header name to extract the value from
         regex: "(.*)"			# MAND 
         index: first			# OPT must be one of first (default)/last/random
