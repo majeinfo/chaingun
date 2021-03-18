@@ -443,6 +443,7 @@ func graph(w *os.File, totalTime int, name, title, xtitle, ytitle string, series
 									break;
 								}
 							}
+							if (high_idx == -1) { high_idx = 0; }
 						}
 						if (aSeries.data[idx].y == 0) {
 							var y1 = aSeries.data[low_idx].y;
