@@ -67,6 +67,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	if httpAction.UseHTTP2 {
 		DefaultTransport = &http2.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			//DisableCompression: true,
 		}
 	} else {
 		DefaultTransport = &http.Transport{
