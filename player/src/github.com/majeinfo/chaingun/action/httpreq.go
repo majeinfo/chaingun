@@ -77,6 +77,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 			}).DialContext,
 			ResponseHeaderTimeout: time.Duration(playbook.Timeout) * time.Second,
 			DisableKeepAlives:     true,
+			//DisableCompression: true,
 		}
 	}
 
