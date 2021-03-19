@@ -1,11 +1,21 @@
 package utils
 
 import (
+	"math/rand"
 	"strconv"
+	"time"
 
 	"github.com/Knetic/govaluate"
 	log "github.com/sirupsen/logrus"
 )
+
+var (
+	rand_src *rand.Rand
+)
+
+func init() {
+	rand_src = rand.New(rand.NewSource(time.Now().UnixNano()))
+}
 
 // Evaluate a precompiled expression
 func Evaluate(sessionMap map[string]string, vulog *log.Entry, compiledExpr *govaluate.EvaluableExpression, expression string) (interface{}, error) {
@@ -30,3 +40,27 @@ func Evaluate(sessionMap map[string]string, vulog *log.Entry, compiledExpr *gova
 
 	return result, nil
 }
+
+// Implements embedded functions for compiled expressions
+func GetExpressionFunctions() map[string]govaluate.ExpressionFunction {
+	functions := map[string]govaluate.ExpressionFunction{
+		"strlen": func(args ...interface{}) (interface{}, error) {
+			length := len(args[0].(string))
+			return (float64)(length), nil
+		},
+		"substr": func(args ...interface{}) (interface{}, error) {
+			runes := []rune(args[0].(string))
+			safeSubstring := string(runes[int(args[1].(float64)):int(args[2].(float64))])
+			return safeSubstring, nil
+		},
+		"random": func(args ...interface{}) (interface{}, error) {
+			start := int(args[0].(float64))
+			end := int(args[1].(float64))
+			value := rand_src.Intn(end - start + 1) + start
+			return (float64)(value), nil
+		},
+	}
+
+	return functions
+}
+

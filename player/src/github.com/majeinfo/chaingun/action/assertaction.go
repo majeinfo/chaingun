@@ -53,7 +53,7 @@ func NewAssertAction(a map[interface{}]interface{}) (AssertAction, bool) {
 		valid = false
 	}
 
-	expression, err := govaluate.NewEvaluableExpressionWithFunctions(a["expression"].(string), getExpressionFunctions())
+	expression, err := govaluate.NewEvaluableExpressionWithFunctions(a["expression"].(string), utils.GetExpressionFunctions())
 
 	assertAction := AssertAction{
 		a["expression"].(string),

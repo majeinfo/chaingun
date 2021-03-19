@@ -491,11 +491,13 @@ Summary:
 The supported functions are:
  - strlen(string)
  - substr(string, start, end)
+ - random(start, end) which returns an integer between start and end, included
 
 Examples:
 ```
   expression: "var1 + 3 > 4 * var2"
   expression: "strlen(var3) > 0"
+  expression: "random(1990, 2020)"
 ```
 
 ## Session variables and Cookies

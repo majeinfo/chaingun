@@ -42,7 +42,7 @@ func _buildActionList(playbook *config.TestDef, playbook_actions []map[string]in
 			if key == "when" {
 				var whenErr error
 				fullAction.When = value.(string)
-				fullAction.CompiledWhen, whenErr = govaluate.NewEvaluableExpressionWithFunctions(value.(string), getExpressionFunctions())
+				fullAction.CompiledWhen, whenErr = govaluate.NewEvaluableExpressionWithFunctions(value.(string), utils.GetExpressionFunctions())
 				if whenErr != nil {
 					log.Errorf("When Expression '%s' cannot be compiled (%s)", fullAction.When, whenErr)
 					valid = false

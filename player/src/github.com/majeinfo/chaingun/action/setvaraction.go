@@ -79,7 +79,7 @@ func NewSetVarAction(a map[interface{}]interface{}) (SetVarAction, bool) {
 		}
 	}
 
-	expression, err := govaluate.NewEvaluableExpressionWithFunctions(a["expression"].(string), getExpressionFunctions())
+	expression, err := govaluate.NewEvaluableExpressionWithFunctions(a["expression"].(string), utils.GetExpressionFunctions())
 	setVarAction := SetVarAction{
 		a["variable"].(string),
 		a["expression"].(string),
