@@ -41,7 +41,7 @@ func DoSQLRequest(sqlAction SQLAction, resultsChannel chan reporter.SampleReqRes
 		vulog.Debugf("New Request: URL: %s, Request: %s", sqlAction.Server, stmt)
 	}
 
-	if !playbook.PersistentConn || vucontext.InitObject == nil { // persistent
+	if !playbook.PersistentDBConn || vucontext.InitObject == nil { // persistent
 		// Special case for MySQL
 		server := sqlAction.Server
 		if sqlAction.DBDriver == "mysql" {
@@ -75,7 +75,7 @@ func DoSQLRequest(sqlAction SQLAction, resultsChannel chan reporter.SampleReqRes
 		db = clientContext.db
 	}
 
-	if !playbook.PersistentConn {
+	if !playbook.PersistentDBConn {
 		defer db.Close()
 	} else {
 		vucontext.CloseFunc = sql_disconnect

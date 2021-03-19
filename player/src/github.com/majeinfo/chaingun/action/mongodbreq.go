@@ -43,7 +43,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		vulog.Debugf("New Request: URL: %s, Command: %s", mongodbAction.Server, mongodbAction.Command)
 	}
 
-	if !playbook.PersistentConn || vucontext.InitObject == nil { // persistent
+	if !playbook.PersistentDBConn || vucontext.InitObject == nil { // persistent
 		// Try to substitute the server name by an IP address
 		server := mongodbAction.Server
 		if !disable_dns_cache {
@@ -75,7 +75,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		ctx = clientContext.ctx
 	}
 
-	if !playbook.PersistentConn {
+	if !playbook.PersistentDBConn {
 		defer client.Disconnect(context.TODO())
 	} else {
 		vucontext.CloseFunc = mongodb_disconnect

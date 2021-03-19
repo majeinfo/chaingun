@@ -2,7 +2,7 @@
 iterations: 3
 users: 2
 rampup: 1
-persistent_connections: true
+persistent_db_connections: true
 
 default:
   db_driver: mysql
