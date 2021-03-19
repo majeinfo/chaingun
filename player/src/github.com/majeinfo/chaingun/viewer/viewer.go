@@ -361,10 +361,19 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		"Deciles by Page",
 		quantilesByPage)
 
+	// We want the page sorted by title
+	page_titles := make([]string, 0, len(colUniqTitle))
+	for title := range colUniqTitle {
+		page_titles = append(page_titles, title)
+	}
+	sort.Strings(page_titles)
+
 	// Output the average response time per page
 	firstRow = true
 	row := ""
-	for title, count := range uniqTitleCount {
+	//for title, count := range uniqTitleCount {
+	for _, title := range page_titles {
+		count := uniqTitleCount[title]
 		log.Debugf("Page %s has %d count and %d total latency", title, count, uniqTitleLatency[title])
 		if firstRow {
 			firstRow = false
@@ -389,7 +398,9 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	sort.Ints(keys)
 
 	firstRow = true
-	for title, errs := range errorsByPage {
+	//for title, errs := range errorsByPage {
+	for _, title := range page_titles {
+		errs := errorsByPage[title]
 		log.Debugf("errors for page %s: %v", title, errs)
 		if firstRow {
 			firstRow = false
