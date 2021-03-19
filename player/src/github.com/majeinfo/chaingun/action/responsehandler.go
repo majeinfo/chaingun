@@ -198,7 +198,7 @@ func JSONProcessor(responseHandler ResponseHandler, sessionMap map[string]string
 
 	if len(resultsArray) == 0 {
 		if responseHandler.Defaultvalue != "" {
-			vulog.Warning("Jsonpath failed to apply, uses default value")
+			vulog.Warningf("Jsonpath failed to apply, uses default value: %s", responseHandler.Defaultvalue)
 			resultsArray = append(resultsArray, responseHandler.Defaultvalue)
 		} else {
 			vulog.Errorf("Jsonpath %v failed to apply - no default value given", responseHandler.Jsonpaths)
@@ -287,9 +287,9 @@ func RegexpProcessor(responseHandler ResponseHandler, sessionMap map[string]stri
 		passResultIntoSessionMap(resultsArray, responseHandler, sessionMap, vulog)
 	} else {
 		if responseHandler.Defaultvalue != "" {
-			vulog.Warning("Regexp failed to apply, uses default value")
+			vulog.Warningf("Regexp failed to apply, uses default value: %s", responseHandler.Defaultvalue)
 			resultsArray := make([]string, 1)
-			resultsArray = append(resultsArray, responseHandler.Defaultvalue)
+			resultsArray[0] = responseHandler.Defaultvalue
 			passResultIntoSessionMap(resultsArray, responseHandler, sessionMap, vulog)
 		} else {
 			vulog.Errorf("Regexp '%s' failed to apply - no default value given", responseHandler.Regex)
