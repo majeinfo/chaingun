@@ -27,7 +27,8 @@ type TestDef struct {
 	Duration       int                      `yaml:"duration"`
 	Users          int                      `yaml:"users"`
 	Rampup         int                      `yaml:"rampup"`
-	PersistentConn bool						`yaml:"persistent_connections"`	// (default is false)
+	PersistentDBConn bool					`yaml:"persistent_db_connections"`	// (default is false)
+	PersistentHttpSession bool 				`yaml:"persistent_http_sessions"` // (default is false)
 	OnError        string                   `yaml:"on_error"` // continue (default) | stop_vu | stop_test
 	HttpErrorCodes string                   `yaml:"http_error_codes"`
 	GrpcProto	   string	                `yaml:"grpc_proto"`

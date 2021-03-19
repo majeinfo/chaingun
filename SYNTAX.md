@@ -49,7 +49,8 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 | `timeout`    | integer | (default=10) number of seconds before a network timeout occurs |
 | `on_error`   | string  | (default=continue,stop_iteration,stop_vu,stop_test) define the behaviour for error handling: just display the error and continue (default), or abort the current iteration, or stop the current VU, or abort the whole test |
 | `http_error_codes` | list | (no default value) define the list of what is considered a HTTP error code. For example, `http_error_codes: 404,403,500`. This is only used by HTTP Actions |
-| `persistent_connections` | bool | (false) if true, each VU uses the same connection for a script iteration. Note: only work for MongoDB and SQL. Also implies that the script uses only one protocol |
+| `persistent_http_sessions` | bool | (false) if true and if sessions are stored in Cookies, each VU uses the same session for all its iterations. |
+| `persistent_db_connections` | bool | (false) if true, each VU uses the same connection for a script iteration. Note: only work for MongoDB and SQL. Also implies that the script uses only one protocol |
 | `grpc_proto` | string | (no default value) if specified, must indicate the path to a ".proto" file. The path to the file is relative to the directory where the player is executed from. This option implies the definition of a default server |
 
 Note : the injector does not support the notion of "keepalive". Connections to the remote servers are opened and closed for each action.

@@ -3,11 +3,16 @@ package main
 import (
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/feeder"
+	"strings"
 )
 
 func cleanSessionMapAndResetUID(UID string, sessionMap map[string]string, playbook *config.TestDef) {
 	// Optimization? Delete all entries rather than reallocate map from scratch for each new iteration.
 	for k := range sessionMap {
+		// If HTTP persistent sessions are wanted, do not clear the Cookies !
+		if playbook.PersistentHttpSession && strings.HasPrefix(k, "__cookie__") {	// TODO: == cookiePrefix from action package
+			continue
+		}
 		delete(sessionMap, k)
 	}
 
