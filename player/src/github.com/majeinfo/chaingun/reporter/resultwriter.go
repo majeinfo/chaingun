@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
+	_ "strings"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -14,9 +16,16 @@ var (
 	w   *bufio.Writer
 	f   *os.File
 	err error
+	opened bool = false
+	clean_re *regexp.Regexp
 )
 
-var opened bool = false
+func init() {
+	clean_re, err = regexp.Compile(`[",]`)
+	if err != nil {
+		log.Fatalf("Could not compile regexp ! %v", err)
+	}
+}
 
 func OpenResultsFile(fileName string) {
 	log.Debugf("OpenResultFile: %s", fileName)
@@ -87,9 +96,11 @@ func WriteResult(sampleResult *SampleReqResult) {
 		_, err = w.WriteString(string(jsonString))
 		_, err = w.WriteString("|")
 	} else if outputType == csvOutput {
+		// Because of CSV structure, we remove double-quote and commas in the FullRequest
+		cleanFullRequest := clean_re.ReplaceAllString(sampleResult.FullRequest, "")
 		s := fmt.Sprintf("%d,%s,%s,%s,%d,%d,%d,%s\n",
 			sampleResult.When, sampleResult.Vid, sampleResult.Type, sampleResult.Title,
-			sampleResult.Status, sampleResult.Size, sampleResult.Latency, sampleResult.FullRequest)
+			sampleResult.Status, sampleResult.Size, sampleResult.Latency, cleanFullRequest)
 		_, err = w.WriteString(s)
 	}
 
