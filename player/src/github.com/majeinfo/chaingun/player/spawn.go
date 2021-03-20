@@ -36,6 +36,15 @@ func spawnUsers(playbook *config.TestDef, actions *[]action.FullAction) {
 			log.Info("Stop now")
 			break
 		}
+
+		// In standalone mode, we may receive a Ctrl-C
+		//lock_emergency_stop.Lock()
+		must_stop := gp_emergency_stop
+		//lock_emergency_stop.Unlock()
+		if must_stop {
+			log.Info("Stopping the VU ASAP !")
+			break
+		}
 	}
 	log.Info("All VUs started, waiting at WaitGroup")
 	wg.Wait()
@@ -53,6 +62,15 @@ func launchActions(playbook *config.TestDef, resultsChannel chan reporter.Sample
 
 actionLoop:
 	for (playbook.Iterations == -1) || (i < playbook.Iterations) {
+		// In standalone mode, we may receive a Ctrl-C
+		//lock_emergency_stop.Lock()
+		must_stop := gp_emergency_stop
+		//lock_emergency_stop.Unlock()
+		if must_stop {
+			log.Debugf("Stopping VU %s", UID)
+			break
+		}
+
 		vulog.Data["iter"] = i
 
 		// Make sure the sessionMap is cleared before each iteration - except for the UID which stays

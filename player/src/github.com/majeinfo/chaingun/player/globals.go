@@ -38,6 +38,8 @@ var (
 	VU_start              time.Time
 	VU_count              int
 	lock_vu_count         sync.Mutex
+	gp_emergency_stop     bool = false
+	lock_emergency_stop   sync.Mutex
 	gp_mode               playerMode
 	gp_valid_playbook     bool = false
 	gp_listen_addr        *string

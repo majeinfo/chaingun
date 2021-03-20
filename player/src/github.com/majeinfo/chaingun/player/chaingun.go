@@ -107,6 +107,7 @@ func playStandaloneMode() {
 	}
 	reporter.OpenResultsFile(outputfile)
 
+	go shutdownHandler()
 	playPreActions(&gp_playbook, &gp_pre_actions)
 	spawnUsers(&gp_playbook, &gp_actions)
 
