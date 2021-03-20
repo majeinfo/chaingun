@@ -10,7 +10,8 @@ var chaingunScript = new Vue({
 			timeout: 10,
 			on_error: 'continue',
 			http_error_code: '',
-			persistent_connections: false,
+			persistent_http_sessions: false,
+			persistent_db_connections: false,
 			'default': {
 				server: '',
 				protocol: '',
@@ -932,7 +933,8 @@ function validateAll(data, errors) {
 	if (data.users <= 0) {
 		errors.push("Users Count must be > 0");
 	}
-	data.persistent_connections = (data.persistent_connections == 'true') ? true : false;
+	data.persistent_http_sessions = (data.persistent_http_sessions == 'true') ? true : false;
+	data.persistent_db_connections = (data.persistent_db_connections == 'true') ? true : false;
 }
 
 function buildYAML(data, variables) {
@@ -952,7 +954,8 @@ function buildYAML(data, variables) {
 	if (copy.http_error_code == '') { delete copy['http_error_code']; }
 	if (copy.on_error == 'continue') { delete copy['on_error']; }
 	if (copy.timeout == 10 ) { delete copy['timeout']; }
-	if (!copy.persistent_connections) { delete copy['persistent_connections']; }
+	if (!copy.persistent_http_sessions) { delete copy['persistent_http_sessions']; }
+	if (!copy.persistent_db_connections) { delete copy['persistent_db_connections']; }
 	var counter = 6;
 	if (copy.default.server == '') { delete copy.default['server']; counter--; }
 	if (copy.default.protocol == '') { delete copy.default['protocol']; counter--; }
