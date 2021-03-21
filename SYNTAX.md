@@ -473,7 +473,7 @@ The supported operators are described here:
    https://github.com/Knetic/govaluate/blob/master/MANUAL.md
 
 Summary:
- - allowed types are: `flaot64`, `int`, `bool`, `string` and arrays
+ - allowed types are: `float64`, `int`, `bool`, `string` and arrays
  - strings that matches date format are converted into a `float64`
  - __+__ operator can be used with numbers and `string` (concatenation)
  - __-__, __*__, __/__, __**__ and __%__ only work with numbers
