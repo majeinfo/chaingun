@@ -21,6 +21,13 @@ build:
     
 test1:
   stage: test
+  image: golang:1.15
+  script:
+    - go get github.com/majeinfo/chaingun/config
+    - go get github.com/majeinfo/chaingun/utils
+
+test2:
+  stage: test
   image: docker
   services:
     - docker:dind
