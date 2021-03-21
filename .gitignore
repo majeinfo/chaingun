@@ -50,6 +50,7 @@ player/src/google.golang.org/
 player/src/github.com/jhump/
 player/src/github.com/gogo/
 player/src/github.com/bmizerany/
+player/src/github.com/elazarl/
 player/src/statik/
 MakeNowJust
 go.mongodb.org/

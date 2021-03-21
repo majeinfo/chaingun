@@ -15,6 +15,7 @@ import (
 	"github.com/majeinfo/chaingun/feeder"
 	"github.com/majeinfo/chaingun/manager"
 	"github.com/majeinfo/chaingun/reporter"
+	"github.com/majeinfo/chaingun/web_proxy"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -171,6 +172,11 @@ func playDesignerMode() {
 func playBatchMode() {
 	log.Debug("Batch mode started")
 	manager.StartBatch(gp_manager_addr, gp_repositorydir, gp_injectors, gp_scriptfile)
+}
+
+func playProxyMode() {
+	log.Debug("Proxy mode started")
+	web_proxy.StartProxy(gp_listen_addr)
 }
 
 // Compute the name of the output file (/path/to/data.csv)

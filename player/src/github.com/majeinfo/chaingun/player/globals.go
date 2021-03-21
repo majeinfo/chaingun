@@ -15,6 +15,7 @@ const (
 	batchMode
 	graphOnlyMode
 	designerMode
+	proxyMode
 )
 
 type playerFunc func()
@@ -31,6 +32,7 @@ var (
 		"batch":      {batchMode, playBatchMode},
 		"graph-only": {graphOnlyMode, playGraphOnlyMode},
 		"designer":   {designerMode, playDesignerMode},
+		"proxy":	  {proxyMode, playProxyMode},
 	}
 )
 
