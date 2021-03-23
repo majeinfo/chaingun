@@ -34,7 +34,7 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 5.4.[The 'when' clause](#the-when-clause-to-trigger-actions)  
 5.5.[Import external data](#how-to-import-external-data)  
 5.6.[Submit form with multipart/form-data syntax](#submit-form-using-multipartform-data-syntax)  
-5.7.[Handle Basic HTTP authentication](#handle-basic-authentication)
+5.7.[Handle Basic HTTP authentication](#handle-http-basic-authentication)
 
 6.[Full Sample](#full-sample)
 

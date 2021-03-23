@@ -28,6 +28,8 @@ func command_line() {
 	gp_disable_dns_cache = flag.Bool("disable-dns-cache", false, "Disable the embedded DNS cache which reduces the number of DNS requests")
 	gp_trace_requests = flag.Bool("trace-requests", false, "Displays the requests and their return code")
 	gp_injectors = flag.String("injectors", "", "Comma-separated list on already started injectors (ex: inject1:12345,inject2,inject3:1234) (manager|batch mode)")
+	gp_proxy_domain = flag.String("proxy-domain", "", "Name of the Domain that must be proxied (ex: github.com) (only for proxy mode)")
+	gp_proxy_ignore_suffixes = flag.String("proxy-ignore-suffixes", ".gif,.png,.jpg,.jpeg,.css,.js,.ico,.ttf,.woff,.pdf", "Comma separated list of request suffixes to ignore (only in proxy mode)")
 	gp_cpu_profile = flag.String("cpuprofile", "", "Write cpu profile to `file`")
 	gp_mem_profile = flag.String("memprofile", "", "Write memory profile to `file`")
 

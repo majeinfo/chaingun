@@ -176,7 +176,7 @@ func playBatchMode() {
 
 func playProxyMode() {
 	log.Debug("Proxy mode started")
-	web_proxy.StartProxy(gp_listen_addr)
+	web_proxy.StartProxy(gp_listen_addr, gp_proxy_domain, gp_proxy_ignore_suffixes)
 }
 
 // Compute the name of the output file (/path/to/data.csv)

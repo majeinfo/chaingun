@@ -52,6 +52,8 @@ var (
 	gp_outputdir          *string
 	gp_outputtype         *string
 	gp_injectors          *string
+	gp_proxy_domain       *string
+	gp_proxy_ignore_suffixes *string
 	gp_store_srv_resp_dir *string
 	gp_no_log             *bool
 	gp_display_srv_resp   *bool

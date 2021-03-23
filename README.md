@@ -34,6 +34,7 @@ An efficient Load Testing Tool for HTTP/MQTT/WS/MongoDB/MySQL/gRPC/TCP/UDP Serve
 - Embeds a Web server to manage remote injectors but also supports a "batch mode"
 - Uses a YAML syntax to describe the stress scenarii
 - Embeds a Web Designer to help build the YAML scripts !
+- May be run in "proxy mode" to help you create the YAML scripts !
 
 # Building
 
@@ -52,7 +53,7 @@ An efficient Load Testing Tool for HTTP/MQTT/WS/MongoDB/MySQL/gRPC/TCP/UDP Serve
 
 Chaingun is made of a single binary (named "player") that can serve multi purpose.
 
-The "player" can be started in 5 different ways:
+The "player" can be started in 6 different ways:
 
 - the standalone mode (which is the default mode): this is the easiest way to proceed and may be
 sufficient when the expected test load can be applied by only one Player
@@ -67,6 +68,8 @@ The results will be aggregated by the Web interface.
 Everyting is executed from the command line in "batch mode" !
 
 - the designer mode: the "player" offers a Web interface which helps you to create the YAML file !
+
+- the proxy mode: acts as a Web proxy that can intercept your requests and create Playbook skeleton
 
 Note for the daemon mode:
 	- Data for feeder can be sent to the Players after sending them the Playbook script.
@@ -142,6 +145,24 @@ e) run in Designer mode (the Web Interface for creating YAML files) :
 
 	$ cd player/bin
 	$ ./player --mode designer --listen-addr 127.0.0.1:12345
+
+f) run in Proxy mode :
+
+	$ cd player/bin
+	$ ./player --mode proxy --listen-addr 127.0.0.1:12345 --proxy-domain example.com
+
+	If you plan to use HTTPS instead of HTTP, make sure the CA of the certificate used by the Proxy is installed
+	in your Browser store. One the Proxy os activated, configure your Browser and navigate to the site that must
+	be load-tested.
+	In order to get the Playbook, type <Ctrl-C> in the terminal where you launched the Proxy. A prompt asks you
+	if you want to exit(e), to reset(r) the capture or to display the playbook(p).
+
+	--listen-addr <IP>:<port> (default is 127.0.0.1:12345) gives the IP and Port the Proxy must be listening to
+		(you have to configure your browser with these values)
+	--proxy-domain <domain> is mandatory and sets the domain name which requests must be captured to build the Playbook
+	--proxy-ignore-suffixes <suffix,suffix...> gives a list of suffixes that must be ignored
+		(default value is: .gif,.png,.jpg,.jpeg,.css,.js,.ico,.ttf,.woff,.pdf)
+	--verbose is optional
 
 ### Run from container image
 
