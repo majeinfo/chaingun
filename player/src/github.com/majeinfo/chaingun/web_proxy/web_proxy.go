@@ -112,7 +112,7 @@ func StartProxy(listen_addr *string, proxy_domain *string, ignored_suffixes *str
 				for k, vv := range c.PostForm {
 					log.Debugf("PostForm(%s, %s)", k, vv)
 					for _, v := range vv {
-						postForm.Set(k, v)
+						postForm.Add(k, v)
 					}
 				}
 				/*
