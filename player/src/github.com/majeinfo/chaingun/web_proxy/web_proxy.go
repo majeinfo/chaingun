@@ -181,8 +181,16 @@ actions:
 		fmt.Printf(header, *domain)
 		for idx, request := range proxiedRequests {
 			fmt.Println("  - http:")
-			fmt.Printf ("      title: Action %d\n", idx+1)
-			fmt.Printf("      url: %s\n", request.URL.Path)
+			fmt.Printf("      title: Action %d\n", idx+1)
+			fmt.Printf("      url: %s", request.URL.Path)
+			if request.URL.RawQuery != "" {
+				fmt.Printf("?%s", request.URL.RawQuery)
+			}
+			fmt.Println()
+
+			if idx == 0 {
+				fmt.Println("      store_cookie: __all__")
+			}
 
 			if request.Method == "GET" {
 				continue
@@ -209,10 +217,6 @@ actions:
 					      - name: submit
 					 */
 				}
-			}
-
-			if idx == 0 {
-				fmt.Println("      store_cookie: __all__")
 			}
 		}
 
