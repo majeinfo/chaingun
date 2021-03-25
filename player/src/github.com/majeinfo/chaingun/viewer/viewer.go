@@ -312,7 +312,11 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 
 	err_series := make(map[string][]int)
 	for errCode, _ := range errorsPerSeconds {
-		err_series[strconv.Itoa(errCode)] = errorsPerSeconds[errCode]
+		if errCode != -1 {
+			err_series[strconv.Itoa(errCode)] = errorsPerSeconds[errCode]
+		} else {
+			err_series["Error"] = errorsPerSeconds[errCode]
+		}
 	}
 	graph(output,
 		total_elapsed_time,
@@ -406,7 +410,11 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 			firstRow = false
 			row = "<tr><th>Page Title</th>"
 			for _, err := range keys {
-				row += "<th>" + strconv.Itoa(err) + "</th>"
+				if err != -1 {
+					row += "<th>" + strconv.Itoa(err) + "</th>"
+				} else {
+					row += "<th>Timeout & Network Error</th>"
+				}
 			}
 			row += "<th>#Req</th></tr>"
 			fmt.Fprintf(output, "$('#http_codes > thead').append('"+row+"');\n")
