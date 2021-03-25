@@ -502,7 +502,8 @@ Examples:
 
 ## Session variables and Cookies
 
-The session variables and the Cookies are deleted at the end of each script loop (if there are many) played by a VU.
+The session variables and the Cookies are deleted at the end of each script iteration (if there are many) played by a VU.
+This behaviour can be changed for HTTP/S actions by setting the global parameter `persistent_http_sessions` to true.
 
 
 ## The `when` clause to trigger Actions
