@@ -38,13 +38,14 @@ An efficient Load Testing Tool for HTTP/MQTT/WS/MongoDB/MySQL/gRPC/TCP/UDP Serve
 
 # Building
 
+Requires golang 1.16+ (because the "embed" module is needed).
+
 	$ git clone https://github.com/majeinfo/chaingun
 	$ cd chaingun
 	$ export GOPATH=`pwd`/player
+        $ export GO111MODULE=off
 	$ go get ./...
-	$ go get ./player/src/github.com/rakyll/statik
-	$ cd player/src
-	$ ../bin/statik -f -src=../../manager/go_web
+        $ cd player/src
 	$ CGO_ENABLED=0 go install github.com/majeinfo/chaingun/player
 	$ cd ..
 	$ bin/player -h
