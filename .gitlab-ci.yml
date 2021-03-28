@@ -4,15 +4,13 @@ stages:
 
 build:
   stage: deploy
-  image: golang:1.15
+  image: golang:1.16
   before_script:
     - export GOPATH=`pwd`/player
   script:
     - go get ./... || true
-    - go get ./player/src/github.com/rakyll/statik
     - cd player/src
-    - ../bin/statik -f -src=../../manager/go_web
-    - CGO_ENABLED=0 go install -ldflags="-s -w" github.com/majeinfo/chaingun/player
+    - CGO_ENABLED=0 GO111MODULE=off go install -ldflags="-s -w" github.com/majeinfo/chaingun/player
     - cd ..
     - bin/player -h || [ $? -eq 2 ]
   artifacts:
@@ -21,7 +19,7 @@ build:
     
 test1:
   stage: test
-  image: golang:1.15
+  image: golang:1.16
   before_script:
     - export GOPATH=`pwd`/player
   script:

@@ -7,17 +7,8 @@ RUN mkdir /appli && cd /appli && git clone -b master https://github.com/majeinfo
 WORKDIR /appli/chaingun
 
 RUN export GOPATH=/appli/chaingun/player && \
-	cd /appli/chaingun && \
-	go get github.com/rakyll/statik && \
-	cd player && \
-	go install github.com/rakyll/statik; \
-	cd src && \
-	../bin/statik -f -src=../../manager/go_web && \
-	cd ../.. && \
-	go get ./... ; exit 0
-RUN export GOPATH=/appli/chaingun/player && \
+	export GO111MODULE=off && \
 	cd player/src && \
-	../bin/statik -f -src=../../manager/go_web && \
 	go install github.com/majeinfo/chaingun/player 
 
 
