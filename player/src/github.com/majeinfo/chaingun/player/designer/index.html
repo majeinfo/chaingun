@@ -1,0 +1,495 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/chaingun.css">
+	<title>Chaingun</title>
+</head>
+<body>
+    <div class="container" id="chaingunApp">
+      <p>&nbsp;</p>
+      <form id="chaingunScript" @submit="checkForm" action="" method="post" novalidate="true">
+
+        <div class="row">
+          <div class="col-3">
+            <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+              <a class="nav-link active" id="v-pills-gp-tab" data-toggle="pill" href="#v-pills-gp" role="tab" aria-controls="v-pills-home" aria-selected="true">Global Parameters</a>
+              <a class="nav-link" id="v-pills-var-tab" data-toggle="pill" href="#v-pills-var" role="tab" aria-controls="v-pills-variables" aria-selected="false">Variables</a>
+              <a class="nav-link" id="v-pills-dflt-values-tab" data-toggle="pill" href="#v-pills-dv" role="tab" aria-controls="v-pills-dflt-values" aria-selected="false">Default Values</a>
+              <a class="nav-link" id="v-pills-feeder-tab" data-toggle="pill" href="#v-pills-fd" role="tab" aria-controls="v-pills-feeder" aria-selected="false">Data Feeder</a>
+              <a class="nav-link" id="v-pills-pal-tab" data-toggle="pill" href="#v-pills-pal" role="tab" aria-controls="v-pills-preact" aria-selected="false">Pre-Actions</a>
+              <a class="nav-link" id="v-pills-al-tab" data-toggle="pill" href="#v-pills-al" role="tab" aria-controls="v-pills-actions" aria-selected="false">Actions</a>
+              <a class="nav-link" id="v-pills-yaml-tab" data-toggle="pill" href="#v-pills-gy" role="tab" aria-controls="v-pills-yaml" aria-selected="false">Generate YAML</a>
+              <a class="nav-link" id="v-pills-fulldoc-tab" data-toggle="pill" href="#v-pills-doc" role="tab" aria-controls="v-pills-fulldoc" aria-selected="false">Full Documentation</a>
+            </div>
+          </div>
+          <div class="col-9">
+            <div class="tab-content border" id="v-pills-tabContent">
+              <!-- Global Parameters -->
+              <div class="tab-pane fade show active m-2" id="v-pills-gp" role="tabpanel" aria-labelledby="v-pills-gp-tab">
+			<div class="form-group row">
+				<label for="iterationsCount" class="col-sm-4 col-form-label">Iteration Count</label>
+				<input type="number" class="col-sm-1 form-control" id="iterationsCount" v-model.number="scriptParms.iterations" placeholder="Enter the number of iterations (-1 for infinite)">
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) indicates how many times each VU must play the script. If value is -1, the script is played until the value of Test Duration parameter is reached">
+			</div>
+			<div class="form-group row">
+				<label for="testDuration" class="col-sm-4 col-form-label">Test Duration (in seconds)</label>
+				<input type="number" class="col-sm-1 form-control" id="testDuration" v-model.number="scriptParms.duration" placeholder="Enter the test duration (in seconds)">
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory if Iteration Count equals -1) gives the duration of the script playing in seconds">
+			</div>
+			<div class="form-group row">
+				<label for="testDuration" class="col-sm-4 col-form-label">Rampup Period (in seconds)</label>
+				<input type="number" class="col-sm-1 form-control" id="rampupPeriod" v-model.number="scriptParms.rampup" placeholder="Enter the rampup period (in seconds)">
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) gives the time in seconds that is use to launch the VU. New VUs are equally launched during this period">
+			</div>
+			<div class="form-group row">
+				<label for="testDuration" class="col-sm-4 col-form-label">Number of VU</label>
+				<input type="number" class="col-sm-1 form-control" id="totalUsers" v-model.number="scriptParms.users" placeholder="Enter the number of VU">
+				&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(mandatory) number of VUs to launch during the rampup period. For example, if users value equals 100 and rampup equals 20, 5 new VUs will be launched every new seconds (because 20*5 = 100)">
+			</div>
+			<!-- Advanced Options -->
+			<div>
+				<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseADVGP" aria-expanded="false" aria-controls="collapseADVGP">
+					Advanced Parameters
+				</button>
+				<div class="collapse" id="collapseADVGP">
+					<div class="card card-body">
+						<div class="form-group row">
+							<label for="timeout" class="col-sm-4 col-form-label">Timeout (in seconds)</label>
+							<input type="number" class="col-sm-2 form-control" id="timeout" v-model.number="scriptParms.timeout" placeholder="Enter the timeout value (in seconds)">
+							&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(default=10) number of seconds before a network timeout occurs">
+						</div>
+						<div class="form-group row">
+							<label for="on_error" class="col-sm-4 col-form-label">On Error</label>
+							<select id="onError" class="col-sm-2 form-control" v-model="scriptParms.on_error" placeholder="OnError">
+								<option selected>continue</option>
+								<option>stop_iteration</option>
+								<option>stop_vu</option>
+								<option>stop_test</option>
+							</select>
+							&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(default=continue,stop_iteration,stop_vu,stop_test) define the behaviour for error handling: just display the error and continue (default), or abort the current iteration, or stop the current VU, or abort the whole test">
+						</div>
+						<div class="form-group row">
+							<label for="http_error_code" class="col-sm-4 col-form-label">HTTP Error Code</label>
+							<input type="text" class="col-sm-3 form-control" id="http_error_code" v-model="scriptParms.http_error_code" placeholder="Enter the list of HTTP error codes">
+							&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(no default value) define the list of what is considered a HTTP error code. For example, http_error_code: 404,403,500. This is only used by HTTP Actions">
+						</div>
+						<div class="form-group row">
+							<label for="persistent_http_sessions" class="col-sm-4 col-form-label">Persistent HTTP Sessions</label>
+							<select id="persistentHTTPSessions" class="col-sm-2 form-control" v-model="scriptParms.persistent_http_sessions" placeholder="PeristentHTTPSessions">
+								<option selected>false</option>
+								<option>true</option>
+							</select>
+							&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(false) if true, each VU uses the same session for a script iteration. It means, it does clear the session Cookies between iterations.">
+						</div>
+						<div class="form-group row">
+							<label for="persistent_db_connections" class="col-sm-4 col-form-label">Persistent DB Connections</label>
+							<select id="persistentDBConnections" class="col-sm-2 form-control" v-model="scriptParms.persistent_db_connections" placeholder="PeristentDBConnections">
+								<option selected>false</option>
+								<option>true</option>
+							</select>
+							&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="(false) if true, each VU uses the same connection for a script iteration. Note: only work for MongoDB and SQL. Also implies that the script uses only one protocol">
+						</div>
+					</div>
+				</div>
+			</div>
+              </div>
+
+              <!-- Variable Definitions -->
+              <div class="tab-pane fade m-2" id="v-pills-var" role="tabpanel" aria-labelledby="v-pills-var-tab">
+			<div class="form-group row">
+				<label for="virtual_user_id" class="col-sm-3 col-form-label">UID</label>
+				<input disabled type="text" class="col-sm-8 form-control" id="uid" placeholder="contains the ID of the current Virtual User">
+			</div>
+			<div class="form-group row">
+				<label for="http_response" class="col-sm-3 col-form-label">HTTP_Response</label>
+				<input disabled type="text" class="col-sm-8 form-control" id="http_response" placeholder="Contains the last returned HTTP Code">
+			</div>
+			<div class="form-group row">
+				<label for="mongodb_id" class="col-sm-3 col-form-label">MONGODB_Last_Insert_ID</label>
+				<input disabled type="text" class="col-sm-8 form-control" id="mongodb_id" placeholder="(string) contains the value of the _id field of the last inserted document">
+			</div>
+			<div class="form-group row">
+				<label for="sql_row_count" class="col-sm-3 col-form-label">SQL_Row_Count</label>
+				<input disabled type="text" class="col-sm-8 form-control" id="mongodb_id" placeholder="contains the count of rows selected, updated or deleted">
+			</div>
+			<hr/>
+			<div class="form-group row">
+				<label for="variables" class="col-sm-3 col-form-label control-label">User defined Variables</label>
+				<div>
+					<button type="button" class="btn btn-sm btn-primary" data-toggle="modal" xdata-target="#newVariable" onClick="chaingunScript.variableShow()">Add a new Variable</button>
+					&nbsp;<img src="img/info-circle-fill.svg" alt="" width="24" height="24" data-toggle="tooltip" title="Actions can define expressions that may contain variables. Some variables are created by chaingun but you can define and use your own variables">
+				</div>
+			</div>
+			<div class="form-group row">
+				<label for="variables" class="col-sm-3 col-form-label control-label"></label>
+				<div class="col-sm-9">
+					<div class="row mb-1" v-for="(variable, index) in action.variables">
+						<div class="col">
+							<input disabled type="text" class="form-control form-inline" id="varName" v-model="variable[0]" placeholder="Enter the Variable Name">
+						</div>
+						<div class="col">
+							<input disabled type="text" class="form-control form-inline" id="varValue" v-model="variable[1]" placeholder="Enter the Expression">
+						</div>
+						<div class="col">
+							<img src="img/pencil.svg" height=20 width=20 v-bind:onclick="'chaingunScript.displayForEditVariable(' + parseInt(index, 10) + '); return false'"/>&nbsp;
+							<img src="img/circle-x.svg" height=20 width=20 v-bind:onclick="'chaingunScript.deleteVariable(' + parseInt(index, 10) + '); return false'"/>
+						</div>
+					</div>
+				</div>
+			</div>
+              </div>
+
+              <!-- Default action values -->
+	      <form-dflt-values
+			v-bind:server="scriptParms.default.server" 
+			v-bind:protocol="scriptParms.default.protocol" 
+			v-bind:method="scriptParms.default.method"
+			v-bind:database="scriptParms.default.database"
+			v-bind:collection="scriptParms.default.collection"
+			v-bind:db_driver="scriptParms.default.db_driver">
+	      </form-dflt-values>
+
+              <!-- Data Feeder -->
+	      <form-feeder 
+			v-bind:feeder_type="scriptParms.feeder.type" 
+			v-bind:filename="scriptParms.feeder.filename" 
+			v-bind:separator="scriptParms.feeder.separator">
+	      </form-feeder>
+
+              <!-- Pre-Action List -->
+              <div class="tab-pane fade m-2" id="v-pills-pal" role="tabpanel" aria-labelledby="v-pills-pal-tab">
+                <table class="table table-bordered" ref="pre_action_list">
+                  <thead class="thead-dark">
+                    <tr><th scope="col">#</th><th>Action Description</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(action, index) in scriptParms.pre_actions" @dragstart="dragActionStart(index, $event)" @dragend="dragActionEnd($event)" draggable="true" @drop="dragActionFinish(index, $event, true)" ondragover="window.allowDrop(event)">
+			<td>{{ index+1 }}</td>
+			<td>{{ getDisplayAction(action) }}</td>
+			<td>
+                          <button class="btn btn-success" v-bind:onclick="'chaingunScript.displayForEditAction(' + parseInt(index, 10) + ', true); return false'">Edit</button>
+                          <button class="btn btn-danger" v-bind:onclick="'confirmBox(chaingunScript.deleteAction,' + parseInt(index, 10) + ', true); return false'">Delete</button>
+			  &nbsp;&nbsp;
+                          <button v-if="'when' in action" class="btn btn-success btn-sm" v-bind:onclick="'chaingunScript.displayForWhen(' + parseInt(index, 10) + ', true); return false'">Edit 'when'</button>
+                          <button v-if="'when' in action" class="btn btn-danger btn-sm" v-bind:onclick="'confirmBox(chaingunScript.deleteWhen,' + parseInt(index, 10) + ', true); return false'">Delete 'when'</button>
+                          <button v-if="!('when' in action)" class="btn btn-primary btn-sm" v-bind:onclick="'chaingunScript.whenShow(' + parseInt(index, 10) + ', true); return false'">Add 'when'</button>
+                        </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <hr/>
+			<div class="form-group form-inline row">
+				<label for="actionType" class="col-sm-3 col-form-label">Action Type</label>
+				<div>
+					<select id="actionType" class="form-control" v-model="action.type" placeholder="Action Type">
+						<option v-for="type in actionTypes">{{ type }}</option>
+					</select>
+				</div>
+				<!-- &nbsp;<span class="badge badge-primary" data-toggle="tooltip" title="">Info</span> -->
+				&nbsp;<button type="button" class="btn btn-primary" data-toggle="modal" xdata-target="#newAction" onClick="chaingunScript.actionShow(true)">Add a new pre-Action</button>
+			</div>
+              </div>
+
+              <!-- Action List -->
+              <div class="tab-pane fade m-2" id="v-pills-al" role="tabpanel" aria-labelledby="v-pills-al-tab">
+                <table class="table table-bordered" ref="action_list">
+                  <thead class="thead-dark">
+                    <tr><th scope="col">#</th><th>Action Description</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(action, index) in scriptParms.actions" @dragstart="dragActionStart(index, $event)" @dragend="dragActionEnd($event)" draggable="true" @drop="dragActionFinish(index, $event, false)" ondragover="window.allowDrop(event)">
+			<td>{{ index+1 }}</td>
+			<td>{{ getDisplayAction(action) }}</td>
+			<td>
+                          <button class="btn btn-success" v-bind:onclick="'chaingunScript.displayForEditAction(' + parseInt(index, 10) + ', false); return false'">Edit</button>
+                          <button class="btn btn-danger" v-bind:onclick="'confirmBox(chaingunScript.deleteAction,' + parseInt(index, 10) + ', false); return false'">Delete</button>
+			  &nbsp;&nbsp;
+                          <button v-if="'when' in action" class="btn btn-success btn-sm" v-bind:onclick="'chaingunScript.displayForWhen(' + parseInt(index, 10) + ', false); return false'">Edit 'when'</button>
+                          <button v-if="'when' in action" class="btn btn-danger btn-sm" v-bind:onclick="'confirmBox(chaingunScript.deleteWhen,' + parseInt(index, 10) + ', false); return false'">Delete 'when'</button>
+                          <button v-if="!('when' in action)" class="btn btn-primary btn-sm" v-bind:onclick="'chaingunScript.whenShow(' + parseInt(index, 10) + ', false); return false'">Add 'when'</button>
+                        </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <hr/>
+			<div class="form-group form-inline row">
+				<label for="actionType" class="col-sm-3 col-form-label">Action Type</label>
+				<div>
+					<select id="actionType" class="form-control" v-model="action.type" placeholder="Action Type">
+						<option v-for="type in actionTypes">{{ type }}</option>
+					</select>
+				</div>
+				<!-- &nbsp;<span class="badge badge-primary" data-toggle="tooltip" title="">Info</span> -->
+				&nbsp;<button type="button" class="btn btn-primary" data-toggle="modal" xdata-target="#newAction" onClick="chaingunScript.actionShow(false)">Add a new Action</button>
+			</div>
+              </div>
+
+              <!-- Generate YAML -->
+              <div class="tab-pane fade m-2" id="v-pills-gy" role="tabpanel" aria-labelledby="v-pills-yaml-tab">
+		      <p v-if="errors.length">
+			<!-- <div v-if="errors.length != 0" class="alert alert-danger alert-dismissible fade show" role="alert">Please correct the following error(s):</div> -->
+			<div v-for="error in errors" class="alert alert-danger alert-dismissible fade show" role="alert">
+			  {{ error }}
+			  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+			    <span aria-hidden="true">&times;</span>
+			  </button>
+			</div>
+		      </p>
+		<button type="submit" onclick="chaingunScript.checkForm(); return false;" class="btn btn-primary btn-block text-left" data-toggle="modal" data-target="#staticBackdrop">Generate YAML</button>
+              </div>
+
+              <!-- See Full Documentation -->
+              <div class="tab-pane fade m-2" id="v-pills-doc" role="tabpanel" aria-labelledby="v-pills-full-doc-tab">
+				  <a href="https://github.com/majeinfo/chaingun/blob/master/SYNTAX.md" target="_blank">See Syntax on GitHub</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </form>
+
+	<!-- Modal that displays the YAML script -->
+	<div class="modal fade" id="staticBackdrop" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+	    <div class="modal-content">
+	      <div class="modal-header">
+		<h5 class="modal-title" id="staticBackdropLabel">Your YAML Script</h5>
+		<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		  <span aria-hidden="true">&times;</span>
+		</button>
+	      </div>
+	      <div class="modal-body">
+		<samp v-html="yamlScript">{{ yamlScript }}</samp>
+	      </div>
+	      <div class="modal-footer">
+		<!--
+		<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+		<button type="button" class="btn btn-primary">Understood</button>
+		-->
+		<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+	<!-- HTTP Action -->
+	<action-http
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:errors2="errors2"
+		v-bind:action_index="action_index"
+		v-bind:store_cookie="action.store_cookie"
+		v-bind:use_http2="action.use_http2"
+		v-bind:body="action.body"
+		v-bind:template="action.template"
+		v-bind:upload_file="action.upload_file"
+		v-bind:headers="action.headers"
+		v-bind:formdatas="action.formdatas"
+		v-bind:responses="action.responses"
+		v-bind:method="action.method"
+		v-bind:url="action.url"
+		v-bind:title="action.title">
+	</action-http>
+
+	<!-- TCP Action -->
+	<action-tcp 
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:title="action.title"
+		v-bind:address="action.address"
+		v-bind:payload="action.payload">
+	</action-tcp>
+
+	<!-- UDP Action -->
+	<action-udp 
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:title="action.title"
+		v-bind:address="action.address"
+		v-bind:payload="action.payload">
+	</action-udp>
+
+	<!-- MQTT Action -->
+	<action-mqtt 
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:title="action.title"
+		v-bind:url="action.url"
+		v-bind:certificatepath="action.certificatepath"
+		v-bind:privatekeypath="action.privatekeypath"
+		v-bind:username="action.username"
+		v-bind:password="action.password"
+		v-bind:clientid="action.clientid"
+		v-bind:payload="action.payload"
+		v-bind:topic="action.topic"
+		v-bind:qos="action.qos">
+	</action-mqtt>
+
+	<!-- SQL Action -->
+	<action-sql 
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:db_driver="action.db_driver"
+		v-bind:server="action.server"
+		v-bind:database="action.database"
+		v-bind:statement="action.statement"
+		v-bind:title="action.title">
+	</action-sql>
+	
+	<!-- MongoDB Action -->
+	<action-mongodb
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:responses="action.responses"
+		v-bind:document="action.document"
+		v-bind:command="action.command"
+		v-bind:filter="action.filter"
+		v-bind:collection="action.collection"
+		v-bind:database="action.database"
+		v-bind:server="action.server"
+		v-bind:title="action.title">
+	</action-mongodb>
+
+	<!-- WS Action -->
+	<action-ws
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:errors2="errors2"
+		v-bind:action_index="action_index"
+		v-bind:store_cookie="action.store_cookie"
+		v-bind:body="action.body"
+		v-bind:responses="action.responses"
+		v-bind:url="action.url"
+		v-bind:title="action.title">
+	</action-ws>
+	
+	<!-- Log Action -->
+	<action-log 
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:message="action.message">
+	</action-log>
+	
+	<!-- Sleep Action -->
+	<action-sleep
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:duration="action.duration">
+	</action-sleep>
+
+	<!-- Assert Action -->
+	<action-assert
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:expression="action.expression">
+	</action-assert>
+
+	<!-- Setvar Action -->
+	<action-setvar
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:variable="action.variable"
+		v-bind:expression="action.expression">
+	</action-setvar>
+
+	<!-- Modal that displays the New Variable -->
+	<form-variable
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:variable="action.variable"
+		v-bind:expression="action.expression">
+	</form-variable>
+
+	<!-- Modal that displays the HTTP Header for Action -->
+	<action-http-header
+		v-bind:action="edit_header_mode"
+		v-bind:errors="errors2"
+		v-bind:action_index="action_index"
+		v-bind:header_name="action.header_name"
+		v-bind:header_value="action.header_value">
+	</action-http-header>
+
+	<!-- Modal that displays the Formdata for Action -->
+	<action-http-formdata
+		v-bind:action="edit_formdata_mode"
+		v-bind:errors="errors2"
+		v-bind:action_index="action_index"
+		v-bind:formdata_name="action.formdata_name"
+		v-bind:formdata_type="action.formdata_type"
+		v-bind:formdata_value="action.formdata_value">
+	</action-http-formdata>
+
+	<!-- Modal that displays the WHEN clause in Action -->
+	<when-clause
+		v-bind:action="edit_when_mode"
+		v-bind:errors="errors"
+		v-bind:action_index="action_index"
+		v-bind:when_clause="action.when_clause">
+	</when-clause>
+
+	<!-- Modal that displays a RESPONSE Form -->
+	<form-response
+		v-bind:action="edit_response_mode"
+		v-bind:errors="errors2"
+		v-bind:reponse_index="response_index"
+		v-bind:from_header="action.from_header"
+		v-bind:regex="action.regex"
+		v-bind:jsonpath="action.jsonpath"
+		v-bind:xmlpath="action.xmlpath"
+		v-bind:variable="action.variable"
+		v-bind:index="action.index"
+		v-bind:default_value="action.default_value">
+	</form-response>
+
+    </div> <!-- chaingunApp -->
+
+	<script src="js/vue.js"></script>
+	<script src="js/jquery-3.4.1.slim.min.js"></script>
+	<script src="js/bootstrap.bundle.min.js"></script>
+	<script src="js/components/feeder.js"></script>
+	<script src="js/components/default_values.js"></script>
+	<script src="js/components/variable.js"></script>
+	<script src="js/components/response.js"></script>
+	<script src="js/components/responses.js"></script>
+	<script src="js/components/when.js"></script>
+	<script src="js/components/action_log.js"></script>
+	<script src="js/components/action_tcp.js"></script>
+	<script src="js/components/action_udp.js"></script>
+	<script src="js/components/action_mqtt.js"></script>
+	<script src="js/components/action_sleep.js"></script>
+	<script src="js/components/action_assert.js"></script>
+	<script src="js/components/action_setvar.js"></script>
+	<script src="js/components/action_sql.js"></script>
+	<script src="js/components/action_mongodb.js"></script>
+	<script src="js/components/action_http.js"></script>
+	<script src="js/components/action_ws.js"></script>
+	<script src="js/components/action_http_header.js"></script>
+	<script src="js/components/action_http_formdata.js"></script>
+	<script src="js/main.js"></script>
+	<script src="js/js-yaml.min.js"></script>
+
+	<script>
+		$(document).ready(function(){
+			$('[data-toggle="tooltip"]').tooltip()
+		});
+		function confirmBox(callback, data) {
+			if (confirm("Do you confirm ?")) {
+				callback(data);
+			}
+			return false;
+		}
+	</script>
+</body>
+</html>
