@@ -1,17 +1,17 @@
 package viewer
 
 import (
+	"embed"
 	"encoding/csv"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"sort"
 	"strconv"
 
 	"github.com/bmizerany/perks/quantile"
-	"github.com/rakyll/statik/fs"
 	log "github.com/sirupsen/logrus"
-	_ "statik"
 )
 
 const (
@@ -26,6 +26,13 @@ type measure struct {
 	recvBytes int
 	latency   int
 }
+
+var (
+	webUrl string = "/graphs/"
+
+	//go:embed graphs/*
+	content embed.FS
+)
 
 func BuildGraphs(datafile, scriptname, outputdir string) error {
 	// Creates the outputdir if needed
@@ -539,16 +546,15 @@ func bar_graph(w *os.File, name, title string, quantiles map[string]*quantile.St
 
 // Copy templates and js in output directory
 func copyTemplates(outputdir string) error {
-	statikFS, err := fs.New()
-	if err != nil {
-		return err
-	}
-	fs.Walk(statikFS, "/graphs", func(path string, info os.FileInfo, err error) error {
+	sub_fs, _ := fs.Sub(content, "graphs")
+	fs.WalkDir(sub_fs, ".", func(path string, info fs.DirEntry, err error) error {
 		log.Debugf("walkFn processing: %s", path)
-		dest := outputdir + "/" + path[len("/graphs"):]
+		log.Debugf("info=%v", info)
+		dest := outputdir + "/"
 
 		// Regular file or directory ?
-		if info.IsDir() {
+		//if info.IsDir() {
+		if info != nil {
 			_, err := os.Stat(dest)
 			if os.IsNotExist(err) {
 				if err := os.Mkdir(dest, 0755); err != nil {
@@ -556,12 +562,12 @@ func copyTemplates(outputdir string) error {
 				}
 			}
 		} else {
-			source, err := statikFS.Open(path)
+			source, err := fs.ReadFile(content, path)
 			if err != nil {
 				log.Errorf("copyTemplates could not open file %s for reading (%s)", path, err)
 				return err
 			}
-			defer source.Close()
+			//defer source.Close()
 
 			destination, err := os.Create(dest)
 			if err != nil {
@@ -569,7 +575,7 @@ func copyTemplates(outputdir string) error {
 				return err
 			}
 			defer destination.Close()
-			_, err = io.Copy(destination, source)
+			_, err = io.CopyBuffer(destination, destination, source)
 			return err
 		}
 		return nil

@@ -2,7 +2,9 @@ package manager
 
 import (
 	"bufio"
+	"embed"
 	"encoding/json"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -13,9 +15,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/majeinfo/chaingun/reporter"
 	"github.com/majeinfo/chaingun/viewer"
-	"github.com/rakyll/statik/fs"
 	log "github.com/sirupsen/logrus"
-	_ "statik"
 )
 
 const (
@@ -29,7 +29,16 @@ var (
 	scriptNames = make(map[string]string)
 	scriptName  string
 	injectors   []string
+
+	webUrl string = "/web/"
+
+	//go:embed web/*
+	content embed.FS
 )
+
+func redirect(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, webUrl, 301)
+}
 
 // Start creates the HTTP server and creates the Web Interface
 func Start(mgrAddr *string, reposdir *string, prelaunched_injectors *string) error {
@@ -39,10 +48,6 @@ func Start(mgrAddr *string, reposdir *string, prelaunched_injectors *string) err
 		injectors = make([]string, 0)
 	}
 	repositoryDir = *reposdir
-	statikFS, err := fs.New()
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/get_injectors", getInjectors)
@@ -52,9 +57,9 @@ func Start(mgrAddr *string, reposdir *string, prelaunched_injectors *string) err
 	mux.HandleFunc("/show_results/", showResults)
 	mux.HandleFunc("/rebuild_graphs/", rebuildGraphs)
 	mux.Handle("/results/", http.FileServer(http.Dir(".")))
-	mux.Handle("/", http.FileServer(statikFS))
-	//mux.Handle("/index.html", http.FileServer(statikFS))
-	//mux.Handle("/static", http.FileServer(statikFS))
+	sub_fs, _ := fs.Sub(content, "web")
+	mux.Handle("/", http.FileServer(http.FS(sub_fs)))
+	//mux.HandleFunc("/", redirect)
 
 	log.Fatal(http.ListenAndServe(*mgrAddr, mux))
 	return nil
