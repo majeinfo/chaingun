@@ -8,9 +8,8 @@ build:
   before_script:
     - export GOPATH=`pwd`/player
   script:
-    - go get ./... || true
     - cd player/src
-    - CGO_ENABLED=0 GO111MODULE=off go install -ldflags="-s -w" github.com/majeinfo/chaingun/player
+    - CGO_ENABLED=0 go install -ldflags="-s -w" ./player
     - cd ..
     - bin/player -h || [ $? -eq 2 ]
   artifacts:
