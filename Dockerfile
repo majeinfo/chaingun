@@ -1,15 +1,12 @@
 # BUILDER Image
-FROM debian:bullseye as builder
-RUN apt-get clean && apt-get update -y
-RUN apt-get install -y git golang
+FROM golang:1.16 as builder
 
 RUN mkdir /appli && cd /appli && git clone -b master https://github.com/majeinfo/chaingun.git
 WORKDIR /appli/chaingun
 
 RUN export GOPATH=/appli/chaingun/player && \
-	export GO111MODULE=off && \
 	cd player/src && \
-	go install github.com/majeinfo/chaingun/player 
+	go install ./player
 
 
 # CHAINGUN Image
