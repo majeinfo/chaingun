@@ -153,13 +153,16 @@ func signalHandler() {
 	for {
 		// Blocking until a signal is sent over signChan channel
 		<-dumpChan
-		fmt.Println("Do you want to exit or create or reset a Playbook ? [e/p/r] ")
+		fmt.Print("\nDo you want to (e)xit, (c)ontinue, (d)isplay the Playbook, (r)eset the Playbook ? [e/c/d/r] ")
 		var answer string
 		fmt.Scanf("%s", &answer)
 		if answer == "e" {
 			fmt.Println("bye bye...")
 			os.Exit(0)
+		} else if answer == "c" {
+			continue
 		} else if answer == "r" {
+			dump_in_progress.Lock()
 			proxiedRequests  = proxiedRequests[:0]
 			dump_in_progress.Unlock()
 			continue
