@@ -22,8 +22,9 @@ test1:
   before_script:
     - export GOPATH=`pwd`/player
   script:
-    - go get github.com/majeinfo/chaingun/config
-    - go get github.com/majeinfo/chaingun/utils
+    - go get github.com/majeinfo/chaingun
+    - go test github.com/majeinfo/chaingun/config
+    - go test github.com/majeinfo/chaingun/utils
 
 test2:
   stage: test
