@@ -6,6 +6,8 @@
 setup.sh
 
 # Folders
+.idea
+player/src/.idea
 _obj
 _test
 __pycache__
