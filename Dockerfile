@@ -25,7 +25,7 @@ RUN mkdir /scripts /output /data /appli && \
 
 WORKDIR /appli/chaingun
 
-RUN ln -s /data /appli/chaingun/manager/server/static/data
+#RUN ln -s /data /appli/chaingun/manager/server/static/data
 COPY --from=builder /appli/chaingun/player/bin/player player/bin/
 ADD start.sh /
 
