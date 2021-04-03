@@ -55,7 +55,7 @@ Req_OK() {
 }
 
 # Test player arguments
-Arg_Error "--output-dir /tmp/chaingun/output/" "When started in standalone mode, needs a script filename (option --script)"
+Arg_Error "--output-dir /tmp/chaingun/output/" "\"script\" not set"
 Arg_Error "--output-dir /tmp/chaingun/output/ --script dummy" "no such file or directory"
 
 # Test script syntax
@@ -133,6 +133,7 @@ Req_OK requests/pre_actions1.yml
 
 rm -f $$.out 2>/dev/null
 if [ $ERRORS -gt 0 ]; then
+	echo "$ERRORS tests failed..."
 	exit 1
 fi
 # EOF
