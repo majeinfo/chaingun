@@ -31,20 +31,20 @@ type proxiedRequest struct {
 var (
 	dump_in_progress sync.Mutex
 	proxiedRequests  = make([]proxiedRequest, 0)
-	domain *string
+	domain string
 )
 
 // Start the Web Proxy
-func StartProxy(listen_addr *string, proxy_domain *string, ignored_suffixes *string) {
+func StartProxy(listen_addr string, proxy_domain string, ignored_suffixes string) {
 	go signalHandler()
 
 	domain = proxy_domain
-	remote_server := strings.ToLower(*proxy_domain)
-	exclude_suffixes := strings.Split(*ignored_suffixes, ",")
+	remote_server := strings.ToLower(proxy_domain)
+	exclude_suffixes := strings.Split(ignored_suffixes, ",")
 
-	log.Infof("Starting Web Proxy on adress: %s", *listen_addr)
-	log.Infof("Proxied Domain: %s", *proxy_domain)
-	log.Infof("Ignored Suffixes: %s", *ignored_suffixes)
+	log.Infof("Starting Web Proxy on adress: %s", listen_addr)
+	log.Infof("Proxied Domain: %s", proxy_domain)
+	log.Infof("Ignored Suffixes: %s", ignored_suffixes)
 	proxy := goproxy.NewProxyHttpServer()
 	//proxy.Verbose = true
 	proxy.OnRequest().HandleConnect(goproxy.AlwaysMitm)
@@ -132,7 +132,7 @@ func StartProxy(listen_addr *string, proxy_domain *string, ignored_suffixes *str
 			return r, nil
 		})
 
-	log.Fatal(http.ListenAndServe(*listen_addr, proxy))
+	log.Fatal(http.ListenAndServe(listen_addr, proxy))
 }
 
 // Handle the SIGHUP and dump the Playbook draft
@@ -173,7 +173,7 @@ default:
   method: GET
 actions:
 `
-		fmt.Printf(header, *domain)
+		fmt.Printf(header, domain)
 		for idx, request := range proxiedRequests {
 			fmt.Println("  - http:")
 			fmt.Printf("      title: Action %d\n", idx+1)

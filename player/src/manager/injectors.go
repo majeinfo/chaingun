@@ -27,13 +27,13 @@ var (
 )
 
 // Start the Batch mode
-func StartBatch(mgrAddr *string, reposdir *string, prelaunched_injectors *string, script_file *string) error {
+func StartBatch(reposdir string, prelaunched_injectors string, script_file string) error {
 	// Build the action from playbook
 	var playbook config.TestDef
 	var pre_actions []action.FullAction
 	var actions []action.FullAction
 
-	data, err := ioutil.ReadFile(*script_file)
+	data, err := ioutil.ReadFile(script_file)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,12 +45,12 @@ func StartBatch(mgrAddr *string, reposdir *string, prelaunched_injectors *string
 	log.Infof("Embedded files: %v", action.GetEmbeddedFilenames())
 
 	// Build the Injector list
-	if len(*prelaunched_injectors) > 0 {
-		injectors = strings.Split(*prelaunched_injectors, ",")
+	if len(prelaunched_injectors) > 0 {
+		injectors = strings.Split(prelaunched_injectors, ",")
 	} else {
 		injectors = make([]string, 0)
 	}
-	targetDir = *reposdir
+	targetDir = reposdir
 	nu_injectors := 0
 
 	// Creates the repository directory if needed
@@ -107,7 +107,7 @@ func StartBatch(mgrAddr *string, reposdir *string, prelaunched_injectors *string
 	return nil
 }
 
-func runScript(script_file *string) {
+func runScript(script_file string) {
 	// Read all the data files and compute their MD5sum
 	var encoded_files = make(map[string]string, len(action.GetEmbeddedFilenames()))
 	var md5sums = make(map[string]string, len(action.GetEmbeddedFilenames()))
@@ -126,9 +126,9 @@ func runScript(script_file *string) {
 	}
 
 	// Read the scenario file and convert it in Base64
-	data, err := ioutil.ReadFile(*script_file)
+	data, err := ioutil.ReadFile(script_file)
 	if err != nil {
-		log.Fatalf("Cannot read the script file %s: %s", *script_file, err)
+		log.Fatalf("Cannot read the script file %s: %s", script_file, err)
 	}
 
 	encoded_data := base64.StdEncoding.EncodeToString(data)
@@ -138,7 +138,7 @@ func runScript(script_file *string) {
 	first_injector := true
 	for injector, conn := range injectorClients {
 		wg.Add(1)
-		go runScriptOnInjector(first_injector, injector, conn, script_file, encoded_data, encoded_files, md5sums, &wg)
+		go runScriptOnInjector(first_injector, injector, conn, &script_file, encoded_data, encoded_files, md5sums, &wg)
 		first_injector = false
 	}
 	log.Info("Waiting for the Injectors to complete their job...")
@@ -151,13 +151,13 @@ func runScript(script_file *string) {
 	}
 
 	// Create metadata files
-	scriptnames := []string{*script_file}
+	scriptnames := []string{script_file}
 	if err := reporter.WriteMetadata(time.Now(), time.Now(), targetDir, scriptnames); err != nil {
 		log.Fatalf("Error while writing metedata file: %s", err.Error())
 	}
 
 	// Build graphs
-	if err := viewer.BuildGraphs(targetDir+"/merged.csv", *script_file, targetDir); err != nil {
+	if err := viewer.BuildGraphs(targetDir+"/merged.csv", script_file, targetDir); err != nil {
 		log.Fatalf("BuildGraphs failed: %s", err)
 	}
 }

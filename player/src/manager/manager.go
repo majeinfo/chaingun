@@ -41,13 +41,13 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 }
 
 // Start creates the HTTP server and creates the Web Interface
-func Start(mgrAddr *string, reposdir *string, prelaunched_injectors *string) error {
-	if len(*prelaunched_injectors) > 0 {
-		injectors = strings.Split(*prelaunched_injectors, ",")
+func Start(mgrAddr string, reposdir string, prelaunched_injectors string) error {
+	if len(prelaunched_injectors) > 0 {
+		injectors = strings.Split(prelaunched_injectors, ",")
 	} else {
 		injectors = make([]string, 0)
 	}
-	repositoryDir = *reposdir
+	repositoryDir = reposdir
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/get_injectors", getInjectors)
@@ -61,7 +61,7 @@ func Start(mgrAddr *string, reposdir *string, prelaunched_injectors *string) err
 	mux.Handle("/", http.FileServer(http.FS(sub_fs)))
 	//mux.HandleFunc("/", redirect)
 
-	log.Fatal(http.ListenAndServe(*mgrAddr, mux))
+	log.Fatal(http.ListenAndServe(mgrAddr, mux))
 	return nil
 }
 

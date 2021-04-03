@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-PLAYER=../player/bin/player 
+PLAYER="../player/bin/player inject"
 #VERBOSE=--verbose
 ERRORS=0
 

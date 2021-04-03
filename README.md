@@ -82,8 +82,7 @@ Note for the daemon mode:
 
 a) run a Player in standalone mode :
 
-	$ cd player/bin
-	$ ./player --output-dir /path/to/output/ --script /path/to/script.yml
+	$ player inject --output-dir /path/to/output/ --script /path/to/script.yml
 
 	--output-dir indicates where the results will be stored
 	--script sets the name of the script file and is mandatory
@@ -98,8 +97,7 @@ a) run a Player in standalone mode :
 
 b) run a Player in daemon mode :
 
-	$ cd player/bin
-	$ ./player --mode daemon --listen-addr 127.0.0.1:12345 
+	$ player daemon --listen-addr 127.0.0.1:12345 
 
 	in daemon mode, the player will listen to the TCP port specified by --listen-addr option
 	(default is 127.0.0.1:12345) and will play the orders sent by the manager. This is the normal
@@ -112,12 +110,12 @@ b) run a Player in daemon mode :
 
 c) run the Manager (when Players are started as Daemons) :
 
-	$ cd player/bin
-	$ ./player --mode manager --manager-listen-addr 127.0.0.1:8000 --repository-dir /tmp/chaingun
+	$ player manage --listen-addr 127.0.0.1:8000 --repository-dir ./ 
 
-	in manager mode, the player will listen to the TCP port specified by --manager-listen-addr option
+	in manager mode, the player will listen to the TCP port specified by the --listen-addr option
 	(default is 127.0.0.1:8000) and will offer a Web interface that manages the remote players.
-	The --repository-dir option gives the location of the results (default is ".")
+	The --repository-dir option gives the location of the results (default is "."). This directory
+	must be relative to the location where you launched the manager from.
 
 	--verbose is optional
 	--injectors injector1:port1,injector2:port2,... gives the list of already started injectors. In that case,
@@ -128,8 +126,7 @@ c) run the Manager (when Players are started as Daemons) :
 
 d) run in Batch mode (need remote injectors) :
 
-	$ cd player/bin
-	$ ./player --mode batch --injectors server1:port1,server2:port2,.... --script /path/to/script.yml
+	$ player batch --injectors server1:port1,server2:port2,.... --script /path/to/script.yml
 
 	The local player tries to connect to the remote injectors. Then it sends them the script and the related
 	files (feed data, template files) and makes the injectors run in parallel. All the filenames (script and related files)
@@ -144,18 +141,18 @@ d) run in Batch mode (need remote injectors) :
 
 e) run in Designer mode (the Web Interface for creating YAML files) :
 
-	$ cd player/bin
-	$ ./player --mode designer --listen-addr 127.0.0.1:12345
+	$ player design --listen-addr 127.0.0.1:12345
+
+	The you can browse to the specified address ans starts creating your Playbook...
 
 f) run in Proxy mode :
 
-	$ cd player/bin
-	$ ./player --mode proxy --listen-addr 127.0.0.1:12345 --proxy-domain example.com
+	$ player proxy --listen-addr 127.0.0.1:12345 --proxy-domain example.com
 
 	If you plan to use HTTPS instead of HTTP, make sure the CA of the certificate used by the Proxy is installed
 	in your Browser store. One the Proxy os activated, configure your Browser and navigate to the site that must
 	be load-tested.
-	In order to get the Playbook, type <Ctrl-C> in the terminal where you launched the Proxy. A prompt asks you
+	In order to display the Playbook, type <Ctrl-C> in the terminal where you launched the Proxy. A prompt will ask you
 	if you want to exit(e), to reset(r) the capture or to display the playbook(p).
 
 	--listen-addr <IP>:<port> (default is 127.0.0.1:12345) gives the IP and Port the Proxy must be listening to
@@ -171,7 +168,7 @@ a) run a Player in standalone mode :
 
 	$ docker container run -it -v /path/to/scripts:/scripts \
 				   -v /path/to/output/dir:/output \
-				   majetraining/chaingun standalone /scripts/script.yml
+				   majetraining/chaingun inject /scripts/script.yml
 
 b) run a Player in daemon mode :
 
@@ -185,7 +182,7 @@ c) run the Manager (when Players are started as Daemons) :
 	$ docker container run -it -d -v /path/to/scripts:/scripts \
 				      -v /path/to/output/dir:/output \
 				      -v /path/to/data_and_graphs:/data \
-				      majetraining/chaingun manager [<IP>:<Listen_Port>]
+				      majetraining/chaingun manage [<IP>:<Listen_Port>]
 
 	- default IP is 0.0.0.0 
 	- default port is 8000

@@ -10,8 +10,8 @@ import (
 )
 
 // Create a Playbook from the YAML data
-func CreatePlaybook(scriptFile *string, data []byte, playbook *config.TestDef, pre_actions *[]FullAction, actions *[]FullAction) bool {
-	gpScriptDir = path.Dir(*scriptFile)
+func CreatePlaybook(scriptFile string, data []byte, playbook *config.TestDef, pre_actions *[]FullAction, actions *[]FullAction) bool {
+	gpScriptDir = path.Dir(scriptFile)
 	log.Debugf("ScriptDir=%s", gpScriptDir)
 
 	err := yaml.UnmarshalStrict([]byte(data), playbook)

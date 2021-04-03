@@ -35,6 +35,7 @@ var (
 )
 
 func BuildGraphs(datafile, scriptname, outputdir string) error {
+	log.Debugf("BuildGraphs in output directory: %s", outputdir)
 	// Creates the outputdir if needed
 	stat, err := os.Stat(outputdir)
 	if os.IsNotExist(err) {
@@ -549,12 +550,12 @@ func copyTemplates(outputdir string) error {
 	sub_fs, _ := fs.Sub(content, "graphs")
 	fs.WalkDir(sub_fs, ".", func(path string, info fs.DirEntry, err error) error {
 		log.Debugf("walkFn processing: %s", path)
-		log.Debugf("info=%v", info)
-		dest := outputdir + "/"
+		//log.Debugf("info=%v", info)
+		dest := outputdir + "/" + path
 
 		// Regular file or directory ?
-		//if info.IsDir() {
-		if info != nil {
+		if info.IsDir() {
+			log.Debugf("This a directory")
 			_, err := os.Stat(dest)
 			if os.IsNotExist(err) {
 				if err := os.Mkdir(dest, 0755); err != nil {
@@ -562,21 +563,17 @@ func copyTemplates(outputdir string) error {
 				}
 			}
 		} else {
-			source, err := fs.ReadFile(content, path)
+			log.Debugf("This is a file")
+			source, err := fs.ReadFile(sub_fs, path)
 			if err != nil {
 				log.Errorf("copyTemplates could not open file %s for reading (%s)", path, err)
 				return err
 			}
-			//defer source.Close()
 
-			destination, err := os.Create(dest)
-			if err != nil {
-				log.Errorf("copyTemplates could not open file %s for writing (%s)", dest, err)
+			if err := os.WriteFile(dest, source, 0666); err != nil {
+				log.Errorf("copyTemplates could not write file %s for writing (%s)", dest, err)
 				return err
 			}
-			defer destination.Close()
-			_, err = io.CopyBuffer(destination, destination, source)
-			return err
 		}
 		return nil
 	})
