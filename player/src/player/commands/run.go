@@ -12,7 +12,6 @@ type rootFlags struct {
 	cpu_profile	string
 	mem_profile string
 	verbose bool
-	version bool
 }
 
 var (
@@ -84,5 +83,4 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&rootConfig.cpu_profile, "cpu-profile", "", "", "Write cpu profile to `file`")
 	RootCmd.PersistentFlags().StringVarP(&rootConfig.mem_profile, "mem-profile", "", "", "Write memory profile to `file`")
 	RootCmd.PersistentFlags().BoolVarP(&rootConfig.verbose, "verbose", "", false, "Set verbose mode")
-	RootCmd.PersistentFlags().BoolVarP(&rootConfig.version, "version", "", false, "Displays the Version")
 }
