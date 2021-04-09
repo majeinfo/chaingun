@@ -29,6 +29,7 @@ type InjectStruct struct {
 }
 
 func StartStandaloneMode(injectParms InjectStruct) {
+	log.Info("If you press <Ctrl-C> during the play, you will get partial results !")
 	action.DisableLogAction(injectParms.No_log)
 	action.DisableDNSCache(injectParms.Disable_dns_cache)
 	action.SetContext(false, injectParms.Listen_addr, injectParms.Display_srv_resp, injectParms.Trace_requests, injectParms.Store_srv_response_dir)
