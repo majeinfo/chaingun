@@ -54,10 +54,13 @@ Requires golang 1.16+ (because the "embed" module is needed).
 
 Chaingun is made of a single binary (named "player") that can serve multi purpose.
 
-The "player" can be started in 6 different ways:
+The "player" can be started in 7 different ways:
 
 - the standalone mode (which is the default mode): this is the easiest way to proceed and may be
 sufficient when the expected test load can be applied by only one Player
+
+- the "ab" mode, so called because it tries to mimick the "ab" command from Apache ! This mode 
+can be used to make a quick test...
 
 - the daemon mode: if you need many Players to be coordinated to stress the same server(s) at the same time,
 you launch different Players (on different hosts !) in "daemon mode"
@@ -161,6 +164,30 @@ f) run in Proxy mode :
 	--proxy-ignore-suffixes <suffix,suffix...> gives a list of suffixes that must be ignored
 		(default value is: .gif,.png,.jpg,.jpeg,.css,.js,.ico,.ttf,.woff,.pdf)
 	--verbose is optional
+
+g) run in "ab" mode :
+
+	$ player ab --request http://mysite.com --user 100 --rampup 10 --duration 10
+
+	This mode does not need any Playbook but it can only inject one request in the remote server.
+	The option are similar to the "standalone" mode, plus some options to describe the request and
+	the load to inject.
+
+	--body string                     Request body for POST requests
+	--disable-dns-cache               Disable the embedded DNS cache used to reduce the number of DNS requests
+	--display-response                Used with verbose mode to display the Server Responses
+	--duration int                    Total duration (in seconds) of the stress - mandatory if 'iterations' is set to -1
+	--iterations int                  Count of iterations for each VU (default value is -1 which means aonly the 'duration' parameter value is used (default -1)
+	--listen-addr string              Address and port to listen to (ex: 127.0.0.1:8080) (default "127.0.0.1:12345")
+	--method string                   HTTP method to use (GET=default, POST, PUT, HEAD) (default "GET")
+	--no-log                          Disable the 'log' actions from the Script
+	--output-dir string               Set the output directory - where to put the data.csv file and the results (default "./results")
+	--rampup int                      (mandatory) Gives the time in seconds that is use to launch the VU. New VUs are equally launched during this period
+	--request string                  URL of the request to be player
+	--store-srv-response-dir string   Set the directory where to store the whole server response (often HTML)
+	--trace                           Generate a trace.out file useable by 'go tool trace' command
+	--trace-requests                  Displays the requests and their return code
+	--users int                       (mandatory) Count of VU to simulate
 
 ### Run from container image
 
