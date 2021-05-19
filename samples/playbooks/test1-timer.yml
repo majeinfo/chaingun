@@ -1,0 +1,30 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+default:
+  server: www.delamarche.com:80
+  protocol: http
+  method: GET
+on_error: stop_test
+actions:
+  - start_timer:
+      name: page1
+  - http:
+      title: Page 1
+      url: /chaingun/page1.php
+      store_cookie: __all__
+  - start_timer:
+      name: page2
+  - http:
+      title: Page 2
+      url: chaingun/page2.php
+  - end_timer:
+      name: page2
+  - http:
+      title: Page Form1
+      method: POST
+      url: /chaingun/form1.php
+      body: p1[item]=v1&p2[item]=v2
+  - end_timer:
+      name: page1

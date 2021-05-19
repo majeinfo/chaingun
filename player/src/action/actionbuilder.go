@@ -80,6 +80,10 @@ func _buildActionList(playbook *config.TestDef, playbook_actions []map[string]in
 					action, valid = NewSetVarAction(actionMap)
 				case "assert":
 					action, valid = NewAssertAction(actionMap)
+				case "start_timer":
+					action, valid = NewStartTimerAction(actionMap)
+				case "end_timer":
+					action, valid = NewEndTimerAction(actionMap)
 				default:
 					valid = false
 					log.Errorf("Unknown action type encountered: %s", key)

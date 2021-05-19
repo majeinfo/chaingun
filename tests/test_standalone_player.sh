@@ -79,6 +79,8 @@ Syn_Error syntax/sql-bad-db-driver.yml 'DB Driver must specify a valid driver (m
 Syn_Error syntax/sql-server-missing.yml 'no Server and no default Server specified'
 Syn_Error syntax/sql-database-missing.yml 'no Database and no default Database specified'
 Syn_Error syntax/sql-statement-missing.yml 'no Statement specified'
+Syn_Error syntax/timer-bad-start.yml "timer action needs 'name' attribute"
+Syn_Error syntax/timer-bad-end "timer action needs 'name' attribute"
 Syn_OK syntax/opt-duration.yml
 Syn_OK syntax/dflt-values.yml
 Syn_OK syntax/setvar1.yml 

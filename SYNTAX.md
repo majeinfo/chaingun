@@ -26,6 +26,7 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 4.9.[sleep](#sleep--wait-action)  
 4.10.[log](#log--log-output-action)  
 4.11.[assert](#assert--creates-assertion)
+4.12.[timers](#timer-action)
 
 5.[Advanced Topics](#advanced-topics)  
 5.1.[Variables usage](#variables-usage)  
@@ -422,7 +423,7 @@ Example :
 Example:
 ```
   - log:
-      message: "Variable interpolcation is possible : ${name}"
+      message: "Variable interpolation is possible : ${name}"
 ```
 
 ## assert : creates assertion
@@ -435,6 +436,30 @@ Example:
 ```
   - assert:
       expression: "name == \"bob\""
+```
+
+## timers : creates page timers
+
+Timers can be used to measure the latency time for a set of requests.
+You define a Timer with the `start_timer` action which contains the Timer name.
+You stop the Timer by repeating the name in the `end_action`.
+Timer values will be displayed in the results with a name like `__timer__name`.
+
+| Parameter Name | Description |
+| :--- | :--- |
+| `name` | mandatory string that defines the Timer name |
+
+Example:
+```
+  - start_timer:
+      name: HomePage
+
+  # other actions
+  #- http:
+  #    ...
+
+  - end_timer:
+      name: HomePage
 ```
 
 # Advanced Topics
