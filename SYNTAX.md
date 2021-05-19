@@ -25,7 +25,7 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 4.8.[setvar](#setvar--creates-and-set-variable-values)  
 4.9.[sleep](#sleep--wait-action)  
 4.10.[log](#log--log-output-action)  
-4.11.[assert](#assert--creates-assertion)
+4.11.[assert](#assert--creates-assertion)  
 4.12.[timers](#timers--creates-page-timers)
 
 5.[Advanced Topics](#advanced-topics)  
