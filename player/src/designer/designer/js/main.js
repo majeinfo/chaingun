@@ -75,16 +75,17 @@ var chaingunScript = new Vue({
 			duration: 100,
 			message: '',
 			when_clause: '',
+			name: '',
 		},
 		yamlScript: "",
 		errors: [],
 		errors2: [],
-		actionTypes: ["assert", "http", "log", "mongodb", "mqtt", "setvar", "sleep", "sql", "tcp", "udp", "ws"],
+		actionTypes: ["assert", "end_timer", "grpc", "http", "log", "mongodb", "mqtt", "setvar", "sleep", "sql", "start_timer", "tcp", "udp", "ws"],
 		cur_action: '',
 		edit_action_mode: '',
 		edit_header_mode: '',
 		edit_when_mode: '',
-                edit_response_mode: '',
+        edit_response_mode: '',
 		edit_formdata_mode: '',
 		response_index: 0,
 		action_index: 0,
@@ -147,6 +148,9 @@ var chaingunScript = new Vue({
 		});
 		this.$on('change_expression', function(value) {
 			this.action.expression = value;
+		});
+		this.$on('change_name', function(value) {
+			this.action.name = value;
 		});
 		this.$on('change_url', function(value) {
 			this.action.url = value;
@@ -295,6 +299,12 @@ var chaingunScript = new Vue({
 		this.$on('new_when', function(value) {
 			this.newWhen();
 		});
+		this.$on('clear_name', function(value) {
+			this.clearName();
+		});
+		this.$on('new_name', function(value) {
+			this.newName();
+		});
 	},
 
 	methods: {
@@ -302,7 +312,7 @@ var chaingunScript = new Vue({
 			this.$forceUpdate();
 		},
 		// ACTION
-                actionShow: function(pre_action) {
+        actionShow: function(pre_action) {
 			console.log('actionShow: ' + this.action.type);
 			this.is_pre_action = pre_action;
 			this.cur_action = this.action.type;
@@ -323,12 +333,13 @@ var chaingunScript = new Vue({
 			this.action.store_cookie = '';
 			this.action.method = '';
 			this.action.message = '';
+			this.action.name = '';
 			$('#new_' + this.cur_action).modal('show');
-                },
+        },
  		clearAction: function() {
 			this.errors = [];
 		},
-                newAction: function() {
+        newAction: function() {
 			console.log('newAction');
 			this.errors = [];
 			newAction = _buildNewAction(this.action, this.scriptParms.default, this.errors);
@@ -350,7 +361,7 @@ var chaingunScript = new Vue({
 				}
 				$('#new_' + this.cur_action).modal('hide');
 			}
-                },
+        },
 		displayForEditAction: function(idx, pre_action) {
 			console.log('displayForEditAction: ' + parseInt(idx, 10));
 			if (pre_action) {
@@ -373,7 +384,7 @@ var chaingunScript = new Vue({
 		dragActionStart: function(idx, evt) {
 			console.log('dragActionStart: ' + parseInt(idx, 10));
 			evt.target.style.opacity = 0.5;
-                        evt.dataTransfer.setData('text/plain', 'This Action may be dragged')
+            evt.dataTransfer.setData('text/plain', 'This Action may be dragged');
 			this.moving_action = idx;
 		},
 		dragActionEnd: function(evt) {
@@ -381,10 +392,10 @@ var chaingunScript = new Vue({
 			evt.target.style.opacity = 1;
 			this.moving_action = null;
 		},
-                dragActionFinish: function(index, evt, pre_action) {
-                        console.log('dragFinish');
-			var data = event.dataTransfer.getData('text/plain');
-			event.preventDefault();
+        dragActionFinish: function(index, evt, pre_action) {
+			console.log('dragFinish');
+			var data = evt.dataTransfer.getData('text/plain');
+			evt.preventDefault();
 			console.log('exchange actions ' + parseInt(this.moving_action, 10) + ' with ' + parseInt(index, 10));
 			if (index != this.moving_action) {
 				if (pre_action) {
@@ -399,7 +410,7 @@ var chaingunScript = new Vue({
 			}
 			this.moving_action = null;
 			this.update();
-                },   
+        },
 		// FORMDATA
 		formdataShow: function() {
 			console.log('formdataShow');
@@ -412,22 +423,24 @@ var chaingunScript = new Vue({
  		clearFormdata: function() {
 			this.errors2 = [];
 		},
-                newFormdata: function() {
+        newFormdata: function() {
 			console.log('newFormdata');
 			this.errors2 = [];
 
 			if (this.action.formdata_name == '') {
-				this.errors2.push("The Header name must not be empty"); 
-			} 
+				this.errors2.push("The Header name must not be empty");
+			}
 			if (this.action.formdata_value == '') {
-				this.errors2.push("The HTTP Header value must not be empty"); 
-			} 
+				this.errors2.push("The HTTP Header value must not be empty");
+			}
 			if (this.errors2.length == 0) {
 				var data = {
 					name: this.action.formdata_name,
 					value: this.action.formdata_value,
 				};
-				if (this.action.formdata_type != '') { data['type'] = this.action.formdata_type; }
+				if (this.action.formdata_type != '') {
+					data['type'] = this.action.formdata_type;
+				}
 				if (this.edit_formdata_mode == 'New') {
 					// Vue.js v2 cannot iterate on map, so we build an array
 					this.action.formdatas.push(data);
@@ -437,7 +450,7 @@ var chaingunScript = new Vue({
 				$('#new_formdata').modal('hide');
 			}
 			this.update();
-                },
+		},
 		displayForEditFormdata: function(idx) {
 			this.edit_formdata_mode = 'Edit';
 			this.formdata_index = idx;
@@ -459,7 +472,7 @@ var chaingunScript = new Vue({
  		clearHeader: function() {
 			this.errors2 = [];
 		},
-                newHeader: function() {
+        newHeader: function() {
 			console.log('newHeader');
 			this.errors2 = [];
 
@@ -481,7 +494,7 @@ var chaingunScript = new Vue({
 				$('#new_header').modal('hide');
 			}
 			this.update();
-                },
+        },
 		displayForEditHeader: function(idx) {
 			this.edit_header_mode = 'Edit';
 			this.header_index = idx;
@@ -507,7 +520,7 @@ var chaingunScript = new Vue({
  		clearResponse: function() {
 			this.errors2 = [];
 		},
-                newResponse: function() {
+        newResponse: function() {
 			console.log('newResponse');
 			this.errors2 = [];
 
@@ -536,7 +549,7 @@ var chaingunScript = new Vue({
 			}
 			console.log('length of action.responses=' + parseInt(this.action.responses.length, 10));
 			this.update();
-                },
+        },
 		displayForEditResponse: function(idx) {
 			console.log('displayForEditResponse: ' + parseInt(idx, 10));
 			this.edit_response_mode = 'Edit';
@@ -554,17 +567,17 @@ var chaingunScript = new Vue({
 			this.action.responses.splice(idx, 1);
 		},
 		// VARIABLE
-                variableShow: function() {
+        variableShow: function() {
 			console.log('variableShow');
 			this.edit_action_mode = 'New';
 			this.action.variable = '';
 			this.action.expression = '';
 			$('#new_variable').modal('show');
-                },
+        },
  		clearVariable: function() {
 			this.errors = [];
 		},
-                newVariable: function() {
+        newVariable: function() {
 			console.log('newVariable');
 			this.errors = [];
 
@@ -586,7 +599,7 @@ var chaingunScript = new Vue({
 				$('#new_variable').modal('hide');
 			}
 			this.update();
-                },
+        },
 		displayForEditVariable: function(idx) {
 			console.log('displayForEditVariable: ' + parseInt(idx, 10));
 			this.edit_action_mode = 'Edit';
@@ -693,11 +706,11 @@ function _buildNewAction(action, dflt, errors) {
 	case 'log':
 		if (action.message == '') { errors.push("Message cannot be null"); }
 		newAction['log'].message = action.message;
-		break
+		break;
 	case 'assert':
 		if (action.expression == '') { errors.push("Expression cannot be null"); }
 		newAction['assert'].expression = action.expression;
-		break
+		break;
 	case 'sleep':
 		if (action.duration <= 0) { errors.push("Duration cannot be negative or null"); }
 		newAction['sleep'].duration = action.duration;
@@ -707,7 +720,15 @@ function _buildNewAction(action, dflt, errors) {
 		if (action.expression == '') { errors.push("Expression cannot be null"); }
 		newAction['setvar'].variable = action.variable;
 		newAction['setvar'].expression = action.expression;
-		break
+		break;
+	case 'start_timer':
+		if (action.name == '') { errors.push("Name cannot be null"); }
+		newAction['start_timer'].name = action.name;
+		break;
+	case 'end_timer':
+		if (action.name == '') { errors.push("Name cannot be null"); }
+		newAction['end_timer'].name = action.name;
+		break;
 	case 'tcp':
 		if (action.title == '') { errors.push("Title cannot be null"); }
 		if (action.address == '') { errors.push("Address cannot be null"); }
@@ -715,7 +736,7 @@ function _buildNewAction(action, dflt, errors) {
 		newAction['tcp'].title = action.title;
 		newAction['tcp'].address = action.address;
 		newAction['tcp'].payload = action.payload;
-		break
+		break;
 	case 'udp':
 		if (action.title == '') { errors.push("Title cannot be null"); }
 		if (action.address == '') { errors.push("Address cannot be null"); }
@@ -723,7 +744,7 @@ function _buildNewAction(action, dflt, errors) {
 		newAction['udp'].title = action.title;
 		newAction['udp'].address = action.address;
 		newAction['udp'].payload = action.payload;
-		break
+		break;
 	case 'sql':
 		if (action.title == '') { errors.push("Title cannot be null"); }
 		if (action.statement == '') { errors.push("Statement cannot be null"); }
@@ -735,7 +756,7 @@ function _buildNewAction(action, dflt, errors) {
 		if (action.db_driver != '') { newAction['sql'].db_driver = action.db_driver; }
 		if (action.database != '') { newAction['sql'].database = action.database; }
 		if (action.server != '') { newAction['sql'].server = action.server; }
-		break
+		break;
 	case 'mongodb':
 		if (action.title == '') { errors.push("Title cannot be null"); }
 		if (action.server == '' && dflt.server == '') { errors.push("Server field or default Server cannot be null"); }
@@ -753,7 +774,7 @@ function _buildNewAction(action, dflt, errors) {
 		if (action.filter != '') { newAction['mongodb'].filter = action.filter; }
 		if (action.document != '') { newAction['mongodb'].document = action.document; }
 		newAction['mongodb'].responses = action.responses;
-		break
+		break;
 	case 'ws':
 		if (action.title == '') { errors.push("Title cannot be null"); }
 		if (action.url == '' && dflt.server == '') { errors.push("URL field or default Server cannot be null"); }
@@ -763,7 +784,7 @@ function _buildNewAction(action, dflt, errors) {
 		if (action.body != '') { newAction['ws'].body = action.body; }
 		newAction['ws'].responses = action.responses;
 		//if (action.url == '') { newAction['ws'].url = dflt.server; }
-		break
+		break;
 	case 'mqtt':
 		if (action.title == '') { errors.push("Title cannot be null"); }
 		if (action.url == '') { errors.push("URL cannot be null"); }
@@ -779,7 +800,7 @@ function _buildNewAction(action, dflt, errors) {
 		newAction['mqtt'].topic = action.topic;
 		newAction['mqtt'].payload = action.payload;
 		newAction['mqtt'].qos = action.qos;
-		break
+		break;
 	}
 	
 	return newAction;
@@ -816,6 +837,14 @@ function _prepareEditAction(target, action) {
 	else if ('assert' in action) {
 		target.expression = action.assert.expression;
 		return 'assert';
+	}
+	else if ('start_timer' in action) {
+		target.name = action.start_timer.name;
+		return 'start_timer';
+	}
+	else if ('end_timer' in action) {
+		target.name = action.end_timer.name;
+		return 'end_timer';
 	}
 	else if ('setvar' in action) {
 		target.variable = action.setvar.variable;
@@ -893,6 +922,12 @@ function _getDisplayAction(action, dflt) {
 	}
 	else if ('setvar' in action) {
 		return 'SETVAR "' + action.setvar.variable + '"';
+	}
+	else if ('start_timer' in action) {
+		return 'START_TIMER "' + action.start_timer.name + '"';
+	}
+	else if ('end_timer' in action) {
+		return 'END_TIMER "' + action.end_timer.name + '"';
 	}
 	else if ('tcp' in action) {
 		return 'TCP "' + action.tcp.title + '"';

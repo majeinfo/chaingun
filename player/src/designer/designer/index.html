@@ -112,7 +112,7 @@
 			</div>
 			<div class="form-group row">
 				<label for="sql_row_count" class="col-sm-3 col-form-label">SQL_Row_Count</label>
-				<input disabled type="text" class="col-sm-8 form-control" id="mongodb_id" placeholder="contains the count of rows selected, updated or deleted">
+				<input disabled type="text" class="col-sm-8 form-control" id="sql_row_count" placeholder="contains the count of rows selected, updated or deleted">
 			</div>
 			<hr/>
 			<div class="form-group row">
@@ -141,7 +141,7 @@
 			</div>
               </div>
 
-              <!-- Default action values -->
+          <!-- Default action values -->
 	      <form-dflt-values
 			v-bind:server="scriptParms.default.server" 
 			v-bind:protocol="scriptParms.default.protocol" 
@@ -151,7 +151,7 @@
 			v-bind:db_driver="scriptParms.default.db_driver">
 	      </form-dflt-values>
 
-              <!-- Data Feeder -->
+          <!-- Data Feeder -->
 	      <form-feeder 
 			v-bind:feeder_type="scriptParms.feeder.type" 
 			v-bind:filename="scriptParms.feeder.filename" 
@@ -293,6 +293,11 @@
 		v-bind:title="action.title">
 	</action-http>
 
+	<!-- TODO: gRPC Action -->
+	<!-- <action-grpc
+			>
+	</action-grpc> -->
+
 	<!-- TCP Action -->
 	<action-tcp 
 		v-bind:action="edit_action_mode"
@@ -394,6 +399,22 @@
 		v-bind:expression="action.expression">
 	</action-assert>
 
+	<!-- Start Timer action -->
+	<action-start-timer
+			v-bind:action="edit_action_mode"
+			v-bind:errors="errors"
+			v-bind:action_index="action_index"
+			v-bind:name="action.name">	>
+	</action-start-timer>
+
+	<!-- Start Timer action -->
+	<action-end-timer
+			v-bind:action="edit_action_mode"
+			v-bind:errors="errors"
+			v-bind:action_index="action_index"
+			v-bind:name="action.name">	>
+	</action-end-timer>
+
 	<!-- Setvar Action -->
 	<action-setvar
 		v-bind:action="edit_action_mode"
@@ -470,6 +491,8 @@
 	<script src="js/components/action_mqtt.js"></script>
 	<script src="js/components/action_sleep.js"></script>
 	<script src="js/components/action_assert.js"></script>
+	<script src="js/components/action_start_timer.js"></script>
+	<script src="js/components/action_end_timer.js"></script>
 	<script src="js/components/action_setvar.js"></script>
 	<script src="js/components/action_sql.js"></script>
 	<script src="js/components/action_mongodb.js"></script>
