@@ -16,9 +16,9 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 
 4.[Actions and Pre-actions](#actions-and-pre-actions)  
 4.1.[HTTP/S](#http--https-request)  
-4.2.[MongoDB](#mongodb-mongodb-request)  
-4.3.[SQL](#sql-sql-request)  
-4.4.[WebSocket](#ws-websocket-request)  
+4.2.[MongoDB](#mongodb--mongodb-request)  
+4.3.[SQL](#sql--sql-request)  
+4.4.[WebSocket](#ws--websocket-request)  
 4.5.[MQTT](#mqtt--mqtt-request)  
 4.6.[gRPC](#grpc--grpc-request-beta)  
 4.7.[TCP & UDP](#tcp-or-udp--simple-tcp-or-udp-request)  
@@ -26,7 +26,7 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 4.9.[sleep](#sleep--wait-action)  
 4.10.[log](#log--log-output-action)  
 4.11.[assert](#assert--creates-assertion)
-4.12.[timers](#timer-action)
+4.12.[timers](#timer--creates-page-timers)
 
 5.[Advanced Topics](#advanced-topics)  
 5.1.[Variables usage](#variables-usage)  
