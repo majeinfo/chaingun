@@ -76,6 +76,8 @@ var chaingunScript = new Vue({
 			message: '',
 			when_clause: '',
 			name: '',
+			data: '',
+			call: '',
 		},
 		yamlScript: "",
 		errors: [],
@@ -160,6 +162,12 @@ var chaingunScript = new Vue({
 		});
 		this.$on('change_use_http2', function(value) {
 			this.action.use_http2 = value;
+		});
+		this.$on('change_data', function(value) {
+			this.action.data = value;
+		});
+		this.$on('change_call', function(value) {
+			this.action.call = value;
 		});
 		this.$on('change_certificatepath', function(value) {
 			this.action.certificatepath = value;
@@ -334,6 +342,8 @@ var chaingunScript = new Vue({
 			this.action.method = '';
 			this.action.message = '';
 			this.action.name = '';
+			this.action.call = '';
+			this.action.data = '';
 			$('#new_' + this.cur_action).modal('show');
         },
  		clearAction: function() {
@@ -703,6 +713,14 @@ function _buildNewAction(action, dflt, errors) {
 		if (action.responses && action.responses.length > 0) { newAction['http'].responses = action.responses; }
 		if (action.formdatas && action.formdatas.length > 0) { newAction['http'].formdatas = action.formdatas; }
 		break;
+	case 'grpc':
+		if (action.title == '') { errors.push("Title field must not be empty"); }
+		if (action.call == '') { errors.push("Call field must not be empty"); }
+		newAction['grpc'].title = action.title;
+		newAction['grpc'].call = action.call;
+		newAction['grpc'].data = action.data;
+		newAction['grpc'].responses = action.responses;
+		break;
 	case 'log':
 		if (action.message == '') { errors.push("Message cannot be null"); }
 		newAction['log'].message = action.message;
@@ -802,7 +820,8 @@ function _buildNewAction(action, dflt, errors) {
 		newAction['mqtt'].qos = action.qos;
 		break;
 	}
-	
+
+	console.log('_buildNewAction', newAction)
 	return newAction;
 }
 
@@ -825,6 +844,13 @@ function _prepareEditAction(target, action) {
 		target.responses = action.http.responses;
 		target.formdatas = action.http.formdatas;
 		return 'http';
+	}
+	else if ('grpc' in action) {
+		target.title = action.grpc.title;
+		target.call = action.grpc.call;
+		target.data = action.grpc.data;
+		target.responses = action.grpc.responses;
+		return 'grpc';
 	}
 	else if ('log' in action) {
 		target.message = action.log.message;
@@ -910,6 +936,9 @@ function _prepareEditAction(target, action) {
 function _getDisplayAction(action, dflt) {
 	if ('http' in action) {
 		return 'HTTP ' + ((action.http.method != '')?action.http.method:dflt.method) + ': "' + action.http.title + '"';
+	}
+	else if ('grpc' in action) {
+		return 'GRPC call: ' + action.grpc.call + ': "' + action.grpc.title + '"';
 	}
 	else if ('sleep' in action) {
 		return 'SLEEP for ' + parseInt(action.sleep.duration) + ' ms';

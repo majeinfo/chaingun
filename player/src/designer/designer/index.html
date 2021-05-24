@@ -293,10 +293,17 @@
 		v-bind:title="action.title">
 	</action-http>
 
-	<!-- TODO: gRPC Action -->
-	<!-- <action-grpc
-			>
-	</action-grpc> -->
+	<!-- gRPC Action -->
+	<action-grpc
+		v-bind:action="edit_action_mode"
+		v-bind:errors="errors"
+		v-bind:errors2="errors2"
+		v-bind:action_index="action_index"
+		v-bind:responses="action.responses"
+		v-bind:data="action.data"
+		v-bind:call="action.call"
+		v-bind:title="action.title">
+	</action-grpc>
 
 	<!-- TCP Action -->
 	<action-tcp 
@@ -498,6 +505,7 @@
 	<script src="js/components/action_mongodb.js"></script>
 	<script src="js/components/action_http.js"></script>
 	<script src="js/components/action_ws.js"></script>
+	<script src="js/components/action_grpc.js"></script>
 	<script src="js/components/action_http_header.js"></script>
 	<script src="js/components/action_http_formdata.js"></script>
 	<script src="js/main.js"></script>
