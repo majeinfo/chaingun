@@ -56,6 +56,7 @@ func _startStandaloneMode(script_name string, data []byte,
 							trace_requests bool, store_srv_response_dir string, must_trace bool, syntax_check_only bool,
 							output_dir string, output_type string) {
 	log.Info("If you press <Ctrl-C> during the play, you will get partial results !")
+	output_type = "csv"
 	action.DisableLogAction(no_log)
 	action.DisableDNSCache(disable_dns_cache)
 	action.SetContext(false, listen_addr, display_srv_resp, trace_requests, store_srv_response_dir)
