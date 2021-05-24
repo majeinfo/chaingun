@@ -32,7 +32,9 @@ func ComputeOutputFilename(output_dir string, output_type string) (string, strin
 	if dir[len(dir)-1] != '/' {
 		dir += "/"
 	}
-	outputfile = dir + "data." + output_type
+	//outputfile = dir + "data." + output_type
+	// Always generate a CSV file
+	outputfile = dir + "data.csv"
 
 	return outputfile, dir
 }

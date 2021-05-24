@@ -14,10 +14,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	DFLT_CAP = 3000
-)
-
 type measure struct {
 	timestamp int
 	vid       int64

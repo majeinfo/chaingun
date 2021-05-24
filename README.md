@@ -189,6 +189,21 @@ g) run in "ab" mode :
 	--trace-requests                  Displays the requests and their return code
 	--users int                       (mandatory) Count of VU to simulate
 
+h) run in "graph" mode :
+
+        $ player graph --output-dir /path/to/output/ --script /path/to/script.yml --output-type json
+
+        This mode is used to regenerate the results from a previous tests. For example, if you fix
+        or make some modification in the already computed CSV files, you can re-generate the graphs.
+        If you specify the "--output-type json" option, a JSON document containing all the results
+	will be displayed on STDOUT from previously obtained CSV file. This is a convenient way
+	to insert the player in a CI/CD pipeline !
+
+        --output-dir indicates where the results will be stored
+        --script sets the name of the script file and is mandatory
+        --output-type csv|json
+        --verbose is optional
+
 ### Run from container image
 
 a) run a Player in standalone mode :

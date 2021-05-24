@@ -34,7 +34,7 @@ func init() {
 	appGraphCmd.Flags().StringVarP(&graphConfig.output_dir, "output-dir", "", "./results",
 		"Set the output directory - must contain the data.csv file")
 	appGraphCmd.Flags().StringVarP(&graphConfig.output_type, "output-type", "", "csv",
-		"Set the output type in file (csv|json)")
+		"Set the output type in file (csv|json) - 'json' option produces a JSON document on STDOUT")
 	appGraphCmd.Flags().StringVarP(&graphConfig.script, "script", "", "",
 		"Set the Script filename")
 	appGraphCmd.MarkFlagRequired("script")

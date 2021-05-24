@@ -46,6 +46,11 @@ func CloseReport(outputFile, outputDir, scriptName string) error {
         return err
     }
 
+    if outputType == jsonOutput {
+        err := viewer.BuildJSON(outputFile, scriptName)
+        return err
+    }
+
     return nil
 }
 

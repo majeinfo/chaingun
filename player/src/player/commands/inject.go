@@ -35,8 +35,10 @@ func init() {
 	appInjectCmd.Flags().BoolVarP(&injectConfig.Syntax_check_only, "syntax-check-only", "", false, "Only validate the syntax of the Script")
 	appInjectCmd.Flags().StringVarP(&injectConfig.Listen_addr, "listen-addr", "", "127.0.0.1:12345",
 		"Address and port to listen to (ex: 127.0.0.1:8080)")
+	/*
 	appInjectCmd.Flags().StringVarP(&injectConfig.Output_type, "output-type", "", "csv",
 		"Set the output type in file (csv|json)")
+	*/
 	appInjectCmd.Flags().StringVarP(&injectConfig.Output_dir, "output-dir", "", "./results",
 		"Set the output directory - where to put the data.csv file and the results")
 	appInjectCmd.Flags().BoolVarP(&injectConfig.No_log, "no-log", "", false, "Disable the 'log' actions from the Script")
