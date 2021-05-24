@@ -14,7 +14,9 @@ func BuildJSON(datafile, scriptname string) error {
 
 	fmt.Println("{")
 	fmt.Println("\t\"global\": {")
-	fmt.Printf("\t\t\"total_elapsed_time\": %d\n", results.total_elapsed_time)
+	fmt.Printf("\t\t\"total_elapsed_time\": %d,\n", results.total_elapsed_time)
+	fmt.Printf("\t\t\"total_requests\": %d,\n", results.total_requests)
+	fmt.Printf("\t\t\"total_network_errors\": %d\n", results.total_netErrors)
 	fmt.Println("\t},")
 
 	fmt.Println("\t\"overall_stats\": {")

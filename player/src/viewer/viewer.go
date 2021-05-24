@@ -2,9 +2,7 @@ package viewer
 
 import (
 	"embed"
-	"encoding/csv"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"sort"
@@ -48,218 +46,9 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		return err
 	}
 
-	// Read the data file (csv)
-	csvfile, err := os.Open(datafile)
+	results, err := computeResults(datafile, scriptname)
 	if err != nil {
-		return fmt.Errorf("Couldn't open the csv file %s: %s", datafile, err)
-	}
-
-	// Parse the file
-	r := csv.NewReader(csvfile)
-
-	// Iterate through the records. Records which Type is "GLOBAL" are not samples
-	/*
-		Timestamp,Vid,Type,Title,Status,Size,Latency,FullRequest
-		41353146,1249300000,HTTP,Page 1,200,17,40794348,http://www.delamarche.com/page1.php
-		83251860,1249300000,HTTP,Page 2,200,11,41740141,http://www.delamarche.com/page2.php
-		249059934,1249300000,HTTP,Page SSL,200,8083,163870870,https://www.delamarche.com:443/
-	*/
-	colUniqTitle := make(map[string]bool)
-	uniqTitleCount := make(map[string]int)
-	uniqTitleLatency := make(map[string]int)
-	uniqTitleRcvBytes := make(map[string]int)
-	colUniqStatus := make(map[int]bool)
-	measures := make([]measure, 0, DFLT_CAP)
-	internalVus := make(map[int]int)
-	quantilesByPage := make(map[string]*quantile.Stream)
-
-	idx := 0
-	firstRow := true
-
-	// Read the raw data from CSV File
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			fmt.Errorf("Error while reading CSV file %s: %s", datafile, err)
-			break
-		}
-		if idx < 10 {
-			log.Debugf("%v", record)
-		}
-		// Skip the first line
-		if firstRow {
-			firstRow = false
-			continue
-		}
-
-		curTime, _ := strconv.ParseFloat(record[0], 64)
-		curType := record[2]
-		curVid, _ := strconv.ParseInt(record[1], 10, 64)
-		curStatus, _ := strconv.ParseInt(record[4], 10, 64)
-		curRecvBytes, _ := strconv.ParseInt(record[5], 10, 64)
-		curLatency, _ := strconv.ParseFloat(record[6], 64)
-
-		if curType != "GLOBAL" {
-			title := record[3]
-			m := measure{
-				timestamp: int(curTime) / 1000000000,
-				vid:       curVid,
-				title:     title,
-				status:    int(curStatus),
-				recvBytes: int(curRecvBytes),
-				latency:   int(curLatency) / 1000000,
-			}
-			measures = append(measures, m)
-
-			colUniqTitle[title] = true
-			uniqTitleCount[title]++
-			uniqTitleLatency[title] += m.latency
-			uniqTitleRcvBytes[title] += m.recvBytes
-			colUniqStatus[int(curStatus)] = true
-			if quantilesByPage[title] == nil {
-				quantilesByPage[title] = quantile.NewTargeted(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.99)
-			}
-			quantilesByPage[title].Insert(float64(m.latency))
-			idx++
-		} else {
-			// The count of internal VU is stored in the Size field
-			internalVus[int(curTime)/1000000000] += int(curRecvBytes)
-		}
-	}
-
-	// Empty file ?
-	if idx == 0 {
-		return fmt.Errorf("Datafile %s does not contain any data !", datafile)
-	}
-
-	// Sort the measures
-	sort.Slice(measures, func(i, j int) bool {
-		return measures[i].timestamp < measures[j].timestamp
-	})
-
-	// Compute stats per time
-	total_elapsed_time := measures[idx-1].timestamp - measures[0].timestamp + 1
-	total_requests := len(measures)
-	total_netErrors := 0
-	log.Debugf("Elapsed seconds=%d", total_elapsed_time)
-
-	vus := make([]int, total_elapsed_time)
-	vusSet := make(map[int]map[int64]bool)
-	nbReq := make([]int, total_elapsed_time)
-	meanTime := make([]int, total_elapsed_time)
-	meanTimePerReq := make(map[string][]int, total_elapsed_time)
-	reqCountPerTime := make(map[string][]int, total_elapsed_time)
-	errors := make([]int, total_elapsed_time)
-	netErrors := make([]int, total_elapsed_time)
-	rcvBytes := make([]int, total_elapsed_time)
-
-	for idx = 0; idx < total_requests; idx++ {
-		nuSec := measures[idx].timestamp - measures[0].timestamp
-
-		// With merged file, we should order the lines to compute the real elapsed time, so we must make
-		// a consistency check :
-		if nuSec >= total_elapsed_time {
-			log.Warningf("Result line %d ignored: out of bounds", idx)
-			continue
-		}
-
-		if measures[idx].status < 0 {
-			netErrors[nuSec] += 1
-			total_netErrors += 1
-			total_requests -= 1
-			continue
-		}
-
-		nbReq[nuSec] += 1
-		if measures[idx].status >= 400 {
-			errors[nuSec] += 1
-		}
-		rcvBytes[nuSec] += measures[idx].recvBytes
-		meanTime[nuSec] += measures[idx].latency
-		if vusSet[nuSec] == nil {
-			vusSet[nuSec] = make(map[int64]bool)
-		}
-		vusSet[nuSec][measures[idx].vid] = true
-	}
-
-	// Compute latency average
-	for idx := 0; idx < len(meanTime); idx++ {
-		if nbReq[idx] > 0 {
-			meanTime[idx] = int(meanTime[idx] / nbReq[idx])
-		}
-	}
-
-	// Compute VU count per second (not used anymore...)
-	for idx := 0; idx < len(vus); idx++ {
-		vus[idx] = len(vusSet[idx])
-	}
-
-	// Compute Latency per Title
-	for title, _ := range colUniqTitle {
-		meanTimePerReq[title] = make([]int, total_elapsed_time)
-		reqCountPerTime[title] = make([]int, total_elapsed_time)
-	}
-	for idx := 0; idx < total_requests; idx++ {
-		nuSec := measures[idx].timestamp - measures[0].timestamp
-		log.Debugf("idx=%d, colTitle[idx]=%s, nuSec=%d", idx, measures[idx].title, nuSec)
-		// With merged file, we should order the lines to compute the real elapsed time, so we must make
-		// a consistency check :
-		if nuSec >= total_elapsed_time {
-			continue
-		}
-
-		meanTimePerReq[measures[idx].title][nuSec] += measures[idx].latency
-		reqCountPerTime[measures[idx].title][nuSec]++
-	}
-	for title, _ := range colUniqTitle {
-		for idx := 0; idx < total_elapsed_time; idx++ {
-			if reqCountPerTime[title][idx] > 0 {
-				meanTimePerReq[title][idx] = int(meanTimePerReq[title][idx] / reqCountPerTime[title][idx])
-			}
-		}
-	}
-
-	// Compute error stats for each request
-	errorsPerSeconds := make(map[int][]int, total_elapsed_time)
-	for errCode, _ := range colUniqStatus {
-		errorsPerSeconds[errCode] = make([]int, total_elapsed_time)
-	}
-	for idx := 0; idx < total_requests; idx++ {
-		nuSec := measures[idx].timestamp - measures[0].timestamp
-		// With merged file, we should order the lines to compute the real elapsed time, so we must make
-		// a consistency check :
-		if nuSec >= total_elapsed_time {
-			continue
-		}
-
-		errorsPerSeconds[measures[idx].status][nuSec]++
-	}
-
-	// Compute errors per request/page
-	errorsByPage := make(map[string]map[int]int, len(colUniqTitle))
-	for title, _ := range colUniqTitle {
-		errorsByPage[title] = make(map[int]int, len(colUniqStatus))
-	}
-	for idx := 0; idx < total_requests; idx++ {
-		errorsByPage[measures[idx].title][measures[idx].status]++
-	}
-
-	// Display the Quantile
-	for title, _ := range quantilesByPage {
-		log.Debug("quantiles for ", title)
-		log.Debug("10% ", quantilesByPage[title].Query(0.1))
-		log.Debug("20% ", quantilesByPage[title].Query(0.2))
-		log.Debug("30% ", quantilesByPage[title].Query(0.3))
-		log.Debug("40% ", quantilesByPage[title].Query(0.4))
-		log.Debug("50% ", quantilesByPage[title].Query(0.5))
-		log.Debug("60% ", quantilesByPage[title].Query(0.6))
-		log.Debug("70% ", quantilesByPage[title].Query(0.7))
-		log.Debug("80% ", quantilesByPage[title].Query(0.8))
-		log.Debug("90% ", quantilesByPage[title].Query(0.9))
-		log.Debug("99% ", quantilesByPage[title].Query(0.99))
+		return err
 	}
 
 	// Create the result file (data.js)
@@ -270,43 +59,34 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		return fmt.Errorf("Could not create result file %s: %s", outputfilename, err.Error())
 	}
 
-	fmt.Fprintf(output, "var elapsed_time = %d;\n", total_elapsed_time)
-	fmt.Fprintf(output, "var total_requests = %d;\n", total_requests)
-	fmt.Fprintf(output, "var total_netErrors = %d;\n", total_netErrors)
+	fmt.Fprintf(output, "var elapsed_time = %d;\n", results.total_elapsed_time)
+	fmt.Fprintf(output, "var total_requests = %d;\n", results.total_requests)
+	fmt.Fprintf(output, "var total_netErrors = %d;\n", results.total_netErrors)
 	fmt.Fprintf(output, "var playbook_name = \"%s\";\n\n", scriptname)
 
 	fmt.Fprintf(output, "$(function () {\n")
 
-	// Bug fixed: internalVus may miss some seconds if no answer rcvd for one second !
-	// vus = make([]int, len(internalVus))
-	vus = make([]int, total_elapsed_time)
-	for k, v := range internalVus {
-		if len(vus) > k-1 {
-			vus[k-1] = v
-		}
-	}
-
 	graph(output,
-		total_elapsed_time,
+		results.total_elapsed_time,
 		"overall_stats",
 		"Overall Statistics per Second",
 		"Elapsed Time (seconds)",
 		"",
 		map[string][]int{
-			"#VU":             vus,
-			"#Req":            nbReq,
-			"Latency (in ms)": meanTime,
-			"#Appl Errors":    errors,
-			"#Net Errors":     netErrors,
-			"#Rcv Bytes":      rcvBytes,
+			"#VU":             results.vus,
+			"#Req":            results.nbReq,
+			"Latency (in ms)": results.meanTime,
+			"#Appl Errors":    results.errors,
+			"#Net Errors":     results.netErrors,
+			"#Rcv Bytes":      results.rcvBytes,
 		}, false)
 
-	series := make(map[string][]int, len(colUniqTitle))
-	for title, _ := range colUniqTitle {
-		series[title] = meanTimePerReq[title]
+	series := make(map[string][]int, len(results.colUniqTitle))
+	for title, _ := range results.colUniqTitle {
+		series[title] = results.meanTimePerReq[title]
 	}
 	graph(output,
-		total_elapsed_time,
+		results.total_elapsed_time,
 		"stats_per_req",
 		"Latency per Request",
 		"Elapsed Time (seconds)",
@@ -315,15 +95,15 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 		false)
 
 	err_series := make(map[string][]int)
-	for errCode, _ := range errorsPerSeconds {
+	for errCode, _ := range results.errorsPerSecond {
 		if errCode != -1 {
-			err_series[strconv.Itoa(errCode)] = errorsPerSeconds[errCode]
+			err_series[strconv.Itoa(errCode)] = results.errorsPerSecond[errCode]
 		} else {
-			err_series["Error"] = errorsPerSeconds[errCode]
+			err_series["Error"] = results.errorsPerSecond[errCode]
 		}
 	}
 	graph(output,
-		total_elapsed_time,
+		results.total_elapsed_time,
 		"errors_by_code",
 		"Returned codes per second",
 		"Elapsed Time (seconds)",
@@ -334,8 +114,8 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	// Compute stats with  #VU as x-values
 	// Find the higher #VU and stops once it is reached
 	max_idx := 0
-	max_vus := vus[0]
-	for second, value := range vus {
+	max_vus := results.vus[0]
+	for second, value := range results.vus {
 		if value > max_vus {
 			max_vus = value
 			max_idx = second
@@ -344,18 +124,18 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	log.Debugf("Maximum number of VU found is %d on second #%d", max_vus, max_idx)
 
 	// Now we can build the new series
-	latency_per_vu_series := make(map[string][]int, len(colUniqTitle))
-	for title, _ := range colUniqTitle {
+	latency_per_vu_series := make(map[string][]int, len(results.colUniqTitle))
+	for title, _ := range results.colUniqTitle {
 		latency_per_vu_series[title] = make([]int, max_vus+1)
-		for second, vu := range vus {
+		for second, vu := range results.vus {
 			if second > max_idx {
 				break
 			}
-			latency_per_vu_series[title][vu] = meanTimePerReq[title][second]
+			latency_per_vu_series[title][vu] = results.meanTimePerReq[title][second]
 		}
 	}
 	graph(output,
-		total_elapsed_time,
+		results.total_elapsed_time,
 		"latency_per_vu",
 		"Latency per VU",
 		"#VU",
@@ -367,22 +147,22 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	bar_graph(output,
 		"quantiles_per_page",
 		"Deciles by Page",
-		quantilesByPage)
+		results.quantilesByPage)
 
 	// We want the page sorted by title
-	page_titles := make([]string, 0, len(colUniqTitle))
-	for title := range colUniqTitle {
+	page_titles := make([]string, 0, len(results.colUniqTitle))
+	for title := range results.colUniqTitle {
 		page_titles = append(page_titles, title)
 	}
 	sort.Strings(page_titles)
 
 	// Output the average response time per page
-	firstRow = true
+	firstRow := true
 	row := ""
 	//for title, count := range uniqTitleCount {
 	for _, title := range page_titles {
-		count := uniqTitleCount[title]
-		log.Debugf("Page %s has %d count and %d total latency", title, count, uniqTitleLatency[title])
+		count := results.uniqTitleCount[title]
+		log.Debugf("Page %s has %d count and %d total latency", title, count, results.uniqTitleLatency[title])
 		if firstRow {
 			firstRow = false
 			row = "<tr><th>Page Title</th><th>#Req</th><th>Avg Response Time (in ms)</th><th>Avg Response Size (in Bytes)</th></tr>"
@@ -391,8 +171,8 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 
 		row = "<tr><td>" + title + "</td>"
 		row += "<td>" + strconv.Itoa(count) + "</td>"
-		row += "<td>" + strconv.Itoa(uniqTitleLatency[title]/count) + "</td>"
-		row += "<td>" + IntComma(int(uniqTitleRcvBytes[title]/count)) + "</td>"
+		row += "<td>" + strconv.Itoa(results.uniqTitleLatency[title]/count) + "</td>"
+		row += "<td>" + IntComma(int(results.uniqTitleRcvBytes[title]/count)) + "</td>"
 		row += "</tr>"
 		fmt.Fprintf(output, "$('#avg_resp_by_page > tbody:last-child').append('"+row+"');\n")
 	}
@@ -400,7 +180,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	// Output the HTTP Code array
 	// First sort the HTTP codes (keys of the colUniqStatus map)
 	var keys []int
-	for k := range colUniqStatus {
+	for k := range results.colUniqStatus {
 		keys = append(keys, k)
 	}
 	sort.Ints(keys)
@@ -408,7 +188,7 @@ func BuildGraphs(datafile, scriptname, outputdir string) error {
 	firstRow = true
 	//for title, errs := range errorsByPage {
 	for _, title := range page_titles {
-		errs := errorsByPage[title]
+		errs := results.errorsByPage[title]
 		log.Debugf("errors for page %s: %v", title, errs)
 		if firstRow {
 			firstRow = false

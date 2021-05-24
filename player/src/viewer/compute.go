@@ -30,7 +30,10 @@ type test_results struct {
 	err_series map[string][]int
 	latency_per_vu_series map[string][]int
 	errorsByPage map[string]map[int]int
+	errorsPerSecond map[int][]int
 	total_elapsed_time int
+	total_requests int
+	total_netErrors int
 	// Values per seconds
 	vus []int
 	vusSet map[int]map[int64]bool
@@ -142,8 +145,8 @@ func computeResults(datafile, scriptname string) (*test_results, error) {
 
 	// Compute stats per time
 	results.total_elapsed_time = results.measures[idx-1].timestamp - results.measures[0].timestamp + 1
-	total_requests := len(results.measures)
-	total_netErrors := 0
+	results.total_requests = len(results.measures)
+	results.total_netErrors = 0
 	log.Debugf("Elapsed seconds=%d", results.total_elapsed_time)
 
 	results.vus = make([]int, results.total_elapsed_time)
@@ -156,7 +159,7 @@ func computeResults(datafile, scriptname string) (*test_results, error) {
 	results.netErrors = make([]int, results.total_elapsed_time)
 	results.rcvBytes = make([]int, results.total_elapsed_time)
 
-	for idx = 0; idx < total_requests; idx++ {
+	for idx = 0; idx < results.total_requests; idx++ {
 		nuSec := results.measures[idx].timestamp - results.measures[0].timestamp
 
 		// With merged file, we should order the lines to compute the real elapsed time, so we must make
@@ -168,8 +171,8 @@ func computeResults(datafile, scriptname string) (*test_results, error) {
 
 		if results.measures[idx].status < 0 {
 			results.netErrors[nuSec] += 1
-			total_netErrors += 1
-			total_requests -= 1
+			results.total_netErrors += 1
+			results.total_requests -= 1
 			continue
 		}
 
@@ -202,7 +205,7 @@ func computeResults(datafile, scriptname string) (*test_results, error) {
 		results.meanTimePerReq[title] = make([]int, results.total_elapsed_time)
 		results.reqCountPerTime[title] = make([]int, results.total_elapsed_time)
 	}
-	for idx := 0; idx < total_requests; idx++ {
+	for idx := 0; idx < results.total_requests; idx++ {
 		nuSec := results.measures[idx].timestamp - results.measures[0].timestamp
 		log.Debugf("idx=%d, colTitle[idx]=%s, nuSec=%d", idx, results.measures[idx].title, nuSec)
 		// With merged file, we should order the lines to compute the real elapsed time, so we must make
@@ -223,11 +226,11 @@ func computeResults(datafile, scriptname string) (*test_results, error) {
 	}
 
 	// Compute error stats for each request
-	errorsPerSeconds := make(map[int][]int, results.total_elapsed_time)
+	results.errorsPerSecond = make(map[int][]int, results.total_elapsed_time)
 	for errCode, _ := range results.colUniqStatus {
-		errorsPerSeconds[errCode] = make([]int, results.total_elapsed_time)
+		results.errorsPerSecond[errCode] = make([]int, results.total_elapsed_time)
 	}
-	for idx := 0; idx < total_requests; idx++ {
+	for idx := 0; idx < results.total_requests; idx++ {
 		nuSec := results.measures[idx].timestamp - results.measures[0].timestamp
 		// With merged file, we should order the lines to compute the real elapsed time, so we must make
 		// a consistency check :
@@ -235,7 +238,7 @@ func computeResults(datafile, scriptname string) (*test_results, error) {
 			continue
 		}
 
-		errorsPerSeconds[results.measures[idx].status][nuSec]++
+		results.errorsPerSecond[results.measures[idx].status][nuSec]++
 	}
 
 	// Compute errors per request/page
@@ -243,7 +246,7 @@ func computeResults(datafile, scriptname string) (*test_results, error) {
 	for title, _ := range results.colUniqTitle {
 		results.errorsByPage[title] = make(map[int]int, len(results.colUniqStatus))
 	}
-	for idx := 0; idx < total_requests; idx++ {
+	for idx := 0; idx < results.total_requests; idx++ {
 		results.errorsByPage[results.measures[idx].title][results.measures[idx].status]++
 	}
 
@@ -277,11 +280,11 @@ func computeResults(datafile, scriptname string) (*test_results, error) {
 	}
 
 	results.err_series = make(map[string][]int)
-	for errCode, _ := range errorsPerSeconds {
+	for errCode, _ := range results.errorsPerSecond {
 		if errCode != -1 {
-			results.err_series[strconv.Itoa(errCode)] = errorsPerSeconds[errCode]
+			results.err_series[strconv.Itoa(errCode)] = results.errorsPerSecond[errCode]
 		} else {
-			results.err_series["Error"] = errorsPerSeconds[errCode]
+			results.err_series["Error"] = results.errorsPerSecond[errCode]
 		}
 	}
 
