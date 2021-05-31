@@ -25,6 +25,7 @@ test1:
     - cd player/src
     - go test ./config
     - go test ./utils
+    - go test ./feeder
 
 test2:
   stage: test
