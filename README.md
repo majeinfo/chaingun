@@ -43,10 +43,9 @@ Requires golang 1.16+ (because the "embed" module is needed).
 	$ git clone https://github.com/majeinfo/chaingun
 	$ cd chaingun
 	$ export GOPATH=`pwd`/player
-	$ export GO111MODULE=off
-	$ go get ./...
+	$ export GO111MODULE=auto
 	$ cd player/src
-	$ CGO_ENABLED=0 go install github.com/majeinfo/chaingun/player
+	$ CGO_ENABLED=0 go install ./player
 	$ cd ..
 	$ bin/player -h
 
