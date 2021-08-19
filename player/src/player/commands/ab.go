@@ -51,6 +51,6 @@ func init() {
 	appAbCmd.Flags().IntVarP(&abConfig.Users, "users", "", 0, "(mandatory) Count of VU to simulate")
 	appAbCmd.MarkFlagRequired("users")
 	appAbCmd.Flags().IntVarP(&abConfig.Rampup, "rampup", "", 0,
-		"(mandatory) Gives the time in seconds that is use to launch the VU. New VUs are equally launched during this period")
+		"Gives the time in seconds that is use to launch the VU. New VUs are equally launched during this period. The default value is 0, so all VUs are launched immediatly")
 	appAbCmd.MarkFlagRequired("users")
 }
