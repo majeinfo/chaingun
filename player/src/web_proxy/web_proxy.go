@@ -42,7 +42,7 @@ func StartProxy(listen_addr string, proxy_domain string, ignored_suffixes string
 	remote_server := strings.ToLower(proxy_domain)
 	exclude_suffixes := strings.Split(ignored_suffixes, ",")
 
-	log.Infof("Starting Web Proxy on adress: %s", listen_addr)
+	log.Infof("Starting Web Proxy on address: %s", listen_addr)
 	log.Infof("Proxied Domain: %s", proxy_domain)
 	log.Infof("Ignored Suffixes: %s", ignored_suffixes)
 	proxy := goproxy.NewProxyHttpServer()
