@@ -42,7 +42,7 @@ func CloseReport(outputFile, outputDir, scriptName string) error {
         // Build graphs
         log.Info("Launching Viewer")
         err := viewer.BuildGraphs(outputFile, scriptName, outputDir)
-        log.Info("Graphs generated")
+        log.Infof("Graphs generated in directory %s", outputDir)
         return err
     }
 
