@@ -166,7 +166,7 @@ func signalHandler() {
 		// Make the Dump !
 		header := `iterations: 1
 users: 1
-warmup: 1
+rampup: 1
 default:
   server: %s
   protocol: http
