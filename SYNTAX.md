@@ -468,7 +468,7 @@ Example:
 
 Variables can be used in the following contexts :
 
-in the following Action parameters, `http.url`, `http.body`, `mqtt.url`, `log.message`, `mqtt.url`, `mqtt.topic`, `mqtt.payload`, `mongodb.server`, `mongodb.document`, `mongodb.filter`. 
+in the following Action parameters, `http.url`, `http.body`, `mqtt.url`, `log.message`, `mqtt.url`, `mqtt.topic`, `mqtt.payload`, `mongodb.server`, `mongodb.document`, `mongodb.filter`, `sql.statement`. 
 In these cases, the variable names must be enclosed between `${....}`.
 
 For example:
