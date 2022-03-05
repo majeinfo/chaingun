@@ -27,7 +27,7 @@ require (
 	github.com/spf13/viper v1.7.1 // indirect
 	github.com/ugorji/go v1.1.4 // indirect
 	github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77 // indirect
-	go.mongodb.org/mongo-driver v1.5.0
+	go.mongodb.org/mongo-driver v1.5.1
 	golang.org/x/net v0.0.0-20210326220855-61e056675ecf
 	golang.org/x/sys v0.0.0-20210330210617-4fbd30eecc44 // indirect
 	golang.org/x/text v0.3.5 // indirect
