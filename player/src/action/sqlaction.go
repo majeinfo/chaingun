@@ -66,7 +66,7 @@ func NewSQLAction(a map[interface{}]interface{}, dflt config.Default, playbook *
 				if _, err := playbook.Variables[v[1]]; !err {
 					log.Debugf("Variable ${%s} not set", v[1])
 				} else {
-					textData = strings.Replace(textData, "${"+v[1]+"}", url.QueryEscape(playbook.Variables[v[1]]), 1)
+					textData = strings.Replace(textData, "${"+v[1]+"}", url.QueryEscape(playbook.Variables[v[1]].Values[0]), 1)	// TODO array
 				}
 			}
 			a["server"] = textData

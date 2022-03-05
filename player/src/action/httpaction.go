@@ -33,6 +33,10 @@ type FormData struct {
 	Content []byte
 }
 
+var (
+	errFormDataBlockAnalysis = errors.New("Errors occurred during FormData block analysis")
+)
+
 // Execute a HTTP Action
 func (h HTTPAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	vulog.Data["action"] = h.Title
@@ -52,6 +56,7 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default, playbook 
 		// Try to substitute already known variables: needed if variables are used
 		// protocol://in the user:auth@server:port/ part of the URL
 		// (cannot use SubstParams() here)
+		// TODO: why here and not in DoHTTPRequest ? (same question for Mongo, SQL, etc...)
 		textData := a["url"].(string)
 		if strings.ContainsAny(textData, "${") {
 			res := re.FindAllStringSubmatch(textData, -1)
@@ -60,7 +65,7 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default, playbook 
 				if _, err := playbook.Variables[v[1]]; !err {
 					log.Debugf("Variable ${%s} not set", v[1])
 				} else {
-					textData = strings.Replace(textData, "${"+v[1]+"}", url.QueryEscape(playbook.Variables[v[1]]), 1)
+					textData = strings.Replace(textData, "${"+v[1]+"}", url.QueryEscape(playbook.Variables[v[1]].Values[0]), 1) // TODO array
 				}
 			}
 			a["url"] = textData
@@ -239,7 +244,7 @@ func NewFormData(a map[interface{}]interface{}) (FormData, error) {
 	}
 
 	if !valid {
-		return formData, errors.New("Errors occurred during FormData block analysis")
+		return formData, errFormDataBlockAnalysis
 	}
 
 	return formData, nil

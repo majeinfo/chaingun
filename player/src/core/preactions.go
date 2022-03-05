@@ -20,7 +20,7 @@ func playPreActions(playbook *config.TestDef, actions *[]action.FullAction) {
 	vulog := log.WithFields(log.Fields{"vuid": UID, "iter": i, "action": ""})
 
 	// Make sure the sessionMap is cleared before each iteration - except for the UID which stays
-	cleanSessionMapAndResetUID(UID, sessionMap, playbook)
+	cleanSessionMapAndResetUID(UID, sessionMap, playbook, 0)
 
 	// If we have feeder data, pop an item and push its key-value pairs into the sessionMap
 	feedSession(playbook, sessionMap)

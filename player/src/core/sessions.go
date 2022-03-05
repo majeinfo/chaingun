@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func cleanSessionMapAndResetUID(UID string, sessionMap map[string]string, playbook *config.TestDef) {
+func cleanSessionMapAndResetUID(UID string, sessionMap map[string]string, playbook *config.TestDef, iteration_nu int) {
 	// Optimization? Delete all entries rather than reallocate map from scratch for each new iteration.
 	for k := range sessionMap {
 		// If HTTP persistent sessions are wanted, do not clear the Cookies !
@@ -22,8 +22,9 @@ func cleanSessionMapAndResetUID(UID string, sessionMap map[string]string, playbo
 	sessionMap[config.MONGODB_LAST_INSERT_ID] = ""
 	sessionMap[config.SQL_ROW_COUNT] = "0"
 
+	// NVariable values are array, we must increment the value at each iteration
 	for k, v := range playbook.Variables {
-		sessionMap[k] = v
+		sessionMap[k] = v.Values[iteration_nu % len(v.Values)]
 	}
 }
 

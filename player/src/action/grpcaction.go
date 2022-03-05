@@ -29,6 +29,11 @@ type GRPCAction struct {
 	Func  *desc.MethodDescriptor
 }
 
+var (
+	errNoMethodNameSpecified = errors.New("no method name specified")
+	errServerHasNoRefelectionAPI = errors.New("server does not support the reflection API")
+)
+
 // Execute a GRPC Action
 func (h GRPCAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	vulog.Data["action"] = h.Title
@@ -87,8 +92,6 @@ func NewGRPCAction(a map[interface{}]interface{}, dflt config.Default, playbook 
 
 	return grpcAction, valid
 }
-
-var errNoMethodNameSpecified = errors.New("no method name specified")
 
 // GetMethodDescFromProto gets method descriptor for the given call symbol from proto file given my path proto
 // imports is used for import paths in parsing the proto file
@@ -257,7 +260,7 @@ func reflectionSupport(err error) error {
 		return nil
 	}
 	if stat, ok := status.FromError(err); ok && stat.Code() == codes.Unimplemented {
-		return errors.New("server does not support the reflection API")
+		return errServerHasNoRefelectionAPI
 	}
 	return err
 }

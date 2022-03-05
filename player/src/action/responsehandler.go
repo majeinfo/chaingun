@@ -25,6 +25,10 @@ type ResponseHandler struct {
 	Defaultvalue string           `yaml:"default_value"`
 }
 
+var (
+	errResponseBlockAnalysis = errors.New("Errors occurred during Response block analysis")
+)
+
 // NewResponseHandlers builds all the ResponseHandler from the Action described in YAML Playbook
 func NewResponseHandlers(a map[interface{}]interface{}) ([]ResponseHandler, bool) {
 	log.Debugf("NewResponseHandlers")
@@ -126,7 +130,7 @@ func NewResponseHandler(a map[interface{}]interface{}) (ResponseHandler, error) 
 	}
 
 	if !valid {
-		return responseHandler, errors.New("Errors occurred during Response block analysis")
+		return responseHandler, errResponseBlockAnalysis
 	}
 
 	return responseHandler, nil

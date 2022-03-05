@@ -78,8 +78,13 @@ They are defined in the `variables` section:
 ```
 variables:
   variable_name: value
+  other_variable:
+    - value1
+    - value2
   ...
 ```
+
+As you can see, variables can be scalar or arrays. In case of arrays, the values are used on after another during the iterations of the same virtual user.
 
 # Default value for Actions
 

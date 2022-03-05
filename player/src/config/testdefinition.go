@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -34,7 +35,7 @@ type TestDef struct {
 	GrpcProto	   string	                `yaml:"grpc_proto"`
 	Timeout        int                      `yaml:"timeout"` // default is 10s
 	DfltValues     Default                  `yaml:"default"`
-	Variables      map[string]string        `yaml:"variables"`
+	Variables      map[string]VariableDef      `yaml:"variables"`
 	DataFeeder     Feeder                   `yaml:"feeder"`
 	PreActions     []map[string]interface{} `yaml:"pre_actions"`
 	Actions        []map[string]interface{} `yaml:"actions"`
@@ -49,6 +50,10 @@ type Default struct {
 	DBDriver   string `yaml:"db_driver"`
 }
 
+type VariableDef struct {
+	Values []string
+}
+
 type Feeder struct {
 	Type      string `yaml:"type"`
 	Filename  string `yaml:"filename"`
@@ -58,6 +63,30 @@ type Feeder struct {
 type VUContext struct {
 	InitObject	interface{}
 	CloseFunc	func(*VUContext)
+}
+
+var (
+	//ErrNoValue      = errors.New("Variable has no value")
+	ErrInvalidValue = errors.New("Invalid value for variable")
+)
+
+// Unmarshal Variable definition to handle scalar & arrays
+func (c *VariableDef) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var value string
+	if err := unmarshal(&value); err == nil {
+		c.Values = make([]string, 1)
+		c.Values[0] = value
+		return nil
+	}
+
+	str_array := make([]string, 0)
+	if err := unmarshal(&str_array); err == nil {
+		log.Debugf("str_array: %v", str_array)
+		c.Values = str_array
+		return nil
+	}
+
+	return ErrInvalidValue
 }
 
 // Validate the Test Definition Consistency

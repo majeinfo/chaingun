@@ -74,7 +74,7 @@ actionLoop:
 		vulog.Data["iter"] = i
 
 		// Make sure the sessionMap is cleared before each iteration - except for the UID which stays
-		cleanSessionMapAndResetUID(UID, sessionMap, playbook)
+		cleanSessionMapAndResetUID(UID, sessionMap, playbook, i)
 
 		// If we have feeder data, pop an item and push its key-value pairs into the sessionMap
 		feedSession(playbook, sessionMap)
