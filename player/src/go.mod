@@ -8,17 +8,18 @@ require (
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/bmizerany/perks v0.0.0-20141205001514-d9a9656a3a4b
 	github.com/eclipse/paho.mqtt.golang v1.3.2
-	github.com/elazarl/goproxy v0.0.0-20210110162100-a92cc753f88e
+	github.com/elazarl/goproxy v0.0.0-20230808193330-2592e75ae04a
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.3.2
-	github.com/golang/protobuf v1.5.1
+	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/websocket v1.4.2
 	github.com/jhump/protoreflect v1.8.2
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.3
 	go.mongodb.org/mongo-driver v1.5.1
-	golang.org/x/net v0.8.0
-	google.golang.org/grpc v1.36.1
+	golang.org/x/net v0.9.0
+	google.golang.org/grpc v1.57.0
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 	gopkg.in/xmlpath.v2 v2.0.0-20150820204837-860cbeca3ebc
 	gopkg.in/yaml.v2 v2.4.0
 )

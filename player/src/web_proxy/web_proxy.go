@@ -13,25 +13,25 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/elazarl/goproxy"
+	goproxy "github.com/elazarl/goproxy"
 	log "github.com/sirupsen/logrus"
 )
 
 type proxiedRequest struct {
-	Host string
+	Host   string
 	Method string
-	URL url.URL
-	Body string
+	URL    url.URL
+	Body   string
 	// PostForm url.Values
 	// MultipartForm *multipart.Form
 	ContentType string
-	PostForm url.Values
+	PostForm    url.Values
 }
 
 var (
 	dump_in_progress sync.Mutex
 	proxiedRequests  = make([]proxiedRequest, 0)
-	domain string
+	domain           string
 )
 
 // Start the Web Proxy
@@ -102,11 +102,11 @@ func StartProxy(listen_addr string, proxy_domain string, ignored_suffixes string
 			if c.Method == "POST" {
 				c.ParseMultipartForm(1024 * 1024)
 				/*
-				if ct == "application/x-www-form-urlencoded" {
-					c.ParseForm() // or call ParseMultipartForm() si Content-Type: multipart/form-data
-				} else if ct == "multipart/form-data" {
-					c.ParseMultipartForm(1024 * 1024)
-				}
+					if ct == "application/x-www-form-urlencoded" {
+						c.ParseForm() // or call ParseMultipartForm() si Content-Type: multipart/form-data
+					} else if ct == "multipart/form-data" {
+						c.ParseMultipartForm(1024 * 1024)
+					}
 				*/
 
 				for k, vv := range c.PostForm {
@@ -118,12 +118,12 @@ func StartProxy(listen_addr string, proxy_domain string, ignored_suffixes string
 			}
 
 			request := proxiedRequest{
-				Host: r.Host,
+				Host:   r.Host,
 				Method: r.Method,
-				URL: *r.URL,
+				URL:    *r.URL,
 				//Body: body,
 				ContentType: ct,
-				PostForm: postForm,
+				PostForm:    postForm,
 			}
 			dump_in_progress.Lock()
 			proxiedRequests = append(proxiedRequests, request)
@@ -155,7 +155,7 @@ func signalHandler() {
 			continue
 		} else if answer == "r" {
 			dump_in_progress.Lock()
-			proxiedRequests  = proxiedRequests[:0]
+			proxiedRequests = proxiedRequests[:0]
 			dump_in_progress.Unlock()
 			continue
 		}
@@ -203,14 +203,14 @@ actions:
 						fmt.Printf("          value: %v\n", v[0])
 					}
 					/*
-					    formdata:
-					      - name: name
-					        value: ${a_variable} Doe
-					      - name: fileToUpload
-					        value: a_filename.txt
-					        type: file		# mandatory for files
-					      - name: submit
-					 */
+					   formdata:
+					     - name: name
+					       value: ${a_variable} Doe
+					     - name: fileToUpload
+					       value: a_filename.txt
+					       type: file		# mandatory for files
+					     - name: submit
+					*/
 				}
 			}
 		}
@@ -218,4 +218,3 @@ actions:
 		dump_in_progress.Unlock()
 	}
 }
-
