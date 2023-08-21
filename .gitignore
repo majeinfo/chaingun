@@ -58,3 +58,7 @@ MakeNowJust
 go.mongodb.org/
 go-sql-driver/
 golang/
+BUGS
+git_token.txt
+*.sh
+*.pem
