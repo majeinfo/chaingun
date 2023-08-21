@@ -176,10 +176,10 @@ func IsValidMongoDBCommand(command string) (bool, error) {
 
 // Check for DBDriver validity
 func IsValidDBDriver(db_driver string) (bool, error) {
-	valid_drivers := []string{"mysql", "postgresql"}
+	valid_drivers := []string{"mysql", "postgres"}
 
 	if !StringInSlice(db_driver, valid_drivers) {
-		return false, fmt.Errorf("DB Driver must specify a valid driver (mysql or postgresql): %s", db_driver)
+		return false, fmt.Errorf("DB Driver must specify a valid driver (mysql or postgres): %s", db_driver)
 	}
 
 	return true, nil

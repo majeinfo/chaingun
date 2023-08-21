@@ -8,6 +8,7 @@ import (
 
 	"database/sql"
 	"github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
@@ -46,6 +47,8 @@ func DoSQLRequest(sqlAction SQLAction, resultsChannel chan reporter.SampleReqRes
 		server := sqlAction.Server
 		if sqlAction.DBDriver == "mysql" {
 			server += "/" + sqlAction.Database
+		} else if sqlAction.DBDriver == "postgres" {
+			server = "postgresql://" + server + "/" + sqlAction.Database + "?sslmode=disable"
 		}
 
 		// Try to substitute the server name by an IP address

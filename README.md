@@ -21,7 +21,7 @@ An efficient Load Testing Tool for HTTP/MQTT/WS/MongoDB/MySQL/gRPC/TCP/UDP Serve
 
 # What it does
 - Provides high-throughput load testing of HTTP/HTTPS/TCP/UDP/WS/MQTT
-- Provides limited load testing for MongoDB and MySQL database servers
+- Provides limited load testing for MongoDB, MySQL and PostgreSQL database servers
 - Provides load testing for gRPC protocol (beta)
 - Supports standalone or distributed modes. The distributed mode can be used to play different tests at the same time or to inject stress load from remote injectors
 - Supports GET, HEAD, POST, PUT and DELETE HTTP methods

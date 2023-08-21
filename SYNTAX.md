@@ -63,12 +63,12 @@ You define your custom variables like this:
 
 ## Predefined Variables
 
-| Parameter Name | Description |
-| :--- | :--- |
-| `UID` | integer value which represents the virtual user ID |
-| `HTTP_Response` | contains the HTTP returned code |
-| `MONGODB_Last_Insert_ID` | contains the value of the "_id" field of the last inserted document (string) |
-| `SQL_Row_Count` | contains the count of rows selected, updated or deleted |
+| Parameter Name | Description                                                                                                                                                                     |
+| :--- |:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `UID` | integer value which represents the virtual user ID                                                                                                                              |
+| `HTTP_Response` | contains the HTTP returned code                                                                                                                                                 |
+| `MONGODB_Last_Insert_ID` | contains the value of the "_id" field of the last inserted document (string)                                                                                                    |
+| `SQL_Row_Count` | contains the count of rows selected, updated or deleted (for SQL action)                                                                                                        |
 | `__cookie__name` | if the option `store_cookie` has been set for `http` actions, Cookies returned by the server can be referenced as variable by prefixing their name with the `__cookie__` string |
 
 ## User defined Variables
@@ -98,14 +98,14 @@ default:
 
 The supported parameter_name(s) are:
 
-| Name | Description | Example values |
-| :--- | :---        | :--- |
-| `server`   | name of remoter server - may also specify a port, for SQL this a DSN. Mandatory if grpc_proto has been specified| www.google.com:80 or www.bing.com or mongodb://localhost:27017 |
-| `protocol` | protocol to be used | http or https |
-| `method`   | HTTP method to use | GET or POST |
-| `database` | default database for MongoDB and SQL | my_database |
-| `collection` | default collection for MongoDB | my_collection |
-| `db_driver` | default SQL Driver - only "mysql" is supported yet | mysql |
+| Name | Description                                                                                                      | Example values |
+| :--- |:-----------------------------------------------------------------------------------------------------------------| :--- |
+| `server`   | name of remoter server - may also specify a port, for SQL this a DSN. Mandatory if grpc_proto has been specified | www.google.com:80 or www.bing.com or mongodb://localhost:27017 |
+| `protocol` | protocol to be used                                                                                              | http or https |
+| `method`   | HTTP method to use                                                                                               | GET or POST |
+| `database` | default database for MongoDB and SQL                                                                             | my_database |
+| `collection` | default collection for MongoDB                                                                                 | my_collection |
+| `db_driver` | default SQL Driver - only "mysql" and "postgres" are supported yet                                              | mysql |
 
 
 # Actions and Pre-Actions
@@ -276,9 +276,13 @@ Examples:
 
 Examples:
 ```
+# the server value is a connection string which depends on the SQL driver. Only mysql and postgres are supported
 - sql:
     title: Clean Table
+    # MySQL connection string
     server: "user:password@tcp(localhost:3306)"
+    # PostgreSQL connection string
+    # server: user:password@localhost:5432
     database: testing
     statament: 'DROP TABLE IF EXISTS my_table'
 - sql:
@@ -294,6 +298,8 @@ Examples:
 - log:
     message: "Row count=${SQL_Row_Count}"
 ```
+
+Remember that `SQL_Row_Count` is a [predefined variable](#predefined-variables)...
 
 ## ws : WebSocket Request
 
