@@ -53,7 +53,7 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 				if _, err := playbook.Variables[v[1]]; !err {
 					log.Debugf("Variable ${%s} not set", v[1])
 				} else {
-					textData = strings.Replace(textData, "${"+v[1]+"}", url.QueryEscape(playbook.Variables[v[1]].Values[0]), 1)	// TODO array
+					textData = strings.Replace(textData, "${"+v[1]+"}", url.QueryEscape(playbook.Variables[v[1]].Values[0]), 1) // TODO array
 				}
 			}
 			a["server"] = textData
@@ -66,8 +66,8 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 		log.Error("MongoDBAction has no Command and no default Command specified")
 		a["command"] = ""
 		valid = false
-	} else if !config.IsValidMongoDBCommand(a["command"].(string)) {
-		log.Error("MongoDBAction must specify a valid command: insertone, findone, deletemany, drop")
+	} else if _, err := config.IsValidMongoDBCommand(a["command"].(string)); err != nil {
+		log.Error("%s", err)
 		valid = false
 	}
 

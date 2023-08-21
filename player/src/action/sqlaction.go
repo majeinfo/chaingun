@@ -40,8 +40,8 @@ func NewSQLAction(a map[interface{}]interface{}, dflt config.Default, playbook *
 			a["db_driver"] = dflt.DBDriver
 		}
 	} else {
-		if !config.IsValidDBDriver(a["db_driver"].(string)) {
-			log.Errorf("DB Driver must specify a valid driver (mysql): %s", a["db_driver"].(string))
+		if _, err := config.IsValidDBDriver(a["db_driver"].(string)); err != nil {
+			log.Errorf("%v", err)
 			valid = false
 		}
 	}
@@ -66,7 +66,7 @@ func NewSQLAction(a map[interface{}]interface{}, dflt config.Default, playbook *
 				if _, err := playbook.Variables[v[1]]; !err {
 					log.Debugf("Variable ${%s} not set", v[1])
 				} else {
-					textData = strings.Replace(textData, "${"+v[1]+"}", url.QueryEscape(playbook.Variables[v[1]].Values[0]), 1)	// TODO array
+					textData = strings.Replace(textData, "${"+v[1]+"}", url.QueryEscape(playbook.Variables[v[1]].Values[0]), 1) // TODO array
 				}
 			}
 			a["server"] = textData

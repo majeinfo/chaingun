@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -23,22 +24,22 @@ const DFLT_TIMEOUT = 10
 const DFLT_ERR = ERR_CONTINUE
 
 type TestDef struct {
-	Version        string                   `yaml:"version"`
-	Iterations     int                      `yaml:"iterations"` // (mandatory) -1 implies use of "duration"
-	Duration       int                      `yaml:"duration"`
-	Users          int                      `yaml:"users"`
-	Rampup         int                      `yaml:"rampup"`
-	PersistentDBConn bool					`yaml:"persistent_db_connections"`	// (default is false)
-	PersistentHttpSession bool 				`yaml:"persistent_http_sessions"` // (default is false)
-	OnError        string                   `yaml:"on_error"` // continue (default) | stop_vu | stop_test
-	HttpErrorCodes string                   `yaml:"http_error_codes"`
-	GrpcProto	   string	                `yaml:"grpc_proto"`
-	Timeout        int                      `yaml:"timeout"` // default is 10s
-	DfltValues     Default                  `yaml:"default"`
-	Variables      map[string]VariableDef      `yaml:"variables"`
-	DataFeeder     Feeder                   `yaml:"feeder"`
-	PreActions     []map[string]interface{} `yaml:"pre_actions"`
-	Actions        []map[string]interface{} `yaml:"actions"`
+	Version               string                   `yaml:"version"`
+	Iterations            int                      `yaml:"iterations"` // (mandatory) -1 implies use of "duration"
+	Duration              int                      `yaml:"duration"`
+	Users                 int                      `yaml:"users"`
+	Rampup                int                      `yaml:"rampup"`
+	PersistentDBConn      bool                     `yaml:"persistent_db_connections"` // (default is false)
+	PersistentHttpSession bool                     `yaml:"persistent_http_sessions"`  // (default is false)
+	OnError               string                   `yaml:"on_error"`                  // continue (default) | stop_vu | stop_test
+	HttpErrorCodes        string                   `yaml:"http_error_codes"`
+	GrpcProto             string                   `yaml:"grpc_proto"`
+	Timeout               int                      `yaml:"timeout"` // default is 10s
+	DfltValues            Default                  `yaml:"default"`
+	Variables             map[string]VariableDef   `yaml:"variables"`
+	DataFeeder            Feeder                   `yaml:"feeder"`
+	PreActions            []map[string]interface{} `yaml:"pre_actions"`
+	Actions               []map[string]interface{} `yaml:"actions"`
 }
 
 type Default struct {
@@ -61,8 +62,8 @@ type Feeder struct {
 }
 
 type VUContext struct {
-	InitObject	interface{}
-	CloseFunc	func(*VUContext)
+	InitObject interface{}
+	CloseFunc  func(*VUContext)
 }
 
 var (
@@ -123,14 +124,18 @@ func ValidateTestDefinition(t *TestDef) bool {
 		}
 	}
 
-	if t.DfltValues.Method != "" && !IsValidHTTPMethod(t.DfltValues.Method) {
-		log.Errorf("Default Http Action must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: %s", t.DfltValues.Method)
-		valid = false
+	if t.DfltValues.Method != "" {
+		if _, err := IsValidHTTPMethod(t.DfltValues.Method); err != nil {
+			log.Errorf("%v", err)
+			valid = false
+		}
 	}
 
-	if t.DfltValues.DBDriver != "" && !IsValidDBDriver(t.DfltValues.DBDriver) {
-		log.Errorf("Default DB Driver must specify a valid driver (mysql): %s", t.DfltValues.DBDriver)
-		valid = false
+	if t.DfltValues.DBDriver != "" {
+		if _, err := IsValidDBDriver(t.DfltValues.DBDriver); err != nil {
+			log.Errorf("%v", err)
+			valid = false
+		}
 	}
 
 	if t.GrpcProto != "" && t.DfltValues.Server == "" {
@@ -148,24 +153,36 @@ func ValidateTestDefinition(t *TestDef) bool {
 }
 
 // Check for method validity
-func IsValidHTTPMethod(method string) bool {
+func IsValidHTTPMethod(method string) (bool, error) {
 	valid_methods := []string{"GET", "POST", "PUT", "HEAD", "DELETE"}
 
-	return StringInSlice(method, valid_methods)
+	if !StringInSlice(method, valid_methods) {
+		return false, fmt.Errorf("HttpAction must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: %s", method)
+	}
+
+	return true, nil
 }
 
 // Check for method validity
-func IsValidMongoDBCommand(command string) bool {
+func IsValidMongoDBCommand(command string) (bool, error) {
 	valid_commands := []string{"findone", "insertone", "deletemany", "drop"}
 
-	return StringInSlice(command, valid_commands)
+	if !StringInSlice(command, valid_commands) {
+		return false, fmt.Errorf("MongoDBAction must specify a valid command: insertone, findone, deletemany, drop: %s", command)
+	}
+
+	return true, nil
 }
 
 // Check for DBDriver validity
-func IsValidDBDriver(db_driver string) bool {
-	valid_drivers := []string{"mysql"}
+func IsValidDBDriver(db_driver string) (bool, error) {
+	valid_drivers := []string{"mysql", "postgresql"}
 
-	return StringInSlice(db_driver, valid_drivers)
+	if !StringInSlice(db_driver, valid_drivers) {
+		return false, fmt.Errorf("DB Driver must specify a valid driver (mysql or postgresql): %s", db_driver)
+	}
+
+	return true, nil
 }
 
 func StringInSlice(a string, list []string) bool {

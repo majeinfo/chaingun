@@ -82,8 +82,8 @@ func NewHTTPAction(a map[interface{}]interface{}, dflt config.Default, playbook 
 		} else {
 			a["method"] = dflt.Method
 		}
-	} else if !config.IsValidHTTPMethod(a["method"].(string)) {
-		log.Errorf("HttpAction must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: %s", a["method"].(string))
+	} else if _, err := config.IsValidHTTPMethod(a["method"].(string)); err != nil {
+		log.Errorf("%v", err)
 		valid = false
 	}
 	if a["title"] == nil || a["title"] == "" {
