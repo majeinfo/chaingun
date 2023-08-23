@@ -7,9 +7,9 @@ import (
 )
 
 type batchFlags struct {
-	script string
+	script         string
 	repository_dir string
-	injectors string
+	injectors      string
 }
 
 var batchConfig batchFlags
@@ -29,7 +29,7 @@ player batch --injectors injector1:8000,injector2:9000 --script /path/to/script.
 
 func init() {
 	RootCmd.AddCommand(appBatchCmd)
-	appBatchCmd.Flags().StringVarP(&batchConfig.repository_dir, "script", "", "",
+	appBatchCmd.Flags().StringVarP(&batchConfig.script, "script", "", "",
 		"Set the Script filename")
 	appBatchCmd.Flags().StringVarP(&batchConfig.repository_dir, "repository-dir", "", ".",
 		"Directory where to store results")
@@ -38,4 +38,3 @@ func init() {
 	appBatchCmd.MarkFlagRequired("script")
 	appBatchCmd.MarkFlagRequired("injectors")
 }
-
