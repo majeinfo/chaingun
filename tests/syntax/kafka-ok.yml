@@ -1,0 +1,23 @@
+---
+iterations: 2
+users: 3
+rampup: 1
+timeout: 4
+actions:
+  - kafka:
+      brokers:
+        - localhost:29092
+        - localhost:29092
+      title: Insert
+      topic: Weather
+      command: write
+      key: toto
+      value: titi
+  - kafka:
+      brokers:
+        - localhost:29092
+        - localhost:29092
+      title: Read a message
+      topic: Weather
+      command: read
+
