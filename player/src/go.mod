@@ -15,6 +15,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/jhump/protoreflect v1.8.2
 	github.com/lib/pq v1.10.9
+	github.com/segmentio/kafka-go v0.4.42
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.3
 	go.mongodb.org/mongo-driver v1.5.1

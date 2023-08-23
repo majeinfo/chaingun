@@ -74,6 +74,8 @@ func _buildActionList(playbook *config.TestDef, playbook_actions []map[string]in
 					action, valid = NewMongoDBAction(actionMap, playbook.DfltValues, playbook)
 				case "sql":
 					action, valid = NewSQLAction(actionMap, playbook.DfltValues, playbook)
+				case "kafka":
+					action, valid = NewKafkaAction(actionMap, playbook.DfltValues, playbook)
 				case "log":
 					action, valid = NewLogAction(actionMap)
 				case "setvar":
