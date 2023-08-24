@@ -102,7 +102,7 @@ The supported parameter_name(s) are:
 | :--- |:-----------------------------------------------------------------------------------------------------------------| :--- |
 | `server`   | name of remoter server - may also specify a port, for SQL this a DSN. Mandatory if grpc_proto has been specified | www.google.com:80 or www.bing.com or mongodb://localhost:27017 |
 | `protocol` | protocol to be used                                                                                              | http or https |
-| `method`   | HTTP method to use                                                                                               | GET or POST |
+| `method`   | HTTP method to use                                                                                               | GET, POST, PUT, HEAD or DELETE |
 | `database` | default database for MongoDB and SQL                                                                             | my_database |
 | `collection` | default collection for MongoDB                                                                                 | my_collection |
 | `db_driver` | default SQL Driver - only "mysql" and "postgres" are supported yet                                              | mysql |
