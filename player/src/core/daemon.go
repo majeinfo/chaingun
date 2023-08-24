@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/majeinfo/chaingun/action"
+	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/feeder"
 	"github.com/majeinfo/chaingun/manager"
 	"github.com/majeinfo/chaingun/reporter"
@@ -255,6 +256,12 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 	}
 	log.Debug("Script content:")
 	log.Debug(string(data))
+
+	// Reset the global otherwise the daemon could not play more than one script
+	g_playbook = config.TestDef{}
+	g_pre_actions = []action.FullAction{}
+	g_actions = []action.FullAction{}
+	g_post_actions = []action.FullAction{}
 
 	if !action.CreatePlaybook(g_scriptfile, data, &g_playbook, &g_pre_actions, &g_actions, &g_post_actions) {
 		gp_daemon_status = IDLE

@@ -13,6 +13,7 @@ import (
 func CreatePlaybook(scriptFile string, data []byte, playbook *config.TestDef, pre_actions *[]FullAction, actions *[]FullAction, post_actions *[]FullAction) bool {
 	gpScriptDir = path.Dir(scriptFile)
 	log.Debugf("ScriptDir=%s", gpScriptDir)
+	log.Debugf("Playbook=%v", playbook)
 
 	err := yaml.UnmarshalStrict([]byte(data), playbook)
 	if err != nil {
