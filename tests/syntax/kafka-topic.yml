@@ -3,13 +3,15 @@ iterations: 2
 users: 3
 rampup: 1
 timeout: 4
+default:
+  server: localhost:29092,localhost:29092
+
 variables:
   topic: Temperature
   brokers: localhost:29092,localhost:29092
 
 pre_actions:
   - kafka:
-      brokers: ${brokers}
       title: Create Topic ${topic}
       topic: ${topic}
       command: createtopic

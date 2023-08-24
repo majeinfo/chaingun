@@ -39,9 +39,13 @@ func NewKafkaAction(a map[interface{}]interface{}, dflt config.Default, playbook
 	valid := true
 
 	if a["brokers"] == nil || a["brokers"] == "" {
-		log.Error("KafkaAction must define brokers (at leat one !)")
-		a["brokers"] = ""
-		valid = false
+		if dflt.Server == "" {
+			log.Error("KafkaAction must define brokers (at leat one !) and no default Server specified")
+			a["brokers"] = ""
+			valid = false
+		} else {
+			a["brokers"] = dflt.Server
+		}
 	}
 
 	if a["title"] == nil || a["title"] == "" {
