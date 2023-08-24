@@ -14,7 +14,7 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 
 3.[Default values for Actions](#default-value-for-actions)
 
-4.[Actions and Pre-actions](#actions-and-pre-actions)  
+4.[Actions, Pre-actions and Post-actions](#actions-and-pre-actions)  
 4.1.[HTTP/S](#http--https-request)  
 4.2.[MongoDB](#mongodb--mongodb-request)  
 4.3.[SQL](#sql--sql-request)  
@@ -108,9 +108,9 @@ The supported parameter_name(s) are:
 | `db_driver` | default SQL Driver - only "mysql" and "postgres" are supported yet                                              | mysql |
 
 
-# Actions and Pre-Actions
+# Actions, Pre-Actions and Post-actions
 
-Actions and pre-actions are defined as a list under the `actions` and `pre_actions` keys :
+Actions, pre-actions and post-actionsare defined as a list under the `actions`, `pre_actions` and `post_actions` keys :
 
 ```
 pre_actions:
@@ -120,12 +120,18 @@ pre_actions:
 actions:
   - action1 ...
   - action2 ...
+
+post_actions:
+  - action1 ...
+  - action2 ...
 ```
 
 Pre-Actions are played only once before starting the VUs.
 Actions are played by the VUs.
-A typical usage of pre-action would be to clean a database table before injecting data.
-In "batch" mode, only the first injector given on the command line will play the pre-actions.
+Post-Actions are played only once after the script completion.
+A typical usage of pre-action would be to create a database table before injecting data.
+A typical usage of post-action would be to clean a database table at the end of the test.
+In "batch" mode, only the first injector given on the command line will play the pre-actions and the post-actions.
 Pre-actions are also handled in "manager" mode (i.e using the embedded Web Interface).
 
 
