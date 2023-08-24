@@ -153,7 +153,23 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		vulog.Debugf("FindOne gets: %v", response)
 
 	case MONGO_DELETEMANY:
-		// TODO: must be implemented
+		doc := SubstParams(sessionMap, mongodbAction.Filter, vulog)
+		err := bson.UnmarshalExtJSON([]byte(doc), true, &bdoc)
+		if err != nil {
+			vulog.Errorf("MongoDB deletemany action failed: %s", err)
+			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
+			resultsChannel <- sampleReqResult
+			return false
+		}
+
+		_, err = collection.DeleteMany(ctx, &bdoc)
+		if err != nil {
+			vulog.Errorf("MongoDB deletemany failed: %s", err)
+			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_ERR, 0, err.Error())
+			resultsChannel <- sampleReqResult
+			return false
+		}
+		vulog.Debugf("Delete Many done")
 	}
 
 	elapsed := time.Since(start)

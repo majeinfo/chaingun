@@ -240,8 +240,8 @@ Examples:
 | `server` | mandatory. If the string does not contain a server specification, use the value given by the `server` key in the default section |
 | `database` | mandatory. If the string is empty, use the value given by the `database` key in the default section |
 | `collection` | mandatory. If the string is empty, use the value given by the `collection` key in the default section |
-| `command` | mandatory. Possible commands are `findone`, `insertone` and `drop` |
-| `filter` | If the command is `findone`, the `filter` parameter is a JSON document used to filter the search |
+| `command` | mandatory. Possible commands are `findone`, `insertone`, `deletemany` and `drop` |
+| `filter` | If the command is `findone` or `deletemany`, the `filter` parameter is a JSON document used to filter the search or the deletion |
 | `document` | If the command is `insertone`, the `document` parameter is a JSON document that must be inserted in the database collection |
 | `responses` | data can be extracted from server responses when `findone` command is played. regex, jsonpath or xmlpath can be used to collect the substrings |
 
