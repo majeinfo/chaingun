@@ -10,7 +10,7 @@ import (
 
 // KafkaAction describes a MongoDB Action
 type KafkaAction struct {
-	Brokers          []string          `yaml:"brokers"`
+	Brokers          string            `yaml:"brokers"`
 	Title            string            `yaml:"title"`
 	Topic            string            `yaml:"topic"`
 	TLSEnabled       bool              `yaml:"tlsEnabled"`
@@ -21,8 +21,10 @@ type KafkaAction struct {
 }
 
 const (
-	KAFKA_WRITE = "write"
-	KAFKA_READ  = "read"
+	KAFKA_WRITE       = "write"
+	KAFKA_READ        = "read"
+	KAFKA_CREATETOPIC = "createtopic"
+	KAFKA_DELETETOPIC = "deletetopic"
 )
 
 // Execute a Kafka Action
@@ -38,7 +40,7 @@ func NewKafkaAction(a map[interface{}]interface{}, dflt config.Default, playbook
 
 	if a["brokers"] == nil || a["brokers"] == "" {
 		log.Error("KafkaAction must define brokers (at leat one !)")
-		a["brokers"] = []string{""}
+		a["brokers"] = ""
 		valid = false
 	}
 
@@ -59,7 +61,7 @@ func NewKafkaAction(a map[interface{}]interface{}, dflt config.Default, playbook
 		a["command"] = ""
 		valid = false
 	} else if _, err := isValidKafkaCommand(a["command"].(string)); err != nil {
-		log.Error("%s", err)
+		log.Errorf("%v", err)
 		valid = false
 	}
 
@@ -86,7 +88,7 @@ func NewKafkaAction(a map[interface{}]interface{}, dflt config.Default, playbook
 	}
 
 	kafkaAction := KafkaAction{
-		Brokers:          []string{"localhost:29092", "localhost:29092"},
+		Brokers:          a["brokers"].(string),
 		Topic:            a["topic"].(string),
 		Title:            a["title"].(string),
 		TLSEnabled:       false,
@@ -102,7 +104,7 @@ func NewKafkaAction(a map[interface{}]interface{}, dflt config.Default, playbook
 }
 
 func isValidKafkaCommand(command string) (bool, error) {
-	valid_commands := []string{KAFKA_WRITE, KAFKA_READ}
+	valid_commands := []string{KAFKA_WRITE, KAFKA_READ, KAFKA_CREATETOPIC, KAFKA_DELETETOPIC}
 
 	if !config.StringInSlice(command, valid_commands) {
 		return false, fmt.Errorf("KafkaAction must specify a valid command: write, read: got %s", command)

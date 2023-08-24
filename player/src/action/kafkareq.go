@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	kafka "github.com/segmentio/kafka-go"
+	"strings"
 	"time"
 
 	"github.com/majeinfo/chaingun/config"
@@ -25,16 +26,19 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 	//var err error
 	sampleReqResult := buildSampleResult(REPORTER_KAFKA, sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, kafkaAction.Title, "")
 
+	topic := SubstParams(sessionMap, kafkaAction.Topic, vulog)
+	title := SubstParams(sessionMap, kafkaAction.Title, vulog)
+	brokers := strings.Split(SubstParamsNoEscape(sessionMap, kafkaAction.Brokers, vulog), ",")
+
 	if must_trace_request {
-		trace_req = fmt.Sprintf("%s %s", kafkaAction.Brokers, kafkaAction.Title)
+		trace_req = fmt.Sprintf("%s %s", kafkaAction.Brokers, title)
 	} else {
-		vulog.Debugf("New Request: URL: %s, Topic: %s", kafkaAction.Brokers, kafkaAction.Topic)
+		vulog.Debugf("New Request: URL: %s, Topic: %s", kafkaAction.Brokers, topic)
 	}
 
 	// Note: persistent connection are not handled here
 	// Note: the DNS cache is not handled neither
 	// Note: implement SASL Mechanism
-	// TODO: createtopics, deletetopics, listtopics, etc...
 	// TODO: prise en compte des variables
 	// TODO: prise en compte des résulats
 	// TODO: possibilité de faire plusieurs read ?
@@ -45,8 +49,8 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 	switch kafkaAction.Command {
 	case KAFKA_WRITE:
 		w := &kafka.Writer{
-			Addr:         kafka.TCP(kafkaAction.Brokers...),
-			Topic:        kafkaAction.Topic,
+			Addr:         kafka.TCP(brokers...),
+			Topic:        topic,
 			Balancer:     &kafka.RoundRobin{},
 			WriteTimeout: time.Duration(playbook.Timeout) * time.Second,
 		}
@@ -84,8 +88,8 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 		}
 
 		r := kafka.NewReader(kafka.ReaderConfig{
-			Brokers: kafkaAction.Brokers,
-			Topic:   kafkaAction.Topic,
+			Brokers: brokers,
+			Topic:   topic,
 			Dialer:  dialer,
 		})
 		defer r.Close()
@@ -101,6 +105,52 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 			vulog.Debugf("msg read: %s", string(msg.Value))
 			break // only one msg read
 		}
+
+	case KAFKA_CREATETOPIC:
+		conn, err := kafka.Dial("tcp", brokers[0])
+		if err != nil {
+			vulog.Errorf("Kafka dial failed: %s", err)
+			buildKafkaSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			resultsChannel <- sampleReqResult
+			return false
+		}
+		defer conn.Close()
+
+		topicConfigs := []kafka.TopicConfig{
+			{
+				Topic:             topic,
+				NumPartitions:     1,
+				ReplicationFactor: 1,
+			},
+		}
+
+		err = conn.CreateTopics(topicConfigs...)
+		if err != nil {
+			vulog.Errorf("Kafka create topic failed: %s", err)
+			buildKafkaSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			resultsChannel <- sampleReqResult
+			return false
+		}
+		vulog.Debugf("Topic %s created", topic)
+
+	case KAFKA_DELETETOPIC:
+		conn, err := kafka.Dial("tcp", brokers[0])
+		if err != nil {
+			vulog.Errorf("Kafka dial failed: %s", err)
+			buildKafkaSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			resultsChannel <- sampleReqResult
+			return false
+		}
+		defer conn.Close()
+
+		err = conn.DeleteTopics(topic)
+		if err != nil {
+			vulog.Errorf("Kafka delete topic failed: %s", err)
+			buildKafkaSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			resultsChannel <- sampleReqResult
+			return false
+		}
+		vulog.Debugf("Topic %s deleted", topic)
 	}
 
 	elapsed := time.Since(start)

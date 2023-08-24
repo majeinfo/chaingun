@@ -75,7 +75,7 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 		a["command"] = ""
 		valid = false
 	} else if _, err := isValidMongoDBCommand(a["command"].(string)); err != nil {
-		log.Error("%s", err)
+		log.Errorf("%v", err)
 		valid = false
 	}
 
