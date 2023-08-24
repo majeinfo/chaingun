@@ -13,7 +13,7 @@ type KafkaAction struct {
 	Brokers          string            `yaml:"brokers"`
 	Title            string            `yaml:"title"`
 	Topic            string            `yaml:"topic"`
-	TLSEnabled       bool              `yaml:"tlsEnabled"`
+	TLSEnabled       bool              `yaml:"tls_enabled"`
 	Command          string            `yaml:"command"`
 	Key              string            `yaml:"key"`
 	Value            string            `yaml:"value"`
@@ -80,6 +80,16 @@ func NewKafkaAction(a map[interface{}]interface{}, dflt config.Default, playbook
 		}
 	}
 
+	if a["tls_enabled"] == nil {
+		a["tls_enabled"] = false
+	} else {
+		if _, ok := a["tls_enabled"].(bool); !ok {
+			log.Error("tls_enabled value must be a boolean (true or false)")
+			a["tls_enabled"] = false
+			valid = false
+		}
+	}
+
 	responseHandlers, validResp := NewResponseHandlers(a)
 
 	if !valid || !validResp {
@@ -91,7 +101,7 @@ func NewKafkaAction(a map[interface{}]interface{}, dflt config.Default, playbook
 		Brokers:          a["brokers"].(string),
 		Topic:            a["topic"].(string),
 		Title:            a["title"].(string),
-		TLSEnabled:       false,
+		TLSEnabled:       a["tls_enabled"].(bool),
 		Command:          a["command"].(string),
 		Key:              a["key"].(string),
 		Value:            a["value"].(string),

@@ -99,14 +99,14 @@ default:
 
 The supported parameter_name(s) are:
 
-| Name | Description                                                                                                      | Example values |
-| :--- |:-----------------------------------------------------------------------------------------------------------------| :--- |
-| `server`   | name of remoter server - may also specify a port, for SQL this a DSN. Mandatory if grpc_proto has been specified | www.google.com:80 or www.bing.com or mongodb://localhost:27017 |
-| `protocol` | protocol to be used                                                                                              | http or https |
-| `method`   | HTTP method to use                                                                                               | GET, POST, PUT, HEAD or DELETE |
-| `database` | default database for MongoDB and SQL                                                                             | my_database |
-| `collection` | default collection for MongoDB                                                                                 | my_collection |
-| `db_driver` | default SQL Driver - only "mysql" and "postgres" are supported yet                                              | mysql |
+| Name | Description                                                                                                                                           | Example values |
+| :--- |:------------------------------------------------------------------------------------------------------------------------------------------------------| :--- |
+| `server`   | name of remoter server - may also specify a port, for SQL this a DSN. For Kafka this is a list of Brokers. Mandatory if grpc_proto has been specified | www.google.com:80 or www.bing.com or mongodb://localhost:27017 |
+| `protocol` | protocol to be used                                                                                                                                   | http or https |
+| `method`   | HTTP method to use                                                                                                                                    | GET, POST, PUT, HEAD or DELETE |
+| `database` | default database for MongoDB and SQL                                                                                                                  | my_database |
+| `collection` | default collection for MongoDB                                                                                                                        | my_collection |
+| `db_driver` | default SQL Driver - only "mysql" and "postgres" are supported yet                                                                                    | mysql |
 
 
 # Actions, Pre-Actions and Post-actions
@@ -397,14 +397,15 @@ Example:
 
 Note : SCRAM authentication not yet supported
 
-| Parameter Name | Description                                                                                    |
-|:---------------|:-----------------------------------------------------------------------------------------------|
-| `title`        | mandatory string that qualifies the request - used for the result output and logging           |
-| `brokers`      | mandatory string that gives a list of Brokers (server1:port1,server2:port2...)                 |
-| `command`      | mandatory string that gives the command to be played (createtopic, deletetopic, write or read) |
-| `topic`        | mandatory string that specifies the Topic                                                      |
-| `key`          | optional string that specifies the Key to be used (write command)                          |
-| `value`   | mandatory string that specifies the Value to be inserted in the Topic (write command)          |
+| Parameter Name | Description                                                                                                                                |
+|:---------------|:-------------------------------------------------------------------------------------------------------------------------------------------|
+| `title`        | mandatory string that qualifies the request - used for the result output and logging                                                       |
+| `brokers`      | mandatory string that gives a list of Brokers (server1:port1,server2:port2...). If missing, use the value of the `server` default variable |
+| `tls_enabled`  | optional boolean that enabled TLS (default is false)                                                                                       |
+| `command`      | mandatory string that gives the command to be played (createtopic, deletetopic, write or read)                                             |
+| `topic`        | mandatory string that specifies the Topic                                                                                                  |
+| `key`          | optional string that specifies the Key to be used (write command)                                                                          |
+| `value`        | mandatory string that specifies the Value to be inserted in the Topic (write command)                                                      |
 
 Variable interpolation applies to requests and responses.
 
