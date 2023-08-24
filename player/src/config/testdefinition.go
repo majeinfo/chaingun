@@ -158,7 +158,7 @@ func IsValidHTTPMethod(method string) (bool, error) {
 	valid_methods := []string{"GET", "POST", "PUT", "HEAD", "DELETE"}
 
 	if !StringInSlice(method, valid_methods) {
-		return false, fmt.Errorf("HttpAction must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: %s", method)
+		return false, fmt.Errorf("HttpAction must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: got %s", method)
 	}
 
 	return true, nil
@@ -169,7 +169,18 @@ func IsValidMongoDBCommand(command string) (bool, error) {
 	valid_commands := []string{"findone", "insertone", "deletemany", "drop"}
 
 	if !StringInSlice(command, valid_commands) {
-		return false, fmt.Errorf("MongoDBAction must specify a valid command: insertone, findone, deletemany, drop: %s", command)
+		return false, fmt.Errorf("MongoDBAction must specify a valid command: insertone, findone, deletemany, drop: got %s", command)
+	}
+
+	return true, nil
+}
+
+// Check for method validity
+func IsValidKafkaCommand(command string) (bool, error) {
+	valid_commands := []string{"write", "read"}
+
+	if !StringInSlice(command, valid_commands) {
+		return false, fmt.Errorf("KafkaAction must specify a valid command: write, read: got %s", command)
 	}
 
 	return true, nil
@@ -180,7 +191,7 @@ func IsValidDBDriver(db_driver string) (bool, error) {
 	valid_drivers := []string{"mysql", "postgres"}
 
 	if !StringInSlice(db_driver, valid_drivers) {
-		return false, fmt.Errorf("DB Driver must specify a valid driver (mysql or postgres): %s", db_driver)
+		return false, fmt.Errorf("DB Driver must specify a valid driver (mysql or postgres): got %s", db_driver)
 	}
 
 	return true, nil

@@ -1,0 +1,10 @@
+---
+iterations: 1
+users: 1
+rampup: 1
+actions:
+  - kafka:
+      brokers:
+        - localhost:29092
+      title: Insert
+
