@@ -4,6 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/majeinfo/chaingun/action"
+	"github.com/majeinfo/chaingun/feeder"
+	"github.com/majeinfo/chaingun/manager"
+	"github.com/majeinfo/chaingun/reporter"
+	"github.com/majeinfo/chaingun/utils"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -11,12 +17,6 @@ import (
 	"path"
 	"runtime"
 	"time"
-	"github.com/majeinfo/chaingun/feeder"
-	"github.com/majeinfo/chaingun/manager"
-	"github.com/majeinfo/chaingun/action"
-	"github.com/majeinfo/chaingun/reporter"
-	"github.com/majeinfo/chaingun/utils"
-	log "github.com/sirupsen/logrus"
 )
 
 // Different states of remote daemon
@@ -29,10 +29,10 @@ const (
 )
 
 type DaemonStruct struct {
-	No_log bool
+	No_log            bool
 	Disable_dns_cache bool
-	Trace_requests bool
-	Listen_addr string
+	Trace_requests    bool
+	Listen_addr       string
 }
 
 var (
@@ -62,10 +62,10 @@ func StartDaemonMode(daemonParms DaemonStruct) {
 		startWsServer(daemonParms.Listen_addr)
 	} else {
 		/*
-		conn, err := net.Dial("tcp", *gp_connect_to)
-		if err != nil {
-			log.Fatalf("Could not connect to %s: %s", *gp_connect_to, err)
-		}
+			conn, err := net.Dial("tcp", *gp_connect_to)
+			if err != nil {
+				log.Fatalf("Could not connect to %s: %s", *gp_connect_to, err)
+			}
 		*/
 		log.Fatal("connect-to mode is not yet implemented")
 	}
@@ -105,6 +105,8 @@ func cmdHandler(c *Client, msg []byte) {
 		sendStatusOKMsg(c, "") //, statusString[gp_daemon_status])
 	case "pre_start":
 		preStartCommand(c)
+	case "post_start":
+		postStartCommand(c)
 	case "start":
 		startCommand(c)
 	case "stop":
@@ -134,7 +136,7 @@ func preStartCommand(c *Client) {
 
 	// Check if there is a valid playbook
 	if !g_valid_playbook {
-		sendStatusError(c, "PresStart command ignored because there is no valid playbook", "")
+		sendStatusError(c, "PreStart command ignored because there is no valid playbook", "")
 		return
 	}
 
@@ -145,6 +147,31 @@ func preStartCommand(c *Client) {
 
 func _preStartCommand(c *Client) {
 	playPreActions(&g_playbook, &g_pre_actions)
+
+	gp_daemon_status = READY_TO_RUN
+	sendStatusOK(c)
+}
+
+func postStartCommand(c *Client) {
+	// Check no run in progress
+	if gp_daemon_status != READY_TO_RUN {
+		sendStatusError(c, "PostStart command ignored because daemon is not idle", "")
+		return
+	}
+
+	// Check if there is a valid playbook
+	if !g_valid_playbook {
+		sendStatusError(c, "PostStart command ignored because there is no valid playbook", "")
+		return
+	}
+
+	gp_daemon_status = RUNNING
+	sendStatusOKMsg(c, "Launch post-actions")
+	go _postStartCommand(c)
+}
+
+func _postStartCommand(c *Client) {
+	playPostActions(&g_playbook, &g_post_actions)
 
 	gp_daemon_status = READY_TO_RUN
 	sendStatusOK(c)
@@ -226,7 +253,10 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 		sendStatusError(c, "Error while decoding string from Base64", err.Error())
 		return
 	}
-	if !action.CreatePlaybook(g_scriptfile, data, &g_playbook, &g_pre_actions, &g_actions) {
+	log.Debug("Script content:")
+	log.Debug(string(data))
+
+	if !action.CreatePlaybook(g_scriptfile, data, &g_playbook, &g_pre_actions, &g_actions, &g_post_actions) {
 		gp_daemon_status = IDLE
 		sendStatusError(c, "Error while processing the Script data", "")
 	} else {

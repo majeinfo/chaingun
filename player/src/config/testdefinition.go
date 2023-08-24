@@ -39,6 +39,7 @@ type TestDef struct {
 	Variables             map[string]VariableDef   `yaml:"variables"`
 	DataFeeder            Feeder                   `yaml:"feeder"`
 	PreActions            []map[string]interface{} `yaml:"pre_actions"`
+	PostActions           []map[string]interface{} `yaml:"post_actions"`
 	Actions               []map[string]interface{} `yaml:"actions"`
 }
 

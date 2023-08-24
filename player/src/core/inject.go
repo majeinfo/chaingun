@@ -15,17 +15,17 @@ import (
 )
 
 type InjectStruct struct {
-	Script string
-	Trace bool
-	No_log bool
-	Disable_dns_cache bool
-	Trace_requests bool
-	Syntax_check_only bool
-	Display_srv_resp bool
+	Script                 string
+	Trace                  bool
+	No_log                 bool
+	Disable_dns_cache      bool
+	Trace_requests         bool
+	Syntax_check_only      bool
+	Display_srv_resp       bool
 	Store_srv_response_dir string
-	Listen_addr string
-	Output_type string
-	Output_dir string
+	Listen_addr            string
+	Output_type            string
+	Output_dir             string
 }
 
 func StartStandaloneMode(injectParms InjectStruct) {
@@ -48,13 +48,13 @@ func StartStandaloneMode(injectParms InjectStruct) {
 		injectParms.Syntax_check_only,
 		injectParms.Output_dir,
 		injectParms.Output_type,
-		)
+	)
 }
 
 func _startStandaloneMode(script_name string, data []byte,
-							no_log bool, disable_dns_cache bool, listen_addr string, display_srv_resp bool,
-							trace_requests bool, store_srv_response_dir string, must_trace bool, syntax_check_only bool,
-							output_dir string, output_type string) {
+	no_log bool, disable_dns_cache bool, listen_addr string, display_srv_resp bool,
+	trace_requests bool, store_srv_response_dir string, must_trace bool, syntax_check_only bool,
+	output_dir string, output_type string) {
 	log.Info("If you press <Ctrl-C> during the play, you will get partial results !")
 	output_type = "csv"
 	action.DisableLogAction(no_log)
@@ -80,7 +80,7 @@ func _startStandaloneMode(script_name string, data []byte,
 	hub = newHub()
 
 	//if !createPlaybook(gp_scriptfile, []byte(data), &gp_playbook, &gp_actions) {
-	if !action.CreatePlaybook(script_name, []byte(data), &g_playbook, &g_pre_actions, &g_actions) {
+	if !action.CreatePlaybook(script_name, []byte(data), &g_playbook, &g_pre_actions, &g_actions, &g_post_actions) {
 		log.Fatalf("Error while processing the Script File")
 	}
 	if syntax_check_only {
@@ -107,6 +107,7 @@ func _startStandaloneMode(script_name string, data []byte,
 	go shutdownHandler()
 	playPreActions(&g_playbook, &g_pre_actions)
 	spawnUsers(&g_playbook, &g_actions, StandaloneMode)
+	playPostActions(&g_playbook, &g_post_actions)
 
 	log.Infof("Done in %v", time.Since(reporter.SimulationStart))
 	log.Infof("Building reports, please wait...")
@@ -123,4 +124,3 @@ func _startStandaloneMode(script_name string, data []byte,
 		log.Error(err.Error())
 	}
 }
-

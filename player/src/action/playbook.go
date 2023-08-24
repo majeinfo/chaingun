@@ -10,13 +10,15 @@ import (
 )
 
 // Create a Playbook from the YAML data
-func CreatePlaybook(scriptFile string, data []byte, playbook *config.TestDef, pre_actions *[]FullAction, actions *[]FullAction) bool {
+func CreatePlaybook(scriptFile string, data []byte, playbook *config.TestDef, pre_actions *[]FullAction, actions *[]FullAction, post_actions *[]FullAction) bool {
 	gpScriptDir = path.Dir(scriptFile)
 	log.Debugf("ScriptDir=%s", gpScriptDir)
 
 	err := yaml.UnmarshalStrict([]byte(data), playbook)
 	if err != nil {
-		log.Fatalf("YAML error: %v", err)
+		//log.Fatalf("YAML error: %v", err)
+		log.Errorf("YAML error: %v", err)
+		return false
 	}
 	log.Debug("Playbook:")
 	log.Debug(playbook)
@@ -32,7 +34,7 @@ func CreatePlaybook(scriptFile string, data []byte, playbook *config.TestDef, pr
 	}
 
 	var isValid bool
-	*pre_actions, *actions, isValid = BuildActionList(playbook)
+	*pre_actions, *actions, *post_actions, isValid = BuildActionList(playbook)
 	if !isValid {
 		return false
 	}

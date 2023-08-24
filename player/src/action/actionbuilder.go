@@ -11,11 +11,13 @@ import (
 )
 
 // BuildActionList builds all the Actions !
-func BuildActionList(playbook *config.TestDef) ([]FullAction, []FullAction, bool) {
+func BuildActionList(playbook *config.TestDef) ([]FullAction, []FullAction, []FullAction, bool) {
 	var pre_actions []FullAction
 	var actions []FullAction
+	var post_actions []FullAction
 	valid_pre_actions := true
 	valid_actions := true
+	valid_post_actions := true
 
 	log.Debug("Variables list:")
 	for k, v := range playbook.Variables {
@@ -24,8 +26,9 @@ func BuildActionList(playbook *config.TestDef) ([]FullAction, []FullAction, bool
 
 	pre_actions, valid_pre_actions = _buildActionList(playbook, playbook.PreActions)
 	actions, valid_actions = _buildActionList(playbook, playbook.Actions)
+	post_actions, valid_post_actions = _buildActionList(playbook, playbook.PostActions)
 
-	return pre_actions, actions, valid_pre_actions && valid_actions
+	return pre_actions, actions, post_actions, valid_pre_actions && valid_actions && valid_post_actions
 }
 
 func _buildActionList(playbook *config.TestDef, playbook_actions []map[string]interface{}) ([]FullAction, bool) {
