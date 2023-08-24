@@ -43,7 +43,7 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 # Global Parameters
 
 | Name | Value | Description |
-| :--- | :---: | :---        | 
+| :--- | :---: | :---        |
 | `iterations` | integer | (mandatory) indicates how many times each VU must play the script. If value is -1, the script is played until the value of `duration` parameter is reached |
 | `duration`   | integer | (mandatory if `iteration` equals -1) gives the duration of the script playing in seconds |
 | `rampup`     | integer | (mandatory) gives the time in seconds that is use to launch the VU. New VUs are equally launched during this period. |
@@ -393,7 +393,7 @@ Example:
         default_value: alice
 ```
 
-## Kakfa (beta)
+## Kafka (beta)
 
 Note : SCRAM authentication not yet supported
 
