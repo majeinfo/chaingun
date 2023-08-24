@@ -20,6 +20,7 @@
               <a class="nav-link" id="v-pills-feeder-tab" data-toggle="pill" href="#v-pills-fd" role="tab" aria-controls="v-pills-feeder" aria-selected="false">Data Feeder</a>
               <a class="nav-link" id="v-pills-pal-tab" data-toggle="pill" href="#v-pills-pal" role="tab" aria-controls="v-pills-preact" aria-selected="false">Pre-Actions</a>
               <a class="nav-link" id="v-pills-al-tab" data-toggle="pill" href="#v-pills-al" role="tab" aria-controls="v-pills-actions" aria-selected="false">Actions</a>
+			  <a class="nav-link" id="v-pills-pol-tab" data-toggle="pill" href="#v-pills-pol" role="tab" aria-controls="v-pills-postact" aria-selected="false">Post-Actions</a>
               <a class="nav-link" id="v-pills-yaml-tab" data-toggle="pill" href="#v-pills-gy" role="tab" aria-controls="v-pills-yaml" aria-selected="false">Generate YAML</a>
               <a class="nav-link" id="v-pills-fulldoc-tab" data-toggle="pill" href="#v-pills-doc" role="tab" aria-controls="v-pills-fulldoc" aria-selected="false">Full Documentation</a>
             </div>
@@ -169,12 +170,12 @@
 			<td>{{ index+1 }}</td>
 			<td>{{ getDisplayAction(action) }}</td>
 			<td>
-                          <button class="btn btn-success" v-bind:onclick="'chaingunScript.displayForEditAction(' + parseInt(index, 10) + ', true); return false'">Edit</button>
-                          <button class="btn btn-danger" v-bind:onclick="'confirmBox(chaingunScript.deleteAction,' + parseInt(index, 10) + ', true); return false'">Delete</button>
+                          <button class="btn btn-success" v-bind:onclick="'chaingunScript.displayForEditAction(' + parseInt(index, 10) + ', -1); return false'">Edit</button>
+                          <button class="btn btn-danger" v-bind:onclick="'confirmBox(chaingunScript.deleteAction,' + parseInt(index, 10) + ', -1); return false'">Delete</button>
 			  &nbsp;&nbsp;
-                          <button v-if="'when' in action" class="btn btn-success btn-sm" v-bind:onclick="'chaingunScript.displayForWhen(' + parseInt(index, 10) + ', true); return false'">Edit 'when'</button>
-                          <button v-if="'when' in action" class="btn btn-danger btn-sm" v-bind:onclick="'confirmBox(chaingunScript.deleteWhen,' + parseInt(index, 10) + ', true); return false'">Delete 'when'</button>
-                          <button v-if="!('when' in action)" class="btn btn-primary btn-sm" v-bind:onclick="'chaingunScript.whenShow(' + parseInt(index, 10) + ', true); return false'">Add 'when'</button>
+                          <button v-if="'when' in action" class="btn btn-success btn-sm" v-bind:onclick="'chaingunScript.displayForWhen(' + parseInt(index, 10) + ', -1); return false'">Edit 'when'</button>
+                          <button v-if="'when' in action" class="btn btn-danger btn-sm" v-bind:onclick="'confirmBox(chaingunScript.deleteWhen,' + parseInt(index, 10) + ', -1); return false'">Delete 'when'</button>
+                          <button v-if="!('when' in action)" class="btn btn-primary btn-sm" v-bind:onclick="'chaingunScript.whenShow(' + parseInt(index, 10) + ', -1); return false'">Add 'when'</button>
                         </td>
                     </tr>
                   </tbody>
@@ -188,7 +189,7 @@
 					</select>
 				</div>
 				<!-- &nbsp;<span class="badge badge-primary" data-toggle="tooltip" title="">Info</span> -->
-				&nbsp;<button type="button" class="btn btn-primary" data-toggle="modal" xdata-target="#newAction" onClick="chaingunScript.actionShow(true)">Add a new pre-Action</button>
+				&nbsp;<button type="button" class="btn btn-primary" data-toggle="modal" xdata-target="#newAction" onClick="chaingunScript.actionShow(-1)">Add a new pre-Action</button>
 			</div>
               </div>
 
@@ -203,12 +204,12 @@
 			<td>{{ index+1 }}</td>
 			<td>{{ getDisplayAction(action) }}</td>
 			<td>
-                          <button class="btn btn-success" v-bind:onclick="'chaingunScript.displayForEditAction(' + parseInt(index, 10) + ', false); return false'">Edit</button>
-                          <button class="btn btn-danger" v-bind:onclick="'confirmBox(chaingunScript.deleteAction,' + parseInt(index, 10) + ', false); return false'">Delete</button>
+                          <button class="btn btn-success" v-bind:onclick="'chaingunScript.displayForEditAction(' + parseInt(index, 10) + ', 0); return false'">Edit</button>
+                          <button class="btn btn-danger" v-bind:onclick="'confirmBox(chaingunScript.deleteAction,' + parseInt(index, 10) + ', 0); return false'">Delete</button>
 			  &nbsp;&nbsp;
-                          <button v-if="'when' in action" class="btn btn-success btn-sm" v-bind:onclick="'chaingunScript.displayForWhen(' + parseInt(index, 10) + ', false); return false'">Edit 'when'</button>
-                          <button v-if="'when' in action" class="btn btn-danger btn-sm" v-bind:onclick="'confirmBox(chaingunScript.deleteWhen,' + parseInt(index, 10) + ', false); return false'">Delete 'when'</button>
-                          <button v-if="!('when' in action)" class="btn btn-primary btn-sm" v-bind:onclick="'chaingunScript.whenShow(' + parseInt(index, 10) + ', false); return false'">Add 'when'</button>
+                          <button v-if="'when' in action" class="btn btn-success btn-sm" v-bind:onclick="'chaingunScript.displayForWhen(' + parseInt(index, 10) + ', 0); return false'">Edit 'when'</button>
+                          <button v-if="'when' in action" class="btn btn-danger btn-sm" v-bind:onclick="'confirmBox(chaingunScript.deleteWhen,' + parseInt(index, 10) + ', 0); return false'">Delete 'when'</button>
+                          <button v-if="!('when' in action)" class="btn btn-primary btn-sm" v-bind:onclick="'chaingunScript.whenShow(' + parseInt(index, 10) + ', 0); return false'">Add 'when'</button>
                         </td>
                     </tr>
                   </tbody>
@@ -222,9 +223,43 @@
 					</select>
 				</div>
 				<!-- &nbsp;<span class="badge badge-primary" data-toggle="tooltip" title="">Info</span> -->
-				&nbsp;<button type="button" class="btn btn-primary" data-toggle="modal" xdata-target="#newAction" onClick="chaingunScript.actionShow(false)">Add a new Action</button>
+				&nbsp;<button type="button" class="btn btn-primary" data-toggle="modal" xdata-target="#newAction" onClick="chaingunScript.actionShow(0)">Add a new Action</button>
 			</div>
               </div>
+
+				<!-- Post-Action List -->
+				<div class="tab-pane fade m-2" id="v-pills-pol" role="tabpanel" aria-labelledby="v-pills-pol-tab">
+					<table class="table table-bordered" ref="post_action_list">
+						<thead class="thead-dark">
+						<tr><th scope="col">#</th><th>Action Description</th><th></th></tr>
+						</thead>
+						<tbody>
+						<tr v-for="(action, index) in scriptParms.post_actions" @dragstart="dragActionStart(index, $event)" @dragend="dragActionEnd($event)" draggable="true" @drop="dragActionFinish(index, $event, true)" ondragover="window.allowDrop(event)">
+							<td>{{ index+1 }}</td>
+							<td>{{ getDisplayAction(action) }}</td>
+							<td>
+								<button class="btn btn-success" v-bind:onclick="'chaingunScript.displayForEditAction(' + parseInt(index, 10) + ', 1); return false'">Edit</button>
+								<button class="btn btn-danger" v-bind:onclick="'confirmBox(chaingunScript.deleteAction,' + parseInt(index, 10) + ', 1); return false'">Delete</button>
+								&nbsp;&nbsp;
+								<button v-if="'when' in action" class="btn btn-success btn-sm" v-bind:onclick="'chaingunScript.displayForWhen(' + parseInt(index, 10) + ', 1); return false'">Edit 'when'</button>
+								<button v-if="'when' in action" class="btn btn-danger btn-sm" v-bind:onclick="'confirmBox(chaingunScript.deleteWhen,' + parseInt(index, 10) + ', 1); return false'">Delete 'when'</button>
+								<button v-if="!('when' in action)" class="btn btn-primary btn-sm" v-bind:onclick="'chaingunScript.whenShow(' + parseInt(index, 10) + ', 1); return false'">Add 'when'</button>
+							</td>
+						</tr>
+						</tbody>
+					</table>
+					<hr/>
+					<div class="form-group form-inline row">
+						<label for="actionType" class="col-sm-3 col-form-label">Action Type</label>
+						<div>
+							<select id="actionType" class="form-control" v-model="action.type" placeholder="Action Type">
+								<option v-for="type in actionTypes">{{ type }}</option>
+							</select>
+						</div>
+						<!-- &nbsp;<span class="badge badge-primary" data-toggle="tooltip" title="">Info</span> -->
+						&nbsp;<button type="button" class="btn btn-primary" data-toggle="modal" xdata-target="#newAction" onClick="chaingunScript.actionShow(1)">Add a new post-Action</button>
+					</div>
+				</div>
 
               <!-- Generate YAML -->
               <div class="tab-pane fade m-2" id="v-pills-gy" role="tabpanel" aria-labelledby="v-pills-yaml-tab">
@@ -515,9 +550,9 @@
 		$(document).ready(function(){
 			$('[data-toggle="tooltip"]').tooltip()
 		});
-		function confirmBox(callback, data) {
+		function confirmBox(callback, ...data) {
 			if (confirm("Do you confirm ?")) {
-				callback(data);
+				callback(...data);
 			}
 			return false;
 		}

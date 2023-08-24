@@ -169,7 +169,8 @@
 const states = {
     IDLE: 0,
     RUNNING: 1,
-    RUNNING_PRE_ACTIONS: 2
+    RUNNING_PRE_ACTIONS: 2,
+    RUNNING_POST_ACTIONS: 3
 };
 
 var injector_count = 1;
@@ -552,6 +553,20 @@ function _preStartActions(id) {
     ws_conns[host].send('{ "cmd": "pre_start" }');
 }
 
+function _postStartActions(id) {
+    var host = $("#ws_host" + id).val();
+
+    console.log('send post_start');
+    if (!ws_conns[host]) {
+        DisplayError("Please connect the Injector " + host + ", first !");
+        return;
+    }
+
+    // Block until the end of post_actions
+    ws_states[host] = states.RUNNING_POST_ACTIONS;
+    ws_conns[host].send('{ "cmd": "post_start" }');
+}
+
 function _start(id) {
     var host = $("#ws_host" + id).val();       
 
@@ -582,6 +597,8 @@ function Start(id, must_play_pre_actions) {
             }
             clearInterval(loop);
             _start(id);
+
+            // TODO: playe the post actions
         }, 1000);
         
         return;

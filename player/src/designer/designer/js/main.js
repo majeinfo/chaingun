@@ -28,6 +28,7 @@ var chaingunScript = new Vue({
 			},
 			pre_actions: [],
 			actions: [],
+			post_actions: [],
 		},
 		action: {
 			type: 'http',
@@ -96,6 +97,7 @@ var chaingunScript = new Vue({
 		formdata_index: 0,
 		moving_action: null,
 		is_pre_action: false,
+		is_post_action: false,
 	},
 
 	mounted: function() {
@@ -320,9 +322,10 @@ var chaingunScript = new Vue({
 			this.$forceUpdate();
 		},
 		// ACTION
-        actionShow: function(pre_action) {
-			console.log('actionShow: ' + this.action.type);
-			this.is_pre_action = pre_action;
+        actionShow: function(scope) {
+			console.log('actionShow: ' + this.action.type + ', ' + parseInt(scope, 10));
+			this.is_pre_action = (scope == -1);
+			this.is_post_action = (scope == 1);
 			this.cur_action = this.action.type;
 			this.edit_action_mode = 'New';
 			this.action.title = '';
@@ -353,18 +356,24 @@ var chaingunScript = new Vue({
 			console.log('newAction');
 			this.errors = [];
 			newAction = _buildNewAction(this.action, this.scriptParms.default, this.errors);
+
 			if (this.errors.length == 0) {
 				if (this.edit_action_mode == 'New') {
 					console.log('This a new action');
 					if (this.is_pre_action) {
 						this.scriptParms.pre_actions.push(newAction);
+					} else if (this.is_post_action) {
+						this.scriptParms.post_actions.push(newAction);
 					} else {
 						this.scriptParms.actions.push(newAction);
 					}
 				} else {
 					console.log('Should update action ' + parseInt(this.action_index, 10));
+					console.log(this.is_pre_action); console.log(this.is_post_action);
 					if (this.is_pre_action) {
 						this.scriptParms.pre_actions[this.action_index] = newAction;
+					} else if (this.is_post_action) {
+						this.scriptParms.post_actions[this.action_index] = newAction;
 					} else {
 						this.scriptParms.actions[this.action_index] = newAction;
 					}
@@ -372,22 +381,30 @@ var chaingunScript = new Vue({
 				$('#new_' + this.cur_action).modal('hide');
 			}
         },
-		displayForEditAction: function(idx, pre_action) {
-			console.log('displayForEditAction: ' + parseInt(idx, 10));
-			if (pre_action) {
+		displayForEditAction: function(idx, scope) {
+			console.log('displayForEditAction: ' + parseInt(idx, 10) + ', ' + parseInt(scope, 10));
+			if (scope == -1) {
 				action_type = _prepareEditAction(this.action, this.scriptParms.pre_actions[idx]);
+				this.is_pre_action = true
+			} else if (scope == 1) {
+				action_type = _prepareEditAction(this.action, this.scriptParms.post_actions[idx]);
+				this.is_post_action = true
 			} else {
 				action_type = _prepareEditAction(this.action, this.scriptParms.actions[idx]);
+				this.is_post_action = false
+				this.is_post_action = false
 			}
 			this.edit_action_mode = 'Edit';
 			this.action_index = idx;
 			$('#new_' + action_type).modal('show');
 		},
-		deleteAction: function(idx, pre_action) {
-			console.log('deleteAction' + parseInt(idx, 10));
-			if (pre_action) {
+		deleteAction: function(idx, scope) {
+			console.log('deleteAction ' + parseInt(idx, 10) + ',' + parseInt(scope, 10)); console.log(scope);
+			if (scope == -1) {
 				this.scriptParms.pre_actions.splice(idx, 1);
-			} else {
+			} else if (scope == 1) {
+				this.scriptParms.post_actions.splice(idx, 1);
+			} {
 				this.scriptParms.actions.splice(idx, 1);
 			}
 		},
@@ -402,16 +419,20 @@ var chaingunScript = new Vue({
 			evt.target.style.opacity = 1;
 			this.moving_action = null;
 		},
-        dragActionFinish: function(index, evt, pre_action) {
+        dragActionFinish: function(index, evt, scope) {
 			console.log('dragFinish');
 			var data = evt.dataTransfer.getData('text/plain');
 			evt.preventDefault();
 			console.log('exchange actions ' + parseInt(this.moving_action, 10) + ' with ' + parseInt(index, 10));
 			if (index != this.moving_action) {
-				if (pre_action) {
+				if (scope == -1) {
 					var save_action = this.scriptParms.pre_actions[this.moving_action];
 					this.scriptParms.pre_actions[this.moving_action] = this.scriptParms.pre_actions[index];
 					this.scriptParms.pre_actions[index] = save_action;
+				} else if (scope == 1) {
+					var save_action = this.scriptParms.post_actions[this.moving_action];
+					this.scriptParms.post_actions[this.moving_action] = this.scriptParms.post_actions[index];
+					this.scriptParms.post_actions[index] = save_action;
 				} else {
 					var save_action = this.scriptParms.actions[this.moving_action];
 					this.scriptParms.actions[this.moving_action] = this.scriptParms.actions[index];
@@ -624,11 +645,12 @@ var chaingunScript = new Vue({
 			this.update();
 		},
 		// WHEN
-		whenShow: function(idx, pre_action) {
+		whenShow: function(idx, scope) {
 			console.log('whenShow: ' + parseInt(idx));
 			this.edit_when_mode = 'New';
 			this.action_index = idx;
-			this.is_pre_action = pre_action;
+			this.is_pre_action = (scope == -1);
+			this.is_post_action = (scope == 1);
 			$('#new_when').modal('show');
 		},
  		clearWhen: function() {
@@ -641,6 +663,8 @@ var chaingunScript = new Vue({
 			} else {
 				if (this.is_pre_action) {
 					this.scriptParms.pre_actions[this.action_index]['when'] = this.action.when_clause;
+				} else if (this.is_post_action) {
+					this.scriptParms.pOST_actions[this.action_index]['when'] = this.action.when_clause;
 				} else {
 					this.scriptParms.actions[this.action_index]['when'] = this.action.when_clause;
 				}
@@ -649,21 +673,25 @@ var chaingunScript = new Vue({
 			}
 			this.update();
 		},
-		displayForWhen: function(idx, pre_action) {
+		displayForWhen: function(idx, scope) {
 			console.log('displayForWhen: ' + parseInt(idx));
 			this.edit_when_mode = 'Edit';
 			this.action_index = idx;
-			if (pre_action) {
+			if (scope == -1) {
 				this.action.when_clause = this.scriptParms.pre_actions[idx]['when'];
+			} else if (scope == 1) {
+				this.action.when_clause = this.scriptParms.post_actions[idx]['when'];
 			} else {
 				this.action.when_clause = this.scriptParms.actions[idx]['when'];
 			}
 			$('#new_when').modal('show');
 		},
-		deleteWhen: function(idx, pre_action) {
+		deleteWhen: function(idx, scope) {
 			console.log('deleteWhen: ' + parseInt(idx));
-			if (pre_action) {
+			if (scope == -1) {
 				delete this.scriptParms.pre_actions[idx]['when'];
+			} else if (scope == 1) {
+				delete this.scriptParms.post_actions[idx]['when'];
 			} else {
 				delete this.scriptParms.actions[idx]['when'];
 			}
@@ -1030,6 +1058,7 @@ function buildYAML(data, variables) {
 	if (copy.feeder.filename == '') { delete copy.feeder; }
 	if (!counter) { delete copy.default; }
 	if (copy.pre_actions.length == 0) { delete copy.pre_actions; }
+	if (copy.post_actions.length == 0) { delete copy.post_actions; }
 	if (copy.actions.length == 0) { delete copy.actions; }
 
 	var text = jsyaml.dump(copy);
