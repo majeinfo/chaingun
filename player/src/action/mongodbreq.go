@@ -94,7 +94,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 	var response []byte
 
 	switch mongodbAction.Command {
-	case "drop":
+	case MONGO_DROP:
 		err := collection.Drop(ctx)
 		if err != nil {
 			vulog.Errorf("MongoDB drop action failed: %s", err)
@@ -104,7 +104,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		}
 		vulog.Debugf("Drop collection done")
 
-	case "insertone":
+	case MONGO_INSERTONE:
 		doc := SubstParams(sessionMap, mongodbAction.Document, vulog)
 		err := bson.UnmarshalExtJSON([]byte(doc), true, &bdoc)
 		if err != nil {
@@ -124,7 +124,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		sessionMap[config.MONGODB_LAST_INSERT_ID] = res.InsertedID.(primitive.ObjectID).String() // ...but the string is not useful it should keep its original type !
 		vulog.Debugf("Insert result: %v, ID=%v", res, res.InsertedID)
 
-	case "findone":
+	case MONGO_FINDONE:
 		doc := SubstParams(sessionMap, mongodbAction.Filter, vulog)
 		err := bson.UnmarshalExtJSON([]byte(doc), true, &bdoc)
 		if err != nil {
@@ -151,6 +151,9 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 			return false
 		}
 		vulog.Debugf("FindOne gets: %v", response)
+
+	case MONGO_DELETEMANY:
+		// TODO: must be implemented
 	}
 
 	elapsed := time.Since(start)

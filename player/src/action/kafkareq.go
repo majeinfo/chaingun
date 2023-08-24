@@ -43,7 +43,7 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 	var start time.Time = time.Now()
 
 	switch kafkaAction.Command {
-	case "write":
+	case KAFKA_WRITE:
 		w := &kafka.Writer{
 			Addr:         kafka.TCP(kafkaAction.Brokers...),
 			Topic:        kafkaAction.Topic,
@@ -73,7 +73,7 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 		}
 		vulog.Debugf("Kafka action done (%d message(s) written)", len(msgs))
 
-	case "read":
+	case KAFKA_READ:
 		dialer := &kafka.Dialer{
 			Timeout: time.Duration(playbook.Timeout) * time.Second,
 		}

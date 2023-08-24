@@ -67,6 +67,14 @@ type VUContext struct {
 	CloseFunc  func(*VUContext)
 }
 
+const (
+	HTTP_GET    = "GET"
+	HTTP_POST   = "POST"
+	HTTP_PUT    = "PUT"
+	HTTP_HEAD   = "HEAD"
+	HTTP_DELETE = "DELETE"
+)
+
 var (
 	//ErrNoValue      = errors.New("Variable has no value")
 	ErrInvalidValue = errors.New("Invalid value for variable")
@@ -155,32 +163,10 @@ func ValidateTestDefinition(t *TestDef) bool {
 
 // Check for method validity
 func IsValidHTTPMethod(method string) (bool, error) {
-	valid_methods := []string{"GET", "POST", "PUT", "HEAD", "DELETE"}
+	valid_methods := []string{HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_HEAD, HTTP_DELETE}
 
 	if !StringInSlice(method, valid_methods) {
 		return false, fmt.Errorf("HttpAction must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: got %s", method)
-	}
-
-	return true, nil
-}
-
-// Check for method validity
-func IsValidMongoDBCommand(command string) (bool, error) {
-	valid_commands := []string{"findone", "insertone", "deletemany", "drop"}
-
-	if !StringInSlice(command, valid_commands) {
-		return false, fmt.Errorf("MongoDBAction must specify a valid command: insertone, findone, deletemany, drop: got %s", command)
-	}
-
-	return true, nil
-}
-
-// Check for method validity
-func IsValidKafkaCommand(command string) (bool, error) {
-	valid_commands := []string{"write", "read"}
-
-	if !StringInSlice(command, valid_commands) {
-		return false, fmt.Errorf("KafkaAction must specify a valid command: write, read: got %s", command)
 	}
 
 	return true, nil

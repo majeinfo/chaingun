@@ -123,11 +123,11 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	store_srv_resp(httpAction.Title, sessionMap["UID"], vulog.Data["iter"].(int), responseBody)
 
 	/*
-	for _, cookie := range resp.Cookies() {
-		vulog.Debugf("Cookie name: %s, cookie value: %s", cookie.Name, cookie.Value)
-	}
-	vulog.Debugf("StoreCookie=%s", httpAction.StoreCookie)
-	 */
+		for _, cookie := range resp.Cookies() {
+			vulog.Debugf("Cookie name: %s, cookie value: %s", cookie.Name, cookie.Value)
+		}
+		vulog.Debugf("StoreCookie=%s", httpAction.StoreCookie)
+	*/
 
 	if httpAction.StoreCookie != "" {
 		for _, cookie := range resp.Cookies() {
@@ -198,7 +198,7 @@ func buildHTTPRequest(httpAction HTTPAction, sessionMap map[string]string, vulog
 
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescapedURL, vulog), body)
 		req.Header.Set("Content-Type", writer.FormDataContentType())
-	} else if httpAction.Method == "PUT" && httpAction.UploadFile != nil {
+	} else if httpAction.Method == config.HTTP_PUT && httpAction.UploadFile != nil {
 		log.Debugf("prepare for uploading file content with PUT")
 		reader := bytes.NewReader(httpAction.UploadFile)
 		req, err = http.NewRequest(httpAction.Method, SubstParams(sessionMap, unescapedURL, vulog), reader)
@@ -222,7 +222,7 @@ func buildHTTPRequest(httpAction HTTPAction, sessionMap map[string]string, vulog
 	for hdr, value := range httpAction.Headers {
 		req.Header.Add(hdr, SubstParams(sessionMap, value, vulog))
 	}
-	if _, ok := httpAction.Headers["content-type"]; !ok && httpAction.Method == "POST" {
+	if _, ok := httpAction.Headers["content-type"]; !ok && httpAction.Method == config.HTTP_POST {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	}
 

@@ -2,6 +2,7 @@ package action
 
 import (
 	_ "errors"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -21,6 +22,13 @@ type MongoDBAction struct {
 	Filter           string            `yaml:"filter"`
 	ResponseHandlers []ResponseHandler `yaml:"responses"`
 }
+
+const (
+	MONGO_FINDONE    = "findone"
+	MONGO_INSERTONE  = "insertone"
+	MONGO_DELETEMANY = "deletemany"
+	MONGO_DROP       = "drop"
+)
 
 // Execute a MongoDB Action
 func (h MongoDBAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
@@ -66,7 +74,7 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 		log.Error("MongoDBAction has no Command and no default Command specified")
 		a["command"] = ""
 		valid = false
-	} else if _, err := config.IsValidMongoDBCommand(a["command"].(string)); err != nil {
+	} else if _, err := isValidMongoDBCommand(a["command"].(string)); err != nil {
 		log.Error("%s", err)
 		valid = false
 	}
@@ -138,4 +146,14 @@ func NewMongoDBAction(a map[interface{}]interface{}, dflt config.Default, playbo
 	log.Debugf("MongoDBAction: %v", mongodbAction)
 
 	return mongodbAction, valid
+}
+
+func isValidMongoDBCommand(command string) (bool, error) {
+	valid_commands := []string{MONGO_FINDONE, MONGO_INSERTONE, MONGO_DELETEMANY, MONGO_DROP}
+
+	if !config.StringInSlice(command, valid_commands) {
+		return false, fmt.Errorf("MongoDBAction must specify a valid command: insertone, findone, deletemany, drop: got %s", command)
+	}
+
+	return true, nil
 }

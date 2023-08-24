@@ -1,6 +1,8 @@
 package action
 
 import (
+	"fmt"
+
 	"github.com/majeinfo/chaingun/config"
 	"github.com/majeinfo/chaingun/reporter"
 	log "github.com/sirupsen/logrus"
@@ -17,6 +19,11 @@ type KafkaAction struct {
 	Value            string            `yaml:"value"`
 	ResponseHandlers []ResponseHandler `yaml:"responses"`
 }
+
+const (
+	KAFKA_WRITE = "write"
+	KAFKA_READ  = "read"
+)
 
 // Execute a Kafka Action
 func (h KafkaAction) Execute(resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
@@ -51,7 +58,7 @@ func NewKafkaAction(a map[interface{}]interface{}, dflt config.Default, playbook
 		log.Error("KafkaAction must have a command")
 		a["command"] = ""
 		valid = false
-	} else if _, err := config.IsValidKafkaCommand(a["command"].(string)); err != nil {
+	} else if _, err := isValidKafkaCommand(a["command"].(string)); err != nil {
 		log.Error("%s", err)
 		valid = false
 	}
@@ -92,4 +99,14 @@ func NewKafkaAction(a map[interface{}]interface{}, dflt config.Default, playbook
 	log.Debugf("KafkaAction: %v", kafkaAction)
 
 	return kafkaAction, valid
+}
+
+func isValidKafkaCommand(command string) (bool, error) {
+	valid_commands := []string{KAFKA_WRITE, KAFKA_READ}
+
+	if !config.StringInSlice(command, valid_commands) {
+		return false, fmt.Errorf("KafkaAction must specify a valid command: write, read: got %s", command)
+	}
+
+	return true, nil
 }
