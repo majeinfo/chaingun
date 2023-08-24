@@ -14,19 +14,20 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 
 3.[Default values for Actions](#default-value-for-actions)
 
-4.[Actions, Pre-actions and Post-actions](#actions-and-pre-actions)  
+4.[Actions, Pre-actions and Post-actions](#actions--pre-actions-and-post-actions)  
 4.1.[HTTP/S](#http--https-request)  
 4.2.[MongoDB](#mongodb--mongodb-request)  
 4.3.[SQL](#sql--sql-request)  
 4.4.[WebSocket](#ws--websocket-request)  
 4.5.[MQTT](#mqtt--mqtt-request)  
 4.6.[gRPC](#grpc--grpc-request-beta)  
-4.7.[TCP & UDP](#tcp-or-udp--simple-tcp-or-udp-request)  
-4.8.[setvar](#setvar--creates-and-set-variable-values)  
-4.9.[sleep](#sleep--wait-action)  
-4.10.[log](#log--log-output-action)  
-4.11.[assert](#assert--creates-assertion)  
-4.12.[timers](#timers--creates-page-timers)
+4.7.[Kafka](#kafka-beta)  
+4.8.[TCP & UDP](#tcp-or-udp--simple-tcp-or-udp-request)  
+4.9.[setvar](#setvar--creates-and-set-variable-values)  
+4.10.[sleep](#sleep--wait-action)  
+4.11.[log](#log--log-output-action)  
+4.12.[assert](#assert--creates-assertion)  
+4.13.[timers](#timers--creates-page-timers)
 
 5.[Advanced Topics](#advanced-topics)  
 5.1.[Variables usage](#variables-usage)  
@@ -268,6 +269,13 @@ Examples:
         default_value: alice
 - log:
     message: "found name is ${the_name}"
+- mongodb:
+    title: Delete data
+    server: mongodb://localhost:27017
+    database: testing
+    collection: person
+    command: deletemany
+    document: '{"name": "${name}", "age": 30}'    
 ```
 
 ## sql : SQL Request
@@ -383,6 +391,36 @@ Example:
         variable: name
         index: first
         default_value: alice
+```
+
+## Kakfa (beta)
+
+Note : SCRAM authentication not yet supported
+
+| Parameter Name | Description                                                                                    |
+|:---------------|:-----------------------------------------------------------------------------------------------|
+| `title`        | mandatory string that qualifies the request - used for the result output and logging           |
+| `brokers`      | mandatory string that gives a list of Brokers (server1:port1,server2:port2...)                 |
+| `command`      | mandatory string that gives the command to be played (createtopic, deletetopic, write or read) |
+| `topic`        | mandatory string that specifies the Topic                                                      |
+| `key`          | optional string that specifies the Key to be used (write command)                          |
+| `value`   | mandatory string that specifies the Value to be inserted in the Topic (write command)          |
+
+Variable interpolation applies to requests and responses.
+
+Example:
+```
+- kafka:
+    title: Create topic
+    brokers: server1:9902
+    command: createtopic
+    topic: Weather
+- kafka:
+    title: Add a message
+    brokers: server1:9902,server2:9904
+    command: write
+    topic: Weather
+    value: too hot
 ```
 
 ## tcp or udp : simple TCP or UDP Request
