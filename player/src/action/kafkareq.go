@@ -39,9 +39,8 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 	// Note: persistent connection are not handled here
 	// Note: the DNS cache is not handled neither
 	// Note: implement SASL Mechanism
-	// TODO: prise en compte des variables
-	// TODO: prise en compte des résulats
-	// TODO: possibilité de faire plusieurs read ?
+	// TODO: responsehandler ?
+	// TODO: multiple message read ?
 	vulog.Debugf("Create new Kafka Client")
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(playbook.Timeout)*time.Second)
 	var start time.Time = time.Now()

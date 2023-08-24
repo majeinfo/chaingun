@@ -73,6 +73,8 @@ const (
 	HTTP_PUT    = "PUT"
 	HTTP_HEAD   = "HEAD"
 	HTTP_DELETE = "DELETE"
+
+	COOKIE_PREFIX = "__cookie__"
 )
 
 var (

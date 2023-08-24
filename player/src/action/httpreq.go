@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	cookiePrefix       = "__cookie__"
+	cookiePrefix       = config.COOKIE_PREFIX
 	cookiePrefixLength = len(cookiePrefix)
 )
 

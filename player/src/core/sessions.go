@@ -10,7 +10,7 @@ func cleanSessionMapAndResetUID(UID string, sessionMap map[string]string, playbo
 	// Optimization? Delete all entries rather than reallocate map from scratch for each new iteration.
 	for k := range sessionMap {
 		// If HTTP persistent sessions are wanted, do not clear the Cookies !
-		if playbook.PersistentHttpSession && strings.HasPrefix(k, "__cookie__") {	// TODO: == cookiePrefix from action package
+		if playbook.PersistentHttpSession && strings.HasPrefix(k, config.COOKIE_PREFIX) {
 			continue
 		}
 		delete(sessionMap, k)
@@ -24,7 +24,7 @@ func cleanSessionMapAndResetUID(UID string, sessionMap map[string]string, playbo
 
 	// NVariable values are array, we must increment the value at each iteration
 	for k, v := range playbook.Variables {
-		sessionMap[k] = v.Values[iteration_nu % len(v.Values)]
+		sessionMap[k] = v.Values[iteration_nu%len(v.Values)]
 	}
 }
 
