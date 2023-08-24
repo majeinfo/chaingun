@@ -1,0 +1,36 @@
+---
+iterations: 2
+users: 3
+rampup: 1
+timeout: 4
+variables:
+  topic: Temperature
+  brokers: localhost:29092,localhost:29092
+
+pre_actions:
+  - kafka:
+      brokers: ${brokers}
+      title: Create Topic ${topic}
+      topic: ${topic}
+      command: createtopic
+
+actions:
+  - kafka:
+      brokers: ${brokers}
+      title: Insert
+      topic: ${topic}
+      command: write
+      key: toto
+      value: titi
+  - kafka:
+      brokers: ${brokers}
+      title: Read a message
+      topic: ${topic}
+      command: read
+
+#post_actions:
+#  - kafka:
+#      brokers: ${brokers}
+#      title: Delete Topic ${topic}
+#      topic: ${topic}
+#      command: deletetopic

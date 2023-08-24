@@ -1,0 +1,25 @@
+---
+iterations: 2
+users: 3
+
+variables:
+  nom: fred
+
+pre_actions:
+  - log:
+      message: pre_action_1
+  - log:
+      message: pre_action_2
+
+actions:
+  - log:
+      message: action_1
+  - log:
+      message: action_2
+
+post_actions:
+  - log:
+      message: post_action_1
+  - log:
+      message: post_action_2
+
