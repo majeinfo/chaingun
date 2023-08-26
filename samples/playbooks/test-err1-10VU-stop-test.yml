@@ -14,7 +14,7 @@ actions:
       method: GET
       url: http://www.delamarche.com/chaingun/page2.php
       responses:
-        - regex: "Bnjour (.*)"
+        - regex: "Bonjour (.*)"
           index: first
           variable: nom
           dfault_value: alice
