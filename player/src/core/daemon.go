@@ -36,6 +36,8 @@ type DaemonStruct struct {
 	Listen_addr       string
 }
 
+type commandHandlerFunc func(*Client, *manager.PlayerCommand, string)
+
 var (
 	gp_daemon_status manager.DaemonStatus = IDLE
 	statusString                          = []string{
@@ -48,6 +50,19 @@ var (
 	hub                 *Hub
 	gp_outputfile       string
 	g_results_available bool
+
+	commandHandlers = map[string]commandHandlerFunc{
+		"status":      sendStatusOKMsg,
+		"pre_start":   preStartCommand,
+		"post_start":  postStartCommand,
+		"start":       startCommand,
+		"stop":        stopCommand,
+		"script":      scriptCommand,
+		"getmd5":      handleGetMD5,
+		"datafile":    handleDataFile,
+		"nextchunk":   handleDataChunk,
+		"get_results": getResultsCommand,
+	}
 )
 
 func StartDaemonMode(daemonParms DaemonStruct) {
@@ -101,34 +116,16 @@ func cmdHandler(c *Client, msg []byte) {
 		return
 	}
 
-	switch cmd.Cmd {
-	case "status":
-		sendStatusOKMsg(c, "") //, statusString[gp_daemon_status])
-	case "pre_start":
-		preStartCommand(c)
-	case "post_start":
-		postStartCommand(c)
-	case "start":
-		startCommand(c)
-	case "stop":
-		stopCommand(c)
-	case "script":
-		scriptCommand(c, &cmd)
-	case "getmd5":
-		handleGetMD5(c, &cmd)
-	case "datafile":
-		handleDataFile(c, &cmd)
-	case "nextchunk":
-		handleDataChunk(c, &cmd)
-	case "get_results":
-		getResultsCommand(c, &cmd)
-	default:
+	if handler, exists := commandHandlers[cmd.Cmd]; !exists {
 		sendStatusError(c, fmt.Sprintf("Message not supported: %s ...", msg[:int(math.Min(float64(len(msg)), 128))]), "")
+	} else {
+		handler(c, &cmd, "")
 	}
+
 	log.Debug("Message handled")
 }
 
-func preStartCommand(c *Client) {
+func preStartCommand(c *Client, cmd *manager.PlayerCommand, _ string) {
 	// Check no run in progress
 	if gp_daemon_status != READY_TO_RUN {
 		sendStatusError(c, "PreStart command ignored because daemon is not idle", "")
@@ -142,7 +139,7 @@ func preStartCommand(c *Client) {
 	}
 
 	gp_daemon_status = RUNNING
-	sendStatusOKMsg(c, "Launch pre-actions")
+	sendStatusOKMsg(c, cmd, "Launch pre-actions")
 	go _preStartCommand(c)
 }
 
@@ -153,7 +150,7 @@ func _preStartCommand(c *Client) {
 	sendStatusOK(c)
 }
 
-func postStartCommand(c *Client) {
+func postStartCommand(c *Client, cmd *manager.PlayerCommand, _ string) {
 	// Check no run in progress
 	if gp_daemon_status != READY_TO_RUN {
 		sendStatusError(c, "PostStart command ignored because daemon is not idle", "")
@@ -167,7 +164,7 @@ func postStartCommand(c *Client) {
 	}
 
 	gp_daemon_status = RUNNING
-	sendStatusOKMsg(c, "Launch post-actions")
+	sendStatusOKMsg(c, cmd, "Launch post-actions")
 	go _postStartCommand(c)
 }
 
@@ -178,7 +175,7 @@ func _postStartCommand(c *Client) {
 	sendStatusOK(c)
 }
 
-func startCommand(c *Client) {
+func startCommand(c *Client, _ *manager.PlayerCommand, _ string) {
 	// Check no run in progress
 	if gp_daemon_status != READY_TO_RUN {
 		sendStatusError(c, "Start command ignored because daemon is not idle", "")
@@ -225,7 +222,7 @@ func _startCommand(c *Client) {
 	sendStatusOK(c)
 }
 
-func stopCommand(c *Client) {
+func stopCommand(c *Client, _ *manager.PlayerCommand, _ string) {
 	// Check  run in progress
 	if gp_daemon_status != RUNNING {
 		sendStatusError(c, "Stop command ignored because daemon is idle", "")
@@ -236,7 +233,7 @@ func stopCommand(c *Client) {
 	sendStatusOK(c)
 }
 
-func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
+func scriptCommand(c *Client, cmd *manager.PlayerCommand, _ string) {
 	// Check no run in progress
 	if gp_daemon_status != IDLE && gp_daemon_status != READY_TO_RUN && gp_daemon_status != WAITING_FOR_FEEDER_DATA {
 		sendStatusError(c, "Script ignored because daemon is not idle or ready to run or wating for data", "")
@@ -269,7 +266,7 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 	} else {
 		g_valid_playbook = true
 		gp_daemon_status = READY_TO_RUN
-		sendStatusOKMsg(c, "Script received")
+		sendStatusOKMsg(c, cmd, "Script received")
 		log.Infof("Script received %s", cmd.MoreInfo)
 
 		if g_playbook.DataFeeder.Type == "csv" {
@@ -282,11 +279,11 @@ func scriptCommand(c *Client, cmd *manager.PlayerCommand) {
 	}
 }
 
-func handleGetMD5(c *Client, cmd *manager.PlayerCommand) {
+func handleGetMD5(c *Client, cmd *manager.PlayerCommand, _ string) {
 	// Must compute and return the MD5 sum of the filename given in Value.
 	// If the file does not exist, returns an error
 	if md5sum, err := utils.Hash_file_md5(cmd.Value); err == nil {
-		sendStatusOKMsg(c, md5sum)
+		sendStatusOKMsg(c, cmd, md5sum)
 		log.Infof("Received GetMD5 for file %s", cmd.Value)
 		log.Infof("MD5 sum is %s", md5sum)
 	} else {
@@ -294,7 +291,7 @@ func handleGetMD5(c *Client, cmd *manager.PlayerCommand) {
 	}
 }
 
-func handleDataFile(c *Client, cmd *manager.PlayerCommand) {
+func handleDataFile(c *Client, cmd *manager.PlayerCommand, _ string) {
 	data, err := base64.StdEncoding.DecodeString(cmd.Value)
 	if err != nil {
 		gp_daemon_status = IDLE
@@ -324,11 +321,11 @@ func handleDataFile(c *Client, cmd *manager.PlayerCommand) {
 		return
 	}
 
-	sendStatusOKMsg(c, "File received")
+	sendStatusOKMsg(c, cmd, "File received")
 	log.Infof("Received file %s", cmd.MoreInfo)
 }
 
-func handleDataChunk(c *Client, cmd *manager.PlayerCommand) {
+func handleDataChunk(c *Client, cmd *manager.PlayerCommand, _ string) {
 	data, err := base64.StdEncoding.DecodeString(cmd.Value)
 	if err != nil {
 		gp_daemon_status = IDLE
@@ -366,17 +363,17 @@ func handleDataChunk(c *Client, cmd *manager.PlayerCommand) {
 		return
 	}
 
-	sendStatusOKMsg(c, "Chunk of file received")
+	sendStatusOKMsg(c, cmd, "Chunk of file received")
 	log.Infof("Received file chunk %s", cmd.MoreInfo)
 }
 
-func getResultsCommand(c *Client, cmd *manager.PlayerCommand) {
+func getResultsCommand(c *Client, cmd *manager.PlayerCommand, _ string) {
 	if !g_results_available {
 		sendStatusError(c, "No Results available", "")
 		return
 	}
 
-	sendStatusOKMsg(c, "Sending Results")
+	sendStatusOKMsg(c, cmd, "Sending Results")
 
 	data, err := ioutil.ReadFile(gp_outputfile)
 	if err != nil {
@@ -397,7 +394,7 @@ func getResultsCommand(c *Client, cmd *manager.PlayerCommand) {
 	//c.send <- j
 	sendToManager(c, j)
 
-	sendStatusOKMsg(c, "Results sent successfully")
+	sendStatusOKMsg(c, cmd, "Results sent successfully")
 }
 
 // Send OK
@@ -406,7 +403,7 @@ func sendStatusOK(c *Client) {
 }
 
 // Send OK
-func sendStatusOKMsg(c *Client, msg string) {
+func sendStatusOKMsg(c *Client, cmd *manager.PlayerCommand, msg string) {
 	sendStatus(c, "OK", msg, "")
 }
 
