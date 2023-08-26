@@ -29,6 +29,8 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 	topic := SubstParams(sessionMap, kafkaAction.Topic, vulog)
 	title := SubstParams(sessionMap, kafkaAction.Title, vulog)
 	brokers := strings.Split(SubstParamsNoEscape(sessionMap, kafkaAction.Brokers, vulog), ",")
+	msg_key := SubstParams(sessionMap, kafkaAction.Key, vulog)
+	msg_value := SubstParams(sessionMap, kafkaAction.Value, vulog)
 
 	if must_trace_request {
 		trace_req = fmt.Sprintf("%s %s", kafkaAction.Brokers, title)
@@ -64,8 +66,8 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 
 		msgs := []kafka.Message{
 			{
-				Key:   []byte(kafkaAction.Key),
-				Value: []byte(kafkaAction.Value),
+				Key:   []byte(msg_key),
+				Value: []byte(msg_value),
 			},
 		}
 		if err := w.WriteMessages(ctx, msgs...); err != nil {

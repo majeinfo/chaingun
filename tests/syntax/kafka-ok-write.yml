@@ -1,0 +1,16 @@
+---
+iterations: 2
+users: 3
+rampup: 1
+timeout: 4
+variables:
+  msg_value: tutu
+actions:
+  - kafka:
+      brokers: localhost:29092,localhost:29092
+      title: Insert
+      topic: Weather
+      command: write
+      key: toto
+      value: msg for ${msg_value}
+
