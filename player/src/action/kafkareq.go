@@ -104,6 +104,8 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 				return false
 			}
 			vulog.Debugf("msg read: %s", string(msg.Value))
+			_, cancel := context.WithCancel(ctx)
+			cancel()
 			break // only one msg read
 		}
 
