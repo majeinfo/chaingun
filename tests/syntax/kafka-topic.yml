@@ -30,9 +30,9 @@ actions:
       topic: ${topic}
       command: read
 
-#post_actions:
-#  - kafka:
-#      brokers: ${brokers}
-#      title: Delete Topic ${topic}
-#      topic: ${topic}
-#      command: deletetopic
+post_actions:
+  - kafka:
+      brokers: ${brokers}
+      title: Delete Topic ${topic}
+      topic: ${topic}
+      command: deletetopic
