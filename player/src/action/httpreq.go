@@ -90,7 +90,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 			vulog.Infof("%s: FAILED (%s)", trace_req, err)
 		}
 		vulog.Errorf("HTTP request failed: %s", err)
-		buildHTTPSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+		completeSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
 		if resp != nil {
 			ioutil.ReadAll(resp.Body)
 			defer resp.Body.Close()
@@ -109,7 +109,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 			vulog.Infof("%s: FAILED (%s)", trace_req, err)
 		}
 		vulog.Printf("Reading HTTP response failed: %s", err)
-		buildHTTPSampleResult(&sampleReqResult, 0, resp.StatusCode, elapsed.Nanoseconds(), req.URL.String())
+		completeSampleResult(&sampleReqResult, 0, resp.StatusCode, elapsed.Nanoseconds(), req.URL.String())
 		resultsChannel <- sampleReqResult
 		return false
 	}
@@ -150,7 +150,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	if valid && !processResult(httpAction.ResponseHandlers, sessionMap, vulog, responseBody, resp.Header) {
 		valid = false
 	}
-	buildHTTPSampleResult(&sampleReqResult, len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), req.URL.String())
+	completeSampleResult(&sampleReqResult, len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), req.URL.String())
 	resultsChannel <- sampleReqResult
 	return valid
 }
@@ -242,9 +242,3 @@ func buildHTTPRequest(httpAction HTTPAction, sessionMap map[string]string, vulog
 	return req, nil
 }
 
-func buildHTTPSampleResult(sample *reporter.SampleReqResult, contentLength int, status int, elapsed int64, fullreq string) {
-	sample.Status = status
-	sample.Size = contentLength
-	sample.Latency = elapsed
-	sample.FullRequest = fullreq
-}

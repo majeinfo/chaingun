@@ -62,7 +62,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		err = client.Connect(ctx)
 		if err != nil {
 			vulog.Errorf("MongoDB request failed: %s", err)
-			buildMongoDBSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -98,7 +98,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		err := collection.Drop(ctx)
 		if err != nil {
 			vulog.Errorf("MongoDB drop action failed: %s", err)
-			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -109,7 +109,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		err := bson.UnmarshalExtJSON([]byte(doc), true, &bdoc)
 		if err != nil {
 			vulog.Errorf("MongoDB insertone action failed: %s", err)
-			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -117,7 +117,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		res, err := collection.InsertOne(ctx, &bdoc)
 		if err != nil {
 			vulog.Errorf("MongoDB insertone failed: %s", err)
-			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_ERR, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, MONGODB_ERR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -129,7 +129,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		err := bson.UnmarshalExtJSON([]byte(doc), true, &bdoc)
 		if err != nil {
 			vulog.Errorf("MongoDB findone action failed: %s", err)
-			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -138,7 +138,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		err = find_res.Decode(&bdoc)
 		if err != nil {
 			vulog.Errorf("MongoDB findone failed: %s", err)
-			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_ERR, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, MONGODB_ERR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -146,7 +146,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		response, err = bson.MarshalExtJSON(bdoc, true, false)
 		if err != nil {
 			vulog.Errorf("MongoDB findone marshal failed: %s", err)
-			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -157,7 +157,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		err := bson.UnmarshalExtJSON([]byte(doc), true, &bdoc)
 		if err != nil {
 			vulog.Errorf("MongoDB deletemany action failed: %s", err)
-			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, MONGODB_JSON, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -165,7 +165,7 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		_, err = collection.DeleteMany(ctx, &bdoc)
 		if err != nil {
 			vulog.Errorf("MongoDB deletemany failed: %s", err)
-			buildMongoDBSampleResult(&sampleReqResult, 0, MONGODB_ERR, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, MONGODB_ERR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -189,16 +189,9 @@ func DoMongoDBRequest(mongodbAction MongoDBAction, resultsChannel chan reporter.
 		valid = false
 	}
 
-	buildMongoDBSampleResult(&sampleReqResult, 0, statusCode, elapsed.Nanoseconds(), "")
+	completeSampleResult(&sampleReqResult, 0, statusCode, elapsed.Nanoseconds(), "")
 	resultsChannel <- sampleReqResult
 	return valid
-}
-
-func buildMongoDBSampleResult(sample *reporter.SampleReqResult, contentLength int, status int, elapsed int64, fullreq string) {
-	sample.Status = status
-	sample.Size = contentLength
-	sample.Latency = elapsed
-	sample.FullRequest = fullreq
 }
 
 func mongodb_disconnect(vucontext *config.VUContext) {

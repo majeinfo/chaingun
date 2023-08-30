@@ -79,6 +79,8 @@ func _buildActionList(playbook *config.TestDef, playbook_actions []map[string]in
 					action, valid = NewSQLAction(actionMap, playbook.DfltValues, playbook)
 				case "kafka":
 					action, valid = NewKafkaAction(actionMap, playbook.DfltValues, playbook)
+				case "elasticsearch":
+					action, valid = NewESAction(actionMap, playbook.DfltValues, playbook)
 				case "log":
 					action, valid = NewLogAction(actionMap)
 				case "setvar":

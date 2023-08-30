@@ -20,6 +20,13 @@ func buildSampleResult(actionType string, vid string, contentLength int, status 
 	return sampleReqResult
 }
 
+func completeSampleResult(sample *reporter.SampleReqResult, contentLength int, status int, elapsed int64, fullreq string) {
+        sample.Status = status
+        sample.Size = contentLength
+        sample.Latency = elapsed
+        sample.FullRequest = fullreq
+}
+
 func updateWhenTime(reqResult *reporter.SampleReqResult) {
 	reqResult.When = time.Since(reporter.SimulationStart).Nanoseconds()
 }

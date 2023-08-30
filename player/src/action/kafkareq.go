@@ -72,7 +72,7 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 		}
 		if err := w.WriteMessages(ctx, msgs...); err != nil {
 			vulog.Errorf("Kafka write request failed: %s", err)
-			buildKafkaSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -99,7 +99,7 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 			msg, err := r.ReadMessage(ctx)
 			if err != nil {
 				vulog.Errorf("Kafka read request failed: %s", err)
-				buildKafkaSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+				completeSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
 				resultsChannel <- sampleReqResult
 				return false
 			}
@@ -113,7 +113,7 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 		conn, err := kafka.Dial("tcp", brokers[0])
 		if err != nil {
 			vulog.Errorf("Kafka dial failed: %s", err)
-			buildKafkaSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -130,7 +130,7 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 		err = conn.CreateTopics(topicConfigs...)
 		if err != nil {
 			vulog.Errorf("Kafka create topic failed: %s", err)
-			buildKafkaSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -140,7 +140,7 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 		conn, err := kafka.Dial("tcp", brokers[0])
 		if err != nil {
 			vulog.Errorf("Kafka dial failed: %s", err)
-			buildKafkaSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -149,7 +149,7 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 		err = conn.DeleteTopics(topic)
 		if err != nil {
 			vulog.Errorf("Kafka delete topic failed: %s", err)
-			buildKafkaSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -166,16 +166,9 @@ func DoKafkaRequest(kafkaAction KafkaAction, resultsChannel chan reporter.Sample
 		vulog.Debugf("")
 	}
 
-	buildKafkaSampleResult(&sampleReqResult, 0, statusCode, elapsed.Nanoseconds(), "")
+	completeSampleResult(&sampleReqResult, 0, statusCode, elapsed.Nanoseconds(), "")
 	resultsChannel <- sampleReqResult
 	return true
-}
-
-func buildKafkaSampleResult(sample *reporter.SampleReqResult, contentLength int, status int, elapsed int64, fullreq string) {
-	sample.Status = status
-	sample.Size = contentLength
-	sample.Latency = elapsed
-	sample.FullRequest = fullreq
 }
 
 func kafka_disconnect(vucontext *config.VUContext) {

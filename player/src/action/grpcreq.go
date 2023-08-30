@@ -101,7 +101,7 @@ func DoGRPCRequest(grpcAction GRPCAction, resultsChannel chan reporter.SampleReq
 			vulog.Infof("%s: FAILED (%s)", trace_req, err)
 		}
 		vulog.Errorf("GRPC connection failed: %s", err)
-		buildGRPCSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+		completeSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
 		resultsChannel <- sampleReqResult
 		return false
 	}
@@ -129,7 +129,7 @@ func DoGRPCRequest(grpcAction GRPCAction, resultsChannel chan reporter.SampleReq
 			vulog.Infof("%s: FAILED (%s)", trace_req, err)
 		}
 		vulog.Printf("Reading GRPC response failed: %s", err)
-		buildGRPCSampleResult(&sampleReqResult, len(resp.String()), 1, elapsed.Nanoseconds(), req.Call)
+		completeSampleResult(&sampleReqResult, len(resp.String()), 1, elapsed.Nanoseconds(), req.Call)
 		resultsChannel <- sampleReqResult
 		return false
 	}
@@ -151,7 +151,7 @@ func DoGRPCRequest(grpcAction GRPCAction, resultsChannel chan reporter.SampleReq
 		valid = false
 	}
 
-	buildGRPCSampleResult(&sampleReqResult, len(resp.String()), 0, elapsed.Nanoseconds(), req.Call)
+	completeSampleResult(&sampleReqResult, len(resp.String()), 0, elapsed.Nanoseconds(), req.Call)
 	resultsChannel <- sampleReqResult
 
 	return valid
@@ -246,9 +246,3 @@ func makeUnaryRequest(ctx *context.Context, req *GRPCRequest, reqMD *metadata.MD
 	return res, resErr
 }
 
-func buildGRPCSampleResult(sample *reporter.SampleReqResult, contentLength int, status int, elapsed int64, fullreq string) {
-	sample.Status = status
-	sample.Size = contentLength
-	sample.Latency = elapsed
-	sample.FullRequest = fullreq
-}

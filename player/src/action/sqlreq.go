@@ -66,7 +66,7 @@ func DoSQLRequest(sqlAction SQLAction, resultsChannel chan reporter.SampleReqRes
 		db, err = sql.Open(sqlAction.DBDriver, server)
 		if err != nil {
 			vulog.Errorf("SQL Open failed: %s", err)
-			buildSQLSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, reporter.NETWORK_ERROR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -91,7 +91,7 @@ func DoSQLRequest(sqlAction SQLAction, resultsChannel chan reporter.SampleReqRes
 		rows, err := db.Query(stmt)
 		if err != nil {
 			vulog.Errorf("SQL Statement failed: %s: %s", stmt, err)
-			buildSQLSampleResult(&sampleReqResult, 0, SQL_ERR, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, SQL_ERR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -116,7 +116,7 @@ func DoSQLRequest(sqlAction SQLAction, resultsChannel chan reporter.SampleReqRes
 		res, err := db.Exec(stmt)
 		if err != nil {
 			vulog.Errorf("SQL Statement failed: %s: %s", stmt, err)
-			buildSQLSampleResult(&sampleReqResult, 0, SQL_ERR, 0, err.Error())
+			completeSampleResult(&sampleReqResult, 0, SQL_ERR, 0, err.Error())
 			resultsChannel <- sampleReqResult
 			return false
 		}
@@ -144,16 +144,9 @@ func DoSQLRequest(sqlAction SQLAction, resultsChannel chan reporter.SampleReqRes
 		}
 	*/
 
-	buildSQLSampleResult(&sampleReqResult, 0, statusCode, elapsed.Nanoseconds(), "")
+	completeSampleResult(&sampleReqResult, 0, statusCode, elapsed.Nanoseconds(), "")
 	resultsChannel <- sampleReqResult
 	return valid
-}
-
-func buildSQLSampleResult(sample *reporter.SampleReqResult, contentLength int, status int, elapsed int64, fullreq string) {
-	sample.Status = status
-	sample.Size = contentLength
-	sample.Latency = elapsed
-	sample.FullRequest = fullreq
 }
 
 func sql_disconnect(vucontext *config.VUContext) {
