@@ -22,12 +22,13 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 4.5.[MQTT](#mqtt--mqtt-request)  
 4.6.[gRPC](#grpc--grpc-request-beta)  
 4.7.[Kafka](#kafka-beta)  
-4.8.[TCP & UDP](#tcp-or-udp--simple-tcp-or-udp-request)  
-4.9.[setvar](#setvar--creates-and-set-variable-values)  
-4.10.[sleep](#sleep--wait-action)  
-4.11.[log](#log--log-output-action)  
-4.12.[assert](#assert--creates-assertion)  
-4.13.[timers](#timers--creates-page-timers)
+4.8.[Elasticsearch](#elasticsearch-beta)  
+4.9.[TCP & UDP](#tcp-or-udp--simple-tcp-or-udp-request)  
+4.10.[setvar](#setvar--creates-and-set-variable-values)  
+4.11.[sleep](#sleep--wait-action)  
+4.12.[log](#log--log-output-action)  
+4.13.[assert](#assert--creates-assertion)  
+4.14.[timers](#timers--creates-page-timers)
 
 5.[Advanced Topics](#advanced-topics)  
 5.1.[Variables usage](#variables-usage)  
@@ -52,7 +53,7 @@ variables. At last, you define the list of actions to be performed by `chaingun`
 | `on_error`   | string  | (default=continue,stop_iteration,stop_vu,stop_test) define the behaviour for error handling: just display the error and continue (default), or abort the current iteration, or stop the current VU, or abort the whole test |
 | `http_error_codes` | list | (no default value) define the list of what is considered a HTTP error code. For example, `http_error_codes: 404,403,500`. This is only used by HTTP Actions |
 | `persistent_http_sessions` | bool | (false) if true and if sessions are stored in Cookies, each VU uses the same session for all its iterations. |
-| `persistent_db_connections` | bool | (false) if true, each VU uses the same connection for a script iteration. Note: only work for MongoDB and SQL. Also implies that the script uses only one protocol |
+| `persistent_db_connections` | bool | (false) if true, each VU uses the same connection for a script iteration. Note: only work for MongoDB, MySQL, PostgreSQL and Elasticsearch. Also implies that the script uses only one protocol |
 | `grpc_proto` | string | (no default value) if specified, must indicate the path to a ".proto" file. The path to the file is relative to the directory where the player is executed from. This option implies the definition of a default server |
 
 Note : the injector does not support the notion of "keepalive". Connections to the remote servers are opened and closed for each action.
@@ -106,6 +107,7 @@ The supported parameter_name(s) are:
 | `method`   | HTTP method to use                                                                                                                                    | GET, POST, PUT, HEAD or DELETE |
 | `database` | default database for MongoDB and SQL                                                                                                                  | my_database |
 | `collection` | default collection for MongoDB                                                                                                                        | my_collection |
+| `index` | default index for Elasticsearch | my_index |
 | `db_driver` | default SQL Driver - only "mysql" and "postgres" are supported yet                                                                                    | mysql |
 
 
@@ -422,6 +424,52 @@ Example:
     command: write
     topic: Weather
     value: too hot
+```
+
+## Elasticsearch (beta)
+
+Note : Index mappings and settings, and authentication not yet supported
+
+| Parameter Name | Description                                                                                                                                |
+|:---------------|:-------------------------------------------------------------------------------------------------------------------------------------------|
+| `title`        | mandatory string that qualifies the request - used for the result output and logging                                                       |
+| `server`      | mandatory string that gives the Server name (http://server:port). If missing, use the value of the `server` default variable |
+| `command`      | mandatory string that gives the command to be played (createindex, deleteindex, insert or search)                                             |
+| `index`        | mandatory string that specifies the Index. If missing, use the value of the `index` default variable |                                     |
+| `document`          | mandatory JSON string that specifies the Document to be inserted (insert command)                                                                          |
+| `refresh`          | optional boolean value that refreshes the Server cache  (insert command) (default=false)                                                                          |
+| `query`        | mandatory JSON string that specifies the Search Query to be executed (search command)                                                      |
+
+Variable interpolation applies to requests and responses.
+
+Example:
+```
+- elasticsearch:
+    title: Create index 
+    server: http://server1:9200
+    command: createindex
+    index: my_index
+- elasticsearch:
+    title: Delete index 
+    server: http://server1:9200
+    command: deleteindex
+    index: my_index
+- elasticsearch:
+    title: Insert a doc
+    index: ${index}
+    command: insert
+    refresh: false
+    document: '{"name": "Doe", "surname": "John", "items": [1, 2, 3]}'
+- elasticsearch:
+    title: Search a doc
+    index: ${index}
+    command: search
+    query: '{"query": {"match_all": {}}}'
+    responses:
+      - jsonpath: $.hits.total.value+
+        index: first
+        variable: hits
+        default_value: not_found
 ```
 
 ## tcp or udp : simple TCP or UDP Request

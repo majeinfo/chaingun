@@ -50,6 +50,7 @@ type Default struct {
 	Database   string `yaml:"database"`
 	Collection string `yaml:"collection"`
 	DBDriver   string `yaml:"db_driver"`
+	Index string `yaml:"index"`
 }
 
 type VariableDef struct {

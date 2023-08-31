@@ -1,0 +1,39 @@
+---
+iterations: 2
+users: 30
+rampup: 3
+timeout: 4
+persistent_db_connections: true
+default:
+  server: http://localhost:9200
+  index: my_customers
+
+pre_actions:
+  - elasticsearch:
+      title: Create Index ${index}
+      command: createindex
+
+actions:
+  - elasticsearch:
+      title: Insert a doc
+      command: insert
+      refresh: false
+      document: '{"name": "Doe", "surname": "John", "items": [1, 2, 3]}'
+
+  - elasticsearch:
+      title: Search a doc
+      command: search
+      query: '{"query": {"match_all": {}}}'
+      responses:
+        - jsonpath: $.hits.total.value+
+          index: first
+          variable: hits
+          default_value: not_found
+
+  - log:
+      message: "Count of found docs: ${hits}"
+
+post_actions:
+  - elasticsearch:
+      title: Delete Index ${index}
+      command: deleteindex

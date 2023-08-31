@@ -62,3 +62,13 @@ BUGS
 git_token.txt
 *.sh
 *.pem
+*.key
+static/
+samples/static/
+player/src/github.com/
+tests/output/
+js/
+merged.csv
+meta.yml
+samples/results/
+tests/results/

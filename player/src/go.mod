@@ -8,6 +8,7 @@ require (
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/bmizerany/perks v0.0.0-20141205001514-d9a9656a3a4b
 	github.com/eclipse/paho.mqtt.golang v1.3.2
+	github.com/elastic/go-elasticsearch/v8 v8.9.0 // indirect
 	github.com/elazarl/goproxy v0.0.0-20230808193330-2592e75ae04a
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.3.2
