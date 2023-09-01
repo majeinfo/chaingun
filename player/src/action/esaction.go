@@ -17,6 +17,7 @@ type ESAction struct {
 	Title            string            `yaml:"title"`
 	Command          string            `yaml:"command"`
 	Index            string            `yaml:"index"`
+	Settings         string            `yaml:"settings"`	// for "createindex" action
 	Document         string            `yaml:"document"`
 	Query            string            `yaml:"query"`
 	Refresh		 bool		   `yaml:"refresh"`	// for "insert" action (default is false)
@@ -80,7 +81,11 @@ func NewESAction(a map[interface{}]interface{}, dflt config.Default, playbook *c
 		valid = false
 	}
 
-	if a["command"] == "insert" {
+	if a["settings"] == nil {
+		a["settings"] = ""
+	}
+
+	if a["command"] == ES_INSERT {
 		if a["document"] == nil || a["document"] == "" {
 			log.Error("ESAction insert command must define a document")
 			a["document"] = ""
@@ -90,7 +95,7 @@ func NewESAction(a map[interface{}]interface{}, dflt config.Default, playbook *c
 		a["document"] = ""
 	}
 
-	if a["command"] == "search" {
+	if a["command"] == ES_SEARCH {
 		if a["query"] == nil || a["query"] == "" {
 			log.Error("ESAction search command must define a query")
 			a["query"] = ""
@@ -138,6 +143,7 @@ func NewESAction(a map[interface{}]interface{}, dflt config.Default, playbook *c
 		Title:            a["title"].(string),
 		Command:          a["command"].(string),
 		Index:            a["index"].(string),
+		Settings:            a["settings"].(string),
 		Document:         a["document"].(string),
 		Query:            a["query"].(string),
 		Refresh:           a["refresh"].(bool),

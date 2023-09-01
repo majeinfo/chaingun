@@ -436,6 +436,7 @@ Note : Index mappings and settings, and authentication not yet supported
 | `server`      | mandatory string that gives the Server name (http://server:port). If missing, use the value of the `server` default variable |
 | `command`      | mandatory string that gives the command to be played (createindex, deleteindex, insert or search)                                             |
 | `index`        | mandatory string that specifies the Index. If missing, use the value of the `index` default variable |                                     |
+| `settings`        | optional string that specifies the Index settings and mappings (createindex command) |                                     |
 | `document`          | mandatory JSON string that specifies the Document to be inserted (insert command)                                                                          |
 | `refresh`          | optional boolean value that refreshes the Server cache  (insert command) (default=false)                                                                          |
 | `query`        | mandatory JSON string that specifies the Search Query to be executed (search command)                                                      |
@@ -449,6 +450,18 @@ Example:
     server: http://server1:9200
     command: createindex
     index: my_index
+    settings: |
+      {
+        "settings": {
+          "number_of_shards": 4,
+          "number_of_replicas": 2
+        },
+        "mappings": {
+          "properties": {
+            "name": { "type": "text" }
+          }
+        }
+      }
 - elasticsearch:
     title: Delete index 
     server: http://server1:9200
