@@ -18,12 +18,22 @@ actions:
       title: Insert a doc
       command: insert
       refresh: false
-      document: '{"name": "Doe", "surname": "John", "items": [1, 2, 3]}'
+      document: |
+        {
+          "name": "Doe", 
+          "surname": "John", 
+          "items": [1, 2, 3]
+        }
 
   - elasticsearch:
       title: Search a doc
       command: search
-      query: '{"query": {"match_all": {}}}'
+      query: |
+        {
+          "query": {
+            "match_all": {}
+          }
+        }
       responses:
         - jsonpath: $.hits.total.value+
           index: first
