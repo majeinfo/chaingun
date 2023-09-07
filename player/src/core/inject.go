@@ -106,8 +106,10 @@ func _startStandaloneMode(script_name string, data []byte,
 
 	go shutdownHandler()
 	playPreActions(&g_playbook, &g_pre_actions)
-	spawnUsers(&g_playbook, &g_actions, StandaloneMode)
-	playPostActions(&g_playbook, &g_post_actions)
+	if gp_daemon_status != STOPPING_NOW {
+		spawnUsers(&g_playbook, &g_actions, StandaloneMode)
+		playPostActions(&g_playbook, &g_post_actions)
+	}
 
 	log.Infof("Done in %v", time.Since(reporter.SimulationStart))
 	log.Infof("Building reports, please wait...")
