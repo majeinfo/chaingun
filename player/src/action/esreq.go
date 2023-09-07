@@ -127,7 +127,7 @@ func DoESRequest(esAction ESAction, resultsChannel chan reporter.SampleReqResult
 		defer res.Body.Close()
 		vulog.Debugf("Response: %v", res)
 		if res.IsError() {
-			vulog.Errorf("Error creating the Index %s: %s", index, res.Status())
+			vulog.Errorf("Error creating the Index %s: %v", index, res)
 			completeSampleResult(&sampleReqResult, 0, ES_ERR, 0, res.Status())
 			resultsChannel <- sampleReqResult
 			return false
@@ -151,7 +151,7 @@ func DoESRequest(esAction ESAction, resultsChannel chan reporter.SampleReqResult
 		defer res.Body.Close()
 		vulog.Debugf("Response: %v", res)
 		if res.IsError() {
-			vulog.Errorf("Error deleting the Index %s: %s", index, res.Status())
+			vulog.Errorf("Error deleting the Index %s: %v", index, res)
 			completeSampleResult(&sampleReqResult, 0, ES_ERR, 0, res.Status())
 			resultsChannel <- sampleReqResult
 			return false
@@ -180,7 +180,7 @@ func DoESRequest(esAction ESAction, resultsChannel chan reporter.SampleReqResult
 
 		vulog.Debugf("Response: %v", res)
 		if res.IsError() {
-			vulog.Errorf("Error indexing document: %s", res.Status())
+			vulog.Errorf("Error indexing document: %v", res)
 			completeSampleResult(&sampleReqResult, 0, ES_ERR, 0, res.Status())
 			resultsChannel <- sampleReqResult
 			return false
@@ -190,13 +190,19 @@ func DoESRequest(esAction ESAction, resultsChannel chan reporter.SampleReqResult
 
 	case ES_SEARCH:
 		query := SubstParams(sessionMap, esAction.Query, vulog)
+		req := esapi.SearchRequest{
+			Index: []string{index},
+			Body: strings.NewReader(query),
+		}
 
 		ctx, _ := context.WithTimeout(context.Background(), time.Duration(playbook.Timeout)*time.Second)
-		res, err := client.Search(
-			client.Search.WithContext(ctx),
-			client.Search.WithIndex(index),
-			client.Search.WithBody(strings.NewReader(query)),
-		)
+		res, err := req.Do(ctx, client)
+
+		//res, err := client.Search(
+		//	client.Search.WithContext(ctx),
+		//	client.Search.WithIndex(index),
+		//	client.Search.WithBody(strings.NewReader(query)),
+		//)
 		if err != nil {
 			vulog.Errorf("ES search action failed: %s", err)
 			completeSampleResult(&sampleReqResult, 0, ES_ERR, 0, err.Error())
@@ -207,7 +213,7 @@ func DoESRequest(esAction ESAction, resultsChannel chan reporter.SampleReqResult
 
 		vulog.Debugf("Response: %v", res)
 		if res.IsError() {
-			vulog.Errorf("Error searching document: %s", res.Status())
+			vulog.Errorf("Error searching document: %v", res)
 			completeSampleResult(&sampleReqResult, 0, ES_ERR, 0, res.Status())
 			resultsChannel <- sampleReqResult
 			return false
