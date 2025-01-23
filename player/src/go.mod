@@ -21,7 +21,7 @@ require (
 	github.com/spf13/cobra v1.1.3
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	go.mongodb.org/mongo-driver v1.5.1
-	golang.org/x/net v0.23.0
+	golang.org/x/net v0.33.0
 	google.golang.org/grpc v1.57.1
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 	gopkg.in/xmlpath.v2 v2.0.0-20150820204837-860cbeca3ebc
