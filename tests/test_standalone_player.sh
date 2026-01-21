@@ -63,8 +63,8 @@ Syn_Error syntax/missing-iterations.yml 'Iterations not set, must be > 0'
 Syn_Error syntax/missing-duration.yml 'When Iterations is -1, Duration must be set'
 Syn_Error syntax/missing-title.yml 'HttpAction must define a title'
 Syn_Error syntax/missing-method.yml 'Action has no Method and no default Method specified'
-Syn_Error syntax/bad-method.yml 'HttpAction must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: GIT'
-Syn_Error syntax/dflt-bad-method.yml 'Default Http Action must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: GIT'
+Syn_Error syntax/bad-method.yml 'HttpAction must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: got GIT'
+Syn_Error syntax/dflt-bad-method.yml 'HttpAction must specify a valid HTTP method: GET, POST, PUT, HEAD or DELETE: got GIT'
 Syn_Error syntax/missing-server.yml 'Host missing for URL'
 Syn_Error syntax/setvar3.yml 'Undefined function strlenght'
 Syn_Error syntax/setvar4.yml 'Unexpected end of expression'
@@ -75,7 +75,7 @@ Syn_Error syntax/mongo-collection-missing.yml 'no Collection and no default Coll
 Syn_Error syntax/mongo-bad-command.yml 'must specify a valid command'
 Syn_Error syntax/mongo-server-missing.yml 'no Server and no default Server specified'
 Syn_Error syntax/sql-db-driver-missing.yml 'no Driver and no default Driver specified'
-Syn_Error syntax/sql-bad-db-driver.yml 'DB Driver must specify a valid driver (mysql)'
+Syn_Error syntax/sql-bad-db-driver.yml 'DB Driver must specify a valid driver (mysql or postgres): got oracle'
 Syn_Error syntax/sql-server-missing.yml 'no Server and no default Server specified'
 Syn_Error syntax/sql-database-missing.yml 'no Database and no default Database specified'
 Syn_Error syntax/sql-statement-missing.yml 'no Statement specified'
@@ -86,7 +86,7 @@ Syn_OK syntax/dflt-values.yml
 Syn_OK syntax/setvar1.yml 
 Syn_OK syntax/setvar2.yml 
 Syn_OK syntax/mongo-insert-ok.yml
-Syn_OK syntax/sql-insert-ok.yml
+Syn_OK syntax/sql-insert-mysql-ok.yml
 
 # Test JSON request
 Req_Error requests/1VU-json-bad.yml 'failed to apply - no default value given'
@@ -133,9 +133,10 @@ Req_Error syntax/grpc-bad-stream.yml 'GrpcAction chat.ChatServiceClientStream.Sa
 # Test a pre-action
 Req_OK requests/pre_actions1.yml
 
-rm -f $$.out 2>/dev/null
 if [ $ERRORS -gt 0 ]; then
 	echo "$ERRORS tests failed..."
 	exit 1
 fi
+
+rm -f $$.out 2>/dev/null
 # EOF
