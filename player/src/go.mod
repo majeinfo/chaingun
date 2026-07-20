@@ -1,6 +1,8 @@
 module github.com/majeinfo/chaingun
 
-go 1.24.1
+go 1.25.0
+
+toolchain go1.25.12
 
 require (
 	github.com/JumboInteractiveLimited/jsonpath v0.0.0-20180321012328-6fcdcc9066b5
@@ -20,7 +22,7 @@ require (
 	github.com/sirupsen/logrus v1.8.3
 	github.com/spf13/cobra v1.1.3
 	go.mongodb.org/mongo-driver v1.5.1
-	golang.org/x/net v0.47.0
+	golang.org/x/net v0.55.0
 	google.golang.org/grpc v1.57.1
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 	gopkg.in/xmlpath.v2 v2.0.0-20150820204837-860cbeca3ebc
@@ -44,10 +46,10 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
-	golang.org/x/crypto v0.45.0 // indirect
-	golang.org/x/sync v0.18.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/text v0.31.0 // indirect
+	golang.org/x/crypto v0.51.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	google.golang.org/genproto v0.0.0-20230526161137-0005af68ea54 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230525234030-28d5490b6b19 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
