@@ -31,7 +31,7 @@ var (
 )
 
 // DoHTTPRequest accepts a Httpaction and a one-way channel to write the results to.
-func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, _ *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
+func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReqResult, sessionMap map[string]string, vucontext *config.VUContext, vulog *log.Entry, playbook *config.TestDef) bool {
 	var trace_req string
 	sampleReqResult := buildSampleResult(REPORTER_HTTP, sessionMap["UID"], 0, reporter.NETWORK_ERROR, 0, httpAction.Title, "")
 
@@ -63,26 +63,15 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 
 	start := time.Now()
 
-	var DefaultTransport http.RoundTripper
-	if httpAction.UseHTTP2 {
-		DefaultTransport = &http2.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			//DisableCompression: true,
-		}
-	} else {
-		DefaultTransport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			DialContext: (&net.Dialer{
-				Timeout:   time.Duration(playbook.Timeout) * time.Second,
-				KeepAlive: time.Duration(playbook.Timeout) * time.Second,
-			}).DialContext,
-			ResponseHeaderTimeout: time.Duration(playbook.Timeout) * time.Second,
-			DisableKeepAlives:     true,
-			//DisableCompression: true,
+	transport := getHTTPTransport(httpAction, vucontext, playbook)
+	if !playbook.PersistentDBConn {
+		// The transport isn't kept around across requests: release its connection
+		// right away instead of leaving it for the GC to reclaim.
+		if closer, ok := transport.(idleConnCloser); ok {
+			defer closer.CloseIdleConnections()
 		}
 	}
-
-	resp, err := DefaultTransport.RoundTrip(req)
+	resp, err := transport.RoundTrip(req)
 	vulog.Debugf("%v", resp)
 
 	if err != nil {
@@ -153,6 +142,52 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	completeSampleResult(&sampleReqResult, len(responseBody), resp.StatusCode, elapsed.Nanoseconds(), req.URL.String())
 	resultsChannel <- sampleReqResult
 	return valid
+}
+
+// idleConnCloser is implemented by both *http.Transport and *http2.Transport.
+type idleConnCloser interface {
+	CloseIdleConnections()
+}
+
+// getHTTPTransport returns the RoundTripper to use for this request.
+// When playbook.PersistentDBConn is set, the transport is created once per VU and
+// stored in vucontext so the underlying TCP/TLS connection is kept alive and reused
+// across requests instead of being torn down and re-established every time.
+func getHTTPTransport(httpAction HTTPAction, vucontext *config.VUContext, playbook *config.TestDef) http.RoundTripper {
+	if httpAction.UseHTTP2 {
+		if playbook.PersistentDBConn {
+			if vucontext.HTTP2Transport == nil {
+				vucontext.HTTP2Transport = newHTTP2Transport()
+			}
+			return vucontext.HTTP2Transport.(*http2.Transport)
+		}
+		return newHTTP2Transport()
+	}
+
+	if playbook.PersistentDBConn {
+		if vucontext.HTTPTransport == nil {
+			vucontext.HTTPTransport = newHTTPTransport(playbook)
+		}
+		return vucontext.HTTPTransport.(*http.Transport)
+	}
+	return newHTTPTransport(playbook)
+}
+
+func newHTTP2Transport() *http2.Transport {
+	return &http2.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+}
+
+func newHTTPTransport(playbook *config.TestDef) *http.Transport {
+	return &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		DialContext: (&net.Dialer{
+			Timeout:   time.Duration(playbook.Timeout) * time.Second,
+			KeepAlive: time.Duration(playbook.Timeout) * time.Second,
+		}).DialContext,
+		ResponseHeaderTimeout: time.Duration(playbook.Timeout) * time.Second,
+	}
 }
 
 func buildHTTPRequest(httpAction HTTPAction, sessionMap map[string]string, vulog *log.Entry) (*http.Request, error) {

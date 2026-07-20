@@ -8,9 +8,15 @@ import (
 	"path"
 	"regexp"
 	_ "strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
+
+// flushInterval bounds how much data can be lost if the process is killed
+// abruptly: WriteResult() is only flushed to disk at most this often instead
+// of on every single result, since fsync-ing per result caps throughput.
+const flushInterval = 500 * time.Millisecond
 
 var (
 	w   *bufio.Writer
@@ -18,6 +24,7 @@ var (
 	err error
 	opened bool = false
 	clean_re *regexp.Regexp
+	lastFlush time.Time
 )
 
 func init() {
@@ -63,6 +70,7 @@ func OpenTempResultsFile(tmpfile *os.File) {
 func initResultsFile() {
 	log.Debug("initResultFile()")
 	w = bufio.NewWriter(f)
+	lastFlush = time.Now()
 	if outputType == jsonOutput {
 		_, err = w.WriteString(string("var logdata = '"))
 	} else if outputType == csvOutput {
@@ -79,7 +87,7 @@ func CloseResultsFile() {
 		if outputType == jsonOutput {
 			_, err = w.WriteString(string("';"))
 		}
-		//w.Flush()
+		w.Flush()
 		f.Close()
 	}
 	// Do nothing if not opened
@@ -107,5 +115,11 @@ func WriteResult(sampleResult *SampleReqResult) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	w.Flush()
+
+	// Flush periodically rather than on every result: WriteResult is only ever
+	// called from the single AcceptResults goroutine, so this stays race-free.
+	if time.Since(lastFlush) >= flushInterval {
+		w.Flush()
+		lastFlush = time.Now()
+	}
 }

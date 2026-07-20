@@ -66,6 +66,12 @@ type Feeder struct {
 type VUContext struct {
 	InitObject interface{}
 	CloseFunc  func(*VUContext)
+
+	// Per-VU persistent HTTP transports, reused across requests when
+	// PersistentDBConn is set (kept separate from InitObject so HTTP actions
+	// can be mixed with SQL/MongoDB/ES actions in the same VU without colliding).
+	HTTPTransport  interface{} // *http.Transport
+	HTTP2Transport interface{} // *http2.Transport
 }
 
 const (

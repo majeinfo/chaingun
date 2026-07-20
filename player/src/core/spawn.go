@@ -13,6 +13,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// idleConnCloser is implemented by both *http.Transport and *http2.Transport,
+// stored as interface{} in VUContext to avoid pulling those packages into config.
+type idleConnCloser interface {
+	CloseIdleConnections()
+}
+
 // Launch VUs
 func spawnUsers(playbook *config.TestDef, actions *[]action.FullAction, mode int) {
 	log.Info("Launch VUs to play the actions")
@@ -145,6 +151,12 @@ actionLoop:
 	if vucontext.CloseFunc != nil {
 		log.Debugf("Call CloseFunc")
 		vucontext.CloseFunc(&vucontext)
+	}
+	if closer, ok := vucontext.HTTPTransport.(idleConnCloser); ok {
+		closer.CloseIdleConnections()
+	}
+	if closer, ok := vucontext.HTTP2Transport.(idleConnCloser); ok {
+		closer.CloseIdleConnections()
 	}
 
 	log.Debugf("exit launchActions (%s)", UID)
