@@ -31,6 +31,7 @@ type TestDef struct {
 	Rampup                int                      `yaml:"rampup"`
 	PersistentDBConn      bool                     `yaml:"persistent_db_connections"` // (default is false)
 	PersistentHttpSession bool                     `yaml:"persistent_http_sessions"`  // (default is false)
+	ReuseHTTPConn         bool                     `yaml:"reuse_http_connections"`    // (default is true, set in CreatePlaybook before unmarshalling)
 	OnError               string                   `yaml:"on_error"`                  // continue (default) | stop_vu | stop_test
 	HttpErrorCodes        string                   `yaml:"http_error_codes"`
 	GrpcProto             string                   `yaml:"grpc_proto"`
@@ -68,7 +69,7 @@ type VUContext struct {
 	CloseFunc  func(*VUContext)
 
 	// Per-VU persistent HTTP transports, reused across requests when
-	// PersistentDBConn is set (kept separate from InitObject so HTTP actions
+	// ReuseHTTPConn is set (kept separate from InitObject so HTTP actions
 	// can be mixed with SQL/MongoDB/ES actions in the same VU without colliding).
 	HTTPTransport  interface{} // *http.Transport
 	HTTP2Transport interface{} // *http2.Transport

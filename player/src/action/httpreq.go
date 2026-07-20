@@ -64,7 +64,7 @@ func DoHTTPRequest(httpAction HTTPAction, resultsChannel chan reporter.SampleReq
 	start := time.Now()
 
 	transport := getHTTPTransport(httpAction, vucontext, playbook)
-	if !playbook.PersistentDBConn {
+	if !playbook.ReuseHTTPConn {
 		// The transport isn't kept around across requests: release its connection
 		// right away instead of leaving it for the GC to reclaim.
 		if closer, ok := transport.(idleConnCloser); ok {
@@ -150,12 +150,12 @@ type idleConnCloser interface {
 }
 
 // getHTTPTransport returns the RoundTripper to use for this request.
-// When playbook.PersistentDBConn is set, the transport is created once per VU and
-// stored in vucontext so the underlying TCP/TLS connection is kept alive and reused
-// across requests instead of being torn down and re-established every time.
+// When playbook.ReuseHTTPConn is set (the default), the transport is created once
+// per VU and stored in vucontext so the underlying TCP/TLS connection is kept alive
+// and reused across requests instead of being torn down and re-established every time.
 func getHTTPTransport(httpAction HTTPAction, vucontext *config.VUContext, playbook *config.TestDef) http.RoundTripper {
 	if httpAction.UseHTTP2 {
-		if playbook.PersistentDBConn {
+		if playbook.ReuseHTTPConn {
 			if vucontext.HTTP2Transport == nil {
 				vucontext.HTTP2Transport = newHTTP2Transport()
 			}
@@ -164,7 +164,7 @@ func getHTTPTransport(httpAction HTTPAction, vucontext *config.VUContext, playbo
 		return newHTTP2Transport()
 	}
 
-	if playbook.PersistentDBConn {
+	if playbook.ReuseHTTPConn {
 		if vucontext.HTTPTransport == nil {
 			vucontext.HTTPTransport = newHTTPTransport(playbook)
 		}

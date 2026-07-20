@@ -15,6 +15,11 @@ func CreatePlaybook(scriptFile string, data []byte, playbook *config.TestDef, pr
 	log.Debugf("ScriptDir=%s", gpScriptDir)
 	log.Debugf("Playbook=%v", playbook)
 
+	// Defaults to true unless the playbook explicitly sets reuse_http_connections: false.
+	// yaml.UnmarshalStrict only touches fields present in the YAML, so this survives
+	// when the key is absent.
+	playbook.ReuseHTTPConn = true
+
 	err := yaml.UnmarshalStrict([]byte(data), playbook)
 	if err != nil {
 		//log.Fatalf("YAML error: %v", err)
