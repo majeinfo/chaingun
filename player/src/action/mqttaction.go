@@ -22,7 +22,7 @@ type MQTTAction struct {
 	Password             string        `yaml:"password"`
 	ClientID             string        `yaml:"clientid"`
 	MaxReconnectInterval time.Duration `yaml:"maxreconnectinterval"`
-	KeepAlive            time.Duration `yaml:"keppalive"`
+	KeepAlive            time.Duration `yaml:"keepalive"`
 	Payload              string        `yaml:"payload"`
 	Qos                  byte          `yaml:"qos"`
 	Topic                string        `yaml:"topic"`
